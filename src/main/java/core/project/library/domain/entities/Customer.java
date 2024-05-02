@@ -1,0 +1,77 @@
+package core.project.library.domain.entities;
+
+import core.project.library.domain.events.Events;
+import core.project.library.domain.value_objects.Email;
+import core.project.library.domain.value_objects.FirstName;
+import core.project.library.domain.value_objects.LastName;
+import core.project.library.domain.value_objects.Password;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+public class Customer {
+    private @NotNull UUID id;
+    private @NotNull FirstName firstName;
+    private @NotNull LastName lastName;
+    private @NotNull Password password;
+    private @NotNull Email email;
+    private @NotNull Events events;
+    private /**@OneToMany*/ Set<Order> orders;
+
+    public void addOrder(Order order) {
+        this.orders.add(order);
+        order.setCustomer(this);
+    }
+
+    public void removeOrder(Order order) {
+        this.orders.remove(order);
+        order.setCustomer(null);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Customer customer = (Customer) o;
+        return Objects.equals(id, customer.id) && Objects.equals(firstName, customer.firstName) &&
+                Objects.equals(lastName, customer.lastName) && Objects.equals(password, customer.password) &&
+                Objects.equals(email, customer.email) && Objects.equals(events, customer.events);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(id);
+        result = 31 * result + Objects.hashCode(firstName);
+        result = 31 * result + Objects.hashCode(lastName);
+        result = 31 * result + Objects.hashCode(password);
+        result = 31 * result + Objects.hashCode(email);
+        result = 31 * result + Objects.hashCode(events);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("""
+                id = %s,
+                first_name = %s,
+                last_name = %s,
+                password = %s,
+                email = %s,
+                creation_date = %s,
+                last_modified_date = %s
+                """, id.toString(), firstName.firstName(), lastName.lastName(),
+                password.password(), email.email(),
+                events.creation_date().toString(), events.last_update_date().toString());
+    }
+
+    public void printOrders() {
+        System.out.println(getOrders());
+    }
+}
