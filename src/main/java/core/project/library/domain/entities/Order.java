@@ -4,7 +4,6 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.TotalPrice;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
