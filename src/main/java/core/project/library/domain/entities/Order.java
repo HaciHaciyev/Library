@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Getter
-@Setter
+@Setter(AccessLevel.PRIVATE)
 @Builder
 @AllArgsConstructor
 public class Order {
@@ -17,28 +17,8 @@ public class Order {
     private @NotNull Integer countOfBooks;
     private @NotNull TotalPrice totalPrice;
     private @NotNull Events events;
-    private /**@ManyToOne*/ Customer customer;
+    private /**@ManyToOne*/ @Setter(AccessLevel.PROTECTED) Customer customer;
     private /**@ManyToMany*/ Set<Book> books;
-
-    public void addCustomer(Customer customer) {
-        this.setCustomer(customer);
-        customer.getOrders().add(this);
-    }
-
-    public void removeCustomer(Customer customer) {
-        this.setCustomer(null);
-        customer.getOrders().remove(this);
-    }
-
-    public void addBook(Book book) {
-        this.books.add(book);
-        book.getOrders().add(this);
-    }
-
-    public void removeBook(Book book) {
-        this.books.remove(book);
-        book.getOrders().remove(this);
-    }
 
     @Override
     public boolean equals(Object o) {

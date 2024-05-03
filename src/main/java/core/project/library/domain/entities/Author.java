@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Getter
-@Setter
+@Setter(AccessLevel.PRIVATE)
 @Builder
 @AllArgsConstructor
 public class Author {
@@ -23,16 +23,6 @@ public class Author {
     private @NotNull Address address;
     private @NotNull Events events;
     private /**@ManyToMany*/ Set<Book> books;
-
-    public void addBook(Book book) {
-        this.books.add(book);
-        book.getAuthors().add(this);
-    }
-
-    public void removeBook(Book book) {
-        this.books.remove(book);
-        book.getAuthors().add(this);
-    }
 
     @Override
     public boolean equals(Object o) {

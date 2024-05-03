@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Getter
-@Setter
+@Setter(AccessLevel.PRIVATE)
 @Builder
 @AllArgsConstructor
 public class Book {
