@@ -20,9 +20,8 @@ public class Repository {
     }
 
     public Integer count() {
-        return jdbcTemplate.isPresent() ?
-                jdbcTemplate.get().queryForObject("Select COUNT(id) from Book", Integer.class)
-                : -1;
+        return jdbcTemplate.map(jdbc -> jdbc.queryForObject("Select COUNT(id) from Book", Integer.class))
+                .orElse(-1);
     }
 
     public void bootstrap() {
