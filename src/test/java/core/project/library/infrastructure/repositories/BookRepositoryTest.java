@@ -17,6 +17,6 @@ class BookRepositoryTest {
     void getBookById() {
         Optional<Book> optional = bookRepository.getBookById("d4f0aa27-317b-4e00-9462-9a7f0faa7a5e");
 
-        assertThat(optional.get()).isNotNull();
+        assertThat(optional.orElseThrow()).isNotNull();
     }
 }
