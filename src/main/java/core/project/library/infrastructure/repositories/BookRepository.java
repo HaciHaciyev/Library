@@ -1,7 +1,7 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Book;
-import core.project.library.infrastructure.mappers.sql_mappers.RowToBook;
+import core.project.library.infrastructure.sql_mappers.RowToBook;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
