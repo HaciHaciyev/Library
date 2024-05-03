@@ -11,8 +11,11 @@ public class BookRepository {
 
     private final Optional<JdbcTemplate> jdbcTemplate;
 
-    public BookRepository(Optional<JdbcTemplate> jdbcTemplate) {
+    private final Optional<RowToBook> rowToBook;
+
+    public BookRepository(Optional<JdbcTemplate> jdbcTemplate, Optional<RowToBook> rowToBook) {
         this.jdbcTemplate = jdbcTemplate;
+        this.rowToBook = rowToBook;
     }
 
     public Optional<Book> getBookById(String bookId) {
@@ -21,8 +24,7 @@ public class BookRepository {
         }
 
         return Optional.ofNullable(jdbcTemplate.get()
-                .queryForObject(
-                        "Select * from Book where id=?", new RowToBook(), bookId)
-                );
+                .queryForObject("Select * from Book where id=?", rowToBook.orElseThrow(), bookId)
+        );
     }
 }
