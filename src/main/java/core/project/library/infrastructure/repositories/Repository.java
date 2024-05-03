@@ -49,7 +49,7 @@ public class Repository {
                 .build();
 
         Book book = Book.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.fromString("d4f0aa27-317b-4e00-9462-9a7f0faa7a5e"))
                 .title(new Title("Title"))
                 .description(new Description("Description"))
                 .isbn(new ISBN("978-161-729-045-9"))
