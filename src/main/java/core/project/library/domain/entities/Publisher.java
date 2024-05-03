@@ -6,16 +6,13 @@ import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.Phone;
 import core.project.library.domain.value_objects.PublisherName;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 @Getter
-@Setter
+@Setter(AccessLevel.PRIVATE)
 @Builder
 @AllArgsConstructor
 public class Publisher {
@@ -26,16 +23,6 @@ public class Publisher {
     private @NotNull Email email;
     private @NotNull Events events;
     private /**@OneToMany*/ Set<Book> books;
-
-    public void addBook(Book book) {
-        this.books.add(book);
-        book.setPublisher(this);
-    }
-
-    public void removeBook(Book book) {
-        this.books.remove(book);
-        book.setPublisher(null);
-    }
 
     @Override
     public boolean equals(Object o) {

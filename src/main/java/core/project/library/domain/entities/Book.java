@@ -8,12 +8,13 @@ import core.project.library.domain.value_objects.Title;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 @Getter
-@Setter
+@Setter(AccessLevel.PRIVATE)
 @Builder
 @AllArgsConstructor
 public class Book {
@@ -113,5 +114,10 @@ public class Book {
 
     public void printOrders() {
         System.out.println(getOrders());
+    }
+
+    //TODO
+    public Book compound(Book book, Publisher publisher, List<Author> authors, List<Order> orders) {
+        return null;
     }
 }
