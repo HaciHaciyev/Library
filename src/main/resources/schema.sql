@@ -79,6 +79,10 @@ Create table Customer (
     last_name varchar(25) not null,
     email varchar(255) not null,
     password varchar(48) not null,
+    state varchar(25) not null,
+    city varchar(25) not null,
+    street varchar(25) not null,
+    home varchar(25) not null,
     creation_date timestamp not null,
     last_modified_date timestamp not null
 );

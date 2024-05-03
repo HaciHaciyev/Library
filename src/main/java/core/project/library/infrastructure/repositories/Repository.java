@@ -7,22 +7,27 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 
 @org.springframework.stereotype.Repository
 public class Repository {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final Optional<JdbcTemplate> jdbcTemplate;
 
-    public Repository(JdbcTemplate jdbcTemplate) {
+    public Repository(Optional<JdbcTemplate> jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     public Integer count() {
-        return jdbcTemplate.queryForObject("Select COUNT(id) from Book", Integer.class);
+        return jdbcTemplate.isPresent() ?
+                jdbcTemplate.get().queryForObject("Select COUNT(id) from Book", Integer.class)
+                : -1;
     }
 
-    public void save() {
+    public void bootstrap() {
+        if (jdbcTemplate.isEmpty()) return;
+
         Publisher publisher = Publisher.builder()
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher"))
@@ -70,6 +75,7 @@ public class Repository {
                 .lastName(new LastName("Customerovich"))
                 .password(new Password("password"))
                 .email(new Email("customer@gmail.com"))
+                .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
                 .orders(new HashSet<>())
                 .build();
@@ -79,7 +85,7 @@ public class Repository {
         customer.addOrder(order);
         book.addOrder(order);
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Book (id, title, description, isbn, price,
                   quantity_on_hand, category, created_date, last_modified_date)
                   values (?,?,?,?,?,?,?,?,?)
@@ -89,7 +95,7 @@ public class Repository {
                 book.getEvents().creation_date(), book.getEvents().last_update_date()
         );
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Author (id, first_name, last_name, email,
                     state, city, street, home, created_date, last_modified_date)
                     values (?,?,?,?,?,?,?,?,?,?)
@@ -100,7 +106,7 @@ public class Repository {
                 author.getEvents().creation_date(), author.getEvents().last_update_date()
         );
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Book_Author (id, book_id, author_id)
                     values (?,?,?)
         """,
@@ -109,7 +115,7 @@ public class Repository {
                 author.getId().toString()
         );
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Publisher (id, publisher_name, state, city, street, home,
                        phone, email, creation_date, last_modified_date)
                        values (?,?,?,?,?,?,?,?,?,?)
@@ -121,7 +127,7 @@ public class Repository {
                 publisher.getEvents().creation_date(), publisher.getEvents().last_update_date()
         );
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Book_Publisher (id, book_id, publisher_id)
                     values (?,?,?)
         """,
@@ -130,7 +136,7 @@ public class Repository {
                 publisher.getId().toString()
         );
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Order_Line (id, count_of_book, total_price,
                         creation_date, last_modified_date)
                         values (?,?,?,?,?)
@@ -139,7 +145,7 @@ public class Repository {
                 order.getEvents().creation_date(), order.getEvents().last_update_date()
         );
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Book_Order (id, book_id, order_id)
                     values (?,?,?)
         """,
@@ -148,17 +154,19 @@ public class Repository {
                 order.getId().toString()
         );
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Customer (id, first_name, last_name, email, password,
+                      state, city, street, home,
                       creation_date, last_modified_date)
-                      values (?,?,?,?,?,?,?)
+                      values (?,?,?,?,?,?,?,?,?,?,?)
         """,
                 customer.getId().toString(), customer.getFirstName().firstName(), customer.getLastName().lastName(),
-                customer.getEmail().email(), customer.getPassword().password(),
+                customer.getEmail().email(), customer.getPassword().password(), customer.getAddress().state(),
+                customer.getAddress().city(), customer.getAddress().street(), customer.getAddress().home(),
                 customer.getEvents().creation_date(), customer.getEvents().last_update_date()
         );
 
-        jdbcTemplate.update("""
+        jdbcTemplate.get().update("""
         Insert into Customer_Order (id, customer_id, order_id)
                     values (?,?,?)
         """,
