@@ -16,8 +16,6 @@ public class Bootstrap implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (repository.isPresent() ? repository.get().count() < 1 : false) {
-            repository.get().bootstrap();
-        }
+        repository.filter(repo -> repo.count() < 1).ifPresent(Repository::bootstrap);
     }
 }
