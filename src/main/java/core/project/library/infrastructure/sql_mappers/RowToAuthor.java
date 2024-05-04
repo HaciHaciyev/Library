@@ -28,7 +28,8 @@ public class RowToAuthor implements RowMapper<Author> {
                         rs.getString("city"),
                         rs.getString("street"),
                         rs.getString("home")
-                ))
+                        )
+                )
                 .events(new Events(
                                 rs.getObject("created_date", Timestamp.class).toLocalDateTime(),
                                 rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()

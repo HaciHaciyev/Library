@@ -1,5 +1,7 @@
 package core.project.library.application.controllers;
 
+import core.project.library.application.mappers.BookMapper;
+import core.project.library.application.model.BookDTO;
 import core.project.library.domain.entities.Book;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.BookRepository;
@@ -15,28 +17,29 @@ import java.util.Optional;
 @RequestMapping("/library/book")
 public class BookController {
 
+    private final BookMapper bookMapper;
+
     private final Optional<BookRepository> bookRepository;
 
-    public BookController(Optional<BookRepository> bookRepository) {
+    public BookController(BookMapper bookMapper, Optional<BookRepository> bookRepository) {
+        this.bookMapper = bookMapper;
         this.bookRepository = bookRepository;
     }
 
     @GetMapping("/getBookById/{bookId}")
-    public ResponseEntity<Optional<Book>> getBookById(@PathVariable("bookId") String bookId) {
+    public ResponseEntity<Optional<BookDTO>> getBookById(@PathVariable("bookId") String bookId) {
         if (bookRepository.isEmpty()) {
             throw new RuntimeException("BookRepository dependency doesn`t exists in BookController class.");
         }
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(
-                        Optional.ofNullable(
-                                Book.compound(
-                                        bookRepository.get().getBookById(bookId)
-                                                .orElseThrow(NotFoundException::new),
-                                        bookRepository.get().getBookPublisher(bookId)
-                                                .orElseThrow(NotFoundException::new),
-                                        bookRepository.get().getBookAuthors(bookId),
-                                        bookRepository.get().getBookOrders(bookId)
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(Optional.ofNullable(bookMapper.toDTO(Book.entityCollectorForBook(
+                                bookRepository.get().getBookById(bookId).orElseThrow(NotFoundException::new),
+                                bookRepository.get().getBookPublisher(bookId).orElseThrow(NotFoundException::new),
+                                bookRepository.get().getBookAuthors(bookId),
+                                bookRepository.get().getBookOrders(bookId)
+                                        )
                                 )
                         )
                 );

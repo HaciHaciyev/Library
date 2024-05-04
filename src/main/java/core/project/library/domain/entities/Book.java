@@ -113,8 +113,8 @@ public class Book {
         System.out.println(getOrders());
     }
 
-    public static Book compound(Book book, Publisher publisher,
-                                List<Optional<Author>> authors, List<Optional<Order>> orders) {
+    public static Book entityCollectorForBook(Book book, Publisher publisher,
+                                              List<Optional<Author>> authors, List<Optional<Order>> orders) {
         Set<Author> authorSet = new HashSet<>();
         for (Optional<Author> author : authors) {
             authorSet.add(author.orElseThrow());
