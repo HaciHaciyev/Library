@@ -71,12 +71,9 @@ public class BookRepository {
                 UUID.class, bookId);
 
         List<Optional<Author>> authors = new ArrayList<>();
-        for (UUID authorId : uuids) {
-            Optional<Author> optional = Optional.ofNullable(jdbcTemplate
-                    .queryForObject("Select * from Author where id=?", rowToAuthor.orElseThrow(), authorId)
-            );
-            authors.add(optional);
-        }
+        uuids.forEach(uuid -> authors.add(Optional.ofNullable(
+                jdbcTemplate.queryForObject("Select * from Author where id=?", rowToAuthor.orElseThrow(), uuid))));
+
         return authors;
     }
 
@@ -85,12 +82,9 @@ public class BookRepository {
                 UUID.class, bookId);
 
         List<Optional<Order>> orders = new ArrayList<>();
-        for (UUID orderId : uuids) {
-            Optional<Order> optional = Optional.ofNullable(jdbcTemplate
-                    .queryForObject("Select * from Order_Line where id=?", rowToOrder.orElseThrow(), orderId)
-            );
-            orders.add(optional);
-        }
+        uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
+                .queryForObject("Select * from Order_Line where id=?", rowToOrder.orElseThrow(), uuid)
+        )));
         return orders;
     }
 
@@ -100,6 +94,7 @@ public class BookRepository {
         Set<Order> orderSet = new HashSet<>();
         authors.forEach(author -> authorSet.add(author.orElseThrow(NotFoundException::new)));
         orders.forEach(order -> orderSet.add(order.orElseThrow(NotFoundException::new)));
+
         return Optional.ofNullable(Book.builder()
                 .id(book.getId())
                 .title(book.getTitle())
