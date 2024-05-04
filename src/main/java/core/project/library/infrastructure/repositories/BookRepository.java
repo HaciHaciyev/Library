@@ -16,7 +16,7 @@ import java.util.*;
 @Repository
 public class BookRepository {
 
-    private final Optional<JdbcTemplate> jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
     private final Optional<RowToBook> rowToBook;
 
@@ -26,7 +26,7 @@ public class BookRepository {
 
     private final Optional<RowToOrder> rowToOrder;
 
-    public BookRepository(Optional<JdbcTemplate> jdbcTemplate,
+    public BookRepository(JdbcTemplate jdbcTemplate,
                           Optional<RowToBook> rowToBook,
                           Optional<RowToPublisher> rowToPublisher,
                           Optional<RowToAuthor> rowToAuthor,
@@ -39,44 +39,30 @@ public class BookRepository {
     }
 
     public Optional<Book> getBookById(String bookId) {
-        if (jdbcTemplate.isEmpty()) {
-            throw new RuntimeException("JdbcTemplate dependency doesn`t exists in BookRepository class.");
-        }
-
-        return Optional.ofNullable(jdbcTemplate.get()
+        return Optional.ofNullable(jdbcTemplate
                 .queryForObject("Select * from Book where id=?", rowToBook.orElseThrow(), bookId)
         );
     }
 
     public Optional<Publisher> getBookPublisher(String bookId) {
-        if (jdbcTemplate.isEmpty()) {
-            throw new RuntimeException("JdbcTemplate dependency doesn`t exists in BookRepository class.");
-        }
-
-        Optional<UUID> publisherId = Optional.ofNullable(jdbcTemplate.get()
+        Optional<UUID> publisherId = Optional.ofNullable(jdbcTemplate
                 .queryForObject("Select publisher_id from Book_Publisher where book_id=?",
                         UUID.class, bookId));
 
-        return Optional.ofNullable(jdbcTemplate.get()
+        return Optional.ofNullable(jdbcTemplate
                 .queryForObject("Select * from Publisher where id=?",
                 rowToPublisher.orElseThrow(), publisherId.orElseThrow(NotFoundException::new))
         );
     }
 
     public List<Optional<Author>> getBookAuthors(String bookId) {
-        if (jdbcTemplate.isEmpty()) {
-            throw new RuntimeException("JdbcTemplate dependency doesn`t exists in BookRepository class.");
-        }
-
-        List<UUID> uuids = jdbcTemplate.get()
-                .queryForList("Select author_id from Book_Author where book_id=?",
+        List<UUID> uuids = jdbcTemplate.queryForList("Select author_id from Book_Author where book_id=?",
                 UUID.class, bookId);
 
         List<Optional<Author>> authors = new ArrayList<>();
         for (UUID authorId : uuids) {
-            Optional<Author> optional = Optional.ofNullable(jdbcTemplate.get()
-                    .queryForObject("Select * from Author where id=?",
-                            rowToAuthor.orElseThrow(), authorId)
+            Optional<Author> optional = Optional.ofNullable(jdbcTemplate
+                    .queryForObject("Select * from Author where id=?", rowToAuthor.orElseThrow(), authorId)
             );
             authors.add(optional);
         }
@@ -84,18 +70,13 @@ public class BookRepository {
     }
 
     public List<Optional<Order>> getBookOrders(String bookId) {
-        if (jdbcTemplate.isEmpty()) {
-            throw new RuntimeException("JdbcTemplate dependency doesn`t exists in BookRepository class.");
-        }
-
-        List<UUID> uuids = jdbcTemplate.get().queryForList("Select order_id from Book_Order where book_id=?",
+        List<UUID> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
                 UUID.class, bookId);
 
         List<Optional<Order>> orders = new ArrayList<>();
         for (UUID orderId : uuids) {
-            Optional<Order> optional = Optional.ofNullable(jdbcTemplate.get()
-                    .queryForObject("Select * from Order_Line where id=?",
-                            rowToOrder.orElseThrow(), orderId)
+            Optional<Order> optional = Optional.ofNullable(jdbcTemplate
+                    .queryForObject("Select * from Order_Line where id=?", rowToOrder.orElseThrow(), orderId)
             );
             orders.add(optional);
         }

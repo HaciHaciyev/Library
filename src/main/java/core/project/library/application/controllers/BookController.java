@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/library/book")
@@ -19,27 +18,22 @@ public class BookController {
 
     private final BookMapper bookMapper;
 
-    private final Optional<BookRepository> bookRepository;
+    private final BookRepository bookRepository;
 
-    public BookController(BookMapper bookMapper, Optional<BookRepository> bookRepository) {
+    public BookController(BookMapper bookMapper, BookRepository bookRepository) {
         this.bookMapper = bookMapper;
         this.bookRepository = bookRepository;
     }
 
     @GetMapping("/getBookById/{bookId}")
-    public ResponseEntity<Optional<BookDTO>> getBookById(@PathVariable("bookId") String bookId) {
-        if (bookRepository.isEmpty()) {
-            throw new RuntimeException("BookRepository dependency doesn`t exists in BookController class.");
-        }
-
+    public ResponseEntity<BookDTO> getBookById(@PathVariable("bookId") String bookId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(Optional.ofNullable(bookMapper.toDTO(Book.entityCollectorForBook(
-                                bookRepository.get().getBookById(bookId).orElseThrow(NotFoundException::new),
-                                bookRepository.get().getBookPublisher(bookId).orElseThrow(NotFoundException::new),
-                                bookRepository.get().getBookAuthors(bookId),
-                                bookRepository.get().getBookOrders(bookId)
-                                        )
+                .body(bookMapper.toDTO(Book.entityCollectorForBook(
+                                bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new),
+                                bookRepository.getBookPublisher(bookId).orElseThrow(NotFoundException::new),
+                                bookRepository.getBookAuthors(bookId),
+                                bookRepository.getBookOrders(bookId)
                                 )
                         )
                 );
