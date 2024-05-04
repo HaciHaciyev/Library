@@ -1,4 +1,4 @@
-package core.project.library.infrastructure.sql_mappers;
+package core.project.library.infrastructure.repositories.sql_mappers;
 
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;

@@ -5,14 +5,16 @@ import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Order;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.sql_mappers.RowToAuthor;
-import core.project.library.infrastructure.sql_mappers.RowToBook;
-import core.project.library.infrastructure.sql_mappers.RowToOrder;
-import core.project.library.infrastructure.sql_mappers.RowToPublisher;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToAuthor;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToPublisher;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import java.util.*;
 
+@Slf4j
 @Repository
 public class BookRepository {
 
@@ -26,11 +28,14 @@ public class BookRepository {
 
     private final Optional<RowToOrder> rowToOrder;
 
-    public BookRepository(JdbcTemplate jdbcTemplate,
-                          Optional<RowToBook> rowToBook,
-                          Optional<RowToPublisher> rowToPublisher,
-                          Optional<RowToAuthor> rowToAuthor,
+    public BookRepository(JdbcTemplate jdbcTemplate, Optional<RowToBook> rowToBook,
+                          Optional<RowToPublisher> rowToPublisher, Optional<RowToAuthor> rowToAuthor,
                           Optional<RowToOrder> rowToOrder) {
+        if (rowToBook.isEmpty()) log.info("RowToBook is empty.");
+        if (rowToPublisher.isEmpty()) log.info("RowToPublisher is empty.");
+        if (rowToAuthor.isEmpty()) log.info("RowToAuthor is empty.");
+        if (rowToOrder.isEmpty()) log.info("RowToOrder is empty.");
+
         this.jdbcTemplate = jdbcTemplate;
         this.rowToBook = rowToBook;
         this.rowToPublisher = rowToPublisher;

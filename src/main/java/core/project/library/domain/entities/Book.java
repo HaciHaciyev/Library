@@ -5,6 +5,7 @@ import core.project.library.domain.value_objects.Category;
 import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
 import core.project.library.domain.value_objects.Title;
+import core.project.library.infrastructure.exceptions.NotFoundException;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.math.BigDecimal;
@@ -116,13 +117,9 @@ public class Book {
     public static Book entityCollectorForBook(Book book, Publisher publisher,
                                               List<Optional<Author>> authors, List<Optional<Order>> orders) {
         Set<Author> authorSet = new HashSet<>();
-        for (Optional<Author> author : authors) {
-            authorSet.add(author.orElseThrow());
-        }
         Set<Order> orderSet = new HashSet<>();
-        for (Optional<Order> order : orders) {
-            orderSet.add(order.orElseThrow());
-        }
+        authors.forEach(author -> authorSet.add(author.orElseThrow(NotFoundException::new)));
+        orders.forEach(order -> orderSet.add(order.orElseThrow(NotFoundException::new)));
         return Book.builder()
                 .id(book.getId())
                 .title(book.getTitle())
