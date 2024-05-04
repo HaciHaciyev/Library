@@ -2,7 +2,6 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.mappers.BookMapper;
 import core.project.library.application.model.BookDTO;
-import core.project.library.domain.entities.Book;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.BookRepository;
 import org.springframework.http.HttpStatus;
@@ -29,13 +28,7 @@ public class BookController {
     public ResponseEntity<BookDTO> getBookById(@PathVariable("bookId") String bookId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(bookMapper.toDTO(Book.entityCollectorForBook(
-                                bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new),
-                                bookRepository.getBookPublisher(bookId).orElseThrow(NotFoundException::new),
-                                bookRepository.getBookAuthors(bookId),
-                                bookRepository.getBookOrders(bookId)
-                                )
-                        )
-                );
+                .body(bookMapper.toDTO(bookRepository.getBookById(bookId)
+                        .orElseThrow(NotFoundException::new)));
     }
 }
