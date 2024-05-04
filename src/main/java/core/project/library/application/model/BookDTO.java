@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
+//dasdada
 public record BookDTO(@NotNull Title title, @NotNull Description description, @NotNull ISBN isbn,
                       @NotNull BigDecimal price, @NotNull Integer quantityOnHand, @NotNull Category category) {
 }
