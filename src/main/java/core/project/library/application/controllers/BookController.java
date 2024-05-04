@@ -30,8 +30,16 @@ public class BookController {
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(
-                        Optional.ofNullable(bookRepository.get().getBookById(bookId)
-                                .orElseThrow(NotFoundException::new))
+                        Optional.ofNullable(
+                                Book.compound(
+                                        bookRepository.get().getBookById(bookId)
+                                                .orElseThrow(NotFoundException::new),
+                                        bookRepository.get().getBookPublisher(bookId)
+                                                .orElseThrow(NotFoundException::new),
+                                        bookRepository.get().getBookAuthors(bookId),
+                                        bookRepository.get().getBookOrders(bookId)
+                                )
+                        )
                 );
     }
 }
