@@ -14,10 +14,10 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 public class Order {
-    private @NotNull UUID id;
-    private @NotNull Integer countOfBooks;
-    private @NotNull TotalPrice totalPrice;
-    private @NotNull Events events;
+    private final @NotNull UUID id;
+    private final @NotNull Integer countOfBooks;
+    private final @NotNull TotalPrice totalPrice;
+    private final @NotNull Events events;
     private /**@ManyToOne*/ @Setter(AccessLevel.PROTECTED) Customer customer;
     private /**@ManyToMany*/ Set<Book> books;
 
