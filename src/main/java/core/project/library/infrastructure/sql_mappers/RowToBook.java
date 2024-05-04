@@ -17,7 +17,6 @@ import java.util.UUID;
 
 @Component
 public class RowToBook implements RowMapper<Book> {
-
     @Override
     public Book mapRow(ResultSet rs, int rowNum) throws SQLException {
         return Book.builder()

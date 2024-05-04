@@ -8,10 +8,7 @@ import core.project.library.domain.value_objects.Title;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter(AccessLevel.PRIVATE)
@@ -116,8 +113,28 @@ public class Book {
         System.out.println(getOrders());
     }
 
-    //TODO
-    public Book compound(Book book, Publisher publisher, List<Author> authors, List<Order> orders) {
-        return null;
+    public static Book compound(Book book, Publisher publisher,
+                                List<Optional<Author>> authors, List<Optional<Order>> orders) {
+        Set<Author> authorSet = new HashSet<>();
+        for (Optional<Author> author : authors) {
+            authorSet.add(author.orElseThrow());
+        }
+        Set<Order> orderSet = new HashSet<>();
+        for (Optional<Order> order : orders) {
+            orderSet.add(order.orElseThrow());
+        }
+        return Book.builder()
+                .id(book.getId())
+                .title(book.getTitle())
+                .description(book.getDescription())
+                .isbn(book.getIsbn())
+                .price(book.getPrice())
+                .quantityOnHand(book.getQuantityOnHand())
+                .category(book.getCategory())
+                .events(book.getEvents())
+                .publisher(publisher)
+                .authors(authorSet)
+                .orders(orderSet)
+                .build();
     }
 }
