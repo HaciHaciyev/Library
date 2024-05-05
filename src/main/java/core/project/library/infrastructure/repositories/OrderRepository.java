@@ -74,4 +74,15 @@ public class OrderRepository {
                         .build()
         );
     }
+
+    public List<Optional<Order>> getOrderByBookId(String bookId) {
+        List<UUID> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
+                UUID.class, bookId);
+
+        List<Optional<Order>> orders = new ArrayList<>();
+        uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
+                .queryForObject("Select * from Order_Line where id=?", rowToOrder.orElseThrow(), uuid)
+        )));
+        return orders;
+    }
 }
