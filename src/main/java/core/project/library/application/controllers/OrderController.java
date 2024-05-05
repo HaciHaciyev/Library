@@ -1,7 +1,7 @@
 package core.project.library.application.controllers;
 
 import core.project.library.domain.entities.Order;
-import core.project.library.infrastructure.repositories.OrderRepository;
+import core.project.library.infrastructure.services.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,16 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/library/order")
 public class OrderController {
 
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
-    public OrderController(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     @GetMapping("/getOrderById/{orderId}")
     public ResponseEntity<Order> getOrderById(@PathVariable("orderId") String orderId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(orderRepository.getOrderById(orderId).orElseThrow());
+                .body(orderService.getOrderById(orderId).orElseThrow());
     }
 }
