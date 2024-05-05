@@ -16,12 +16,12 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 public class Author {
-    private @NotNull UUID id;
-    private @NotNull FirstName firstName;
-    private @NotNull LastName lastName;
-    private @NotNull Email email;
-    private @NotNull Address address;
-    private @NotNull Events events;
+    private final @NotNull UUID id;
+    private final @NotNull FirstName firstName;
+    private final @NotNull LastName lastName;
+    private final @NotNull Email email;
+    private final @NotNull Address address;
+    private final @NotNull Events events;
     private /**@ManyToMany*/ Set<Book> books;
 
     @Override

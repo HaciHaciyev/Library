@@ -11,11 +11,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @org.springframework.stereotype.Repository
-public class Repository {
+public class BootstrapRepository {
 
     private final Optional<JdbcTemplate> jdbcTemplate;
 
-    public Repository(Optional<JdbcTemplate> jdbcTemplate) {
+    public BootstrapRepository(Optional<JdbcTemplate> jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

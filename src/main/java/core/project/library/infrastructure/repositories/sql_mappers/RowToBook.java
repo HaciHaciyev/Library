@@ -1,4 +1,4 @@
-package core.project.library.infrastructure.sql_mappers;
+package core.project.library.infrastructure.repositories.sql_mappers;
 
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.events.Events;
@@ -17,7 +17,6 @@ import java.util.UUID;
 
 @Component
 public class RowToBook implements RowMapper<Book> {
-
     @Override
     public Book mapRow(ResultSet rs, int rowNum) throws SQLException {
         return Book.builder()

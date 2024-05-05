@@ -8,24 +8,21 @@ import core.project.library.domain.value_objects.Title;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter(AccessLevel.PRIVATE)
 @Builder
 @AllArgsConstructor
 public class Book {
-    private @NotNull UUID id;
-    private @NotNull Title title;
-    private @NotNull Description description;
-    private @NotNull ISBN isbn;
-    private @NotNull BigDecimal price;
-    private @NotNull Integer quantityOnHand;
-    private @NotNull Category category;
-    private @NotNull Events events;
+    private final @NotNull UUID id;
+    private final @NotNull Title title;
+    private final @NotNull Description description;
+    private final @NotNull ISBN isbn;
+    private final @NotNull BigDecimal price;
+    private final @NotNull Integer quantityOnHand;
+    private final @NotNull Category category;
+    private final @NotNull Events events;
     private /**@ManyToOne*/ Publisher publisher;
     private /**@ManyToMany*/ Set<Author> authors;
     private /**@ManyToMany*/ Set<Order> orders;
@@ -114,10 +111,5 @@ public class Book {
 
     public void printOrders() {
         System.out.println(getOrders());
-    }
-
-    //TODO
-    public Book compound(Book book, Publisher publisher, List<Author> authors, List<Order> orders) {
-        return null;
     }
 }

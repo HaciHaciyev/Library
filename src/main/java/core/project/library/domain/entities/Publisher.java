@@ -16,12 +16,12 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 public class Publisher {
-    private @NotNull UUID id;
-    private @NotNull PublisherName publisherName;
-    private @NotNull Address address;
-    private @NotNull Phone phone;
-    private @NotNull Email email;
-    private @NotNull Events events;
+    private final @NotNull UUID id;
+    private final @NotNull PublisherName publisherName;
+    private final @NotNull Address address;
+    private final @NotNull Phone phone;
+    private final @NotNull Email email;
+    private final @NotNull Events events;
     private /**@OneToMany*/ Set<Book> books;
 
     @Override
