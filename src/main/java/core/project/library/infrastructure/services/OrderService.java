@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class OrderService {
 
     private final BookRepository bookRepository;
 
-    public Optional<Order> getOrderById(String orderId) {
+    public Optional<Order> getOrderById(UUID orderId) {
         return entityCollectorForOrder(
                 orderRepository.getOrderById(orderId).orElseThrow(NotFoundException::new),
                 customerRepository.getCustomerByOrderId(orderId).orElseThrow(NotFoundException::new),

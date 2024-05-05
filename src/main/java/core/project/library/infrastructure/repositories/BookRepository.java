@@ -27,13 +27,13 @@ public class BookRepository {
         this.rowToBook = rowToBook;
     }
 
-    public Optional<Book> getBookById(String bookId) {
+    public Optional<Book> getBookById(UUID bookId) {
         return Optional.ofNullable(jdbcTemplate
                 .queryForObject("Select * from Book where id=?", rowToBook.orElseThrow(), bookId)
         );
     }
 
-    public List<Book> getBooksByOrderId(String orderId) {
+    public List<Book> getBooksByOrderId(UUID orderId) {
         List<UUID> books_uuids = jdbcTemplate.queryForList(
                 "Select book_id from Book_Order where order_id=?", UUID.class, orderId
         );

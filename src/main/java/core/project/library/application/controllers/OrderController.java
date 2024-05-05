@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/library/order")
 public class OrderController {
@@ -20,7 +22,7 @@ public class OrderController {
     }
 
     @GetMapping("/getOrderById/{orderId}")
-    public ResponseEntity<Order> getOrderById(@PathVariable("orderId") String orderId) {
+    public ResponseEntity<Order> getOrderById(@PathVariable("orderId") UUID orderId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(orderService.getOrderById(orderId).orElseThrow());

@@ -19,7 +19,7 @@ public class CustomerRepository {
         this.rowToCustomer = rowToCustomer;
     }
 
-    public Optional<Customer> getCustomerByOrderId(String orderId) {
+    public Optional<Customer> getCustomerByOrderId(UUID orderId) {
         Optional<UUID> customerId = Optional.ofNullable(jdbcTemplate.queryForObject(
                 "Select customer_id from Customer_Order where order_id=?",
                 UUID.class, orderId
