@@ -61,7 +61,7 @@ public class BootstrapRepository {
                 .build();
 
         Order order = Order.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.fromString("a486f288-cec3-4205-b753-d4ddf2796f9a"))
                 .countOfBooks(1)
                 .totalPrice(new TotalPrice(new BigDecimal("12.99")))
                 .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
