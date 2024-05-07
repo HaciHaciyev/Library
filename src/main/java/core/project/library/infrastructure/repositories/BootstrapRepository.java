@@ -12,11 +12,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @org.springframework.stereotype.Repository
-public class Repository {
+public class BootstrapRepository {
 
     private final Optional<JdbcTemplate> jdbcTemplate;
 
-    public Repository(Optional<JdbcTemplate> jdbcTemplate) {
+    public BootstrapRepository(Optional<JdbcTemplate> jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -62,7 +62,7 @@ public class Repository {
                 .build();
 
         Order order = Order.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.fromString("a486f288-cec3-4205-b753-d4ddf2796f9a"))
                 .countOfBooks(1)
                 .totalPrice(new TotalPrice(new BigDecimal("12.99")))
                 .events(new Events(LocalDateTime.now(), LocalDateTime.now()))

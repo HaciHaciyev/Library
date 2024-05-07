@@ -1,0 +1,46 @@
+package core.project.library.infrastructure.repositories;
+
+import core.project.library.domain.entities.Order;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToCustomer;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.util.*;
+
+@Slf4j
+@Repository
+public class OrderRepository {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    private final Optional<RowToOrder> rowToOrder;
+
+    public OrderRepository(JdbcTemplate jdbcTemplate,
+                           Optional<RowToOrder> rowToOrder,
+                           Optional<RowToCustomer> rowToCustomer,
+                           Optional<RowToBook> rowToBook) {
+        if (rowToOrder.isEmpty()) log.info("RowToOrder is empty.");
+        this.jdbcTemplate = jdbcTemplate;
+        this.rowToOrder = rowToOrder;
+    }
+
+    public Optional<Order> getOrderById(String orderId) {
+        return Optional.ofNullable(jdbcTemplate.queryForObject(
+                "Select * from Order_Line where id=?", rowToOrder.orElseThrow(), orderId
+        ));
+    }
+
+    public List<Optional<Order>> getOrderByBookId(String bookId) {
+        List<UUID> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
+                UUID.class, bookId);
+
+        List<Optional<Order>> orders = new ArrayList<>();
+        uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
+                .queryForObject("Select * from Order_Line where id=?", rowToOrder.orElseThrow(), uuid)
+        )));
+        return orders;
+    }
+}
