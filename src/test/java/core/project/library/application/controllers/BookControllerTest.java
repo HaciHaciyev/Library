@@ -22,6 +22,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Optional;
 
+import java.util.UUID;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -80,5 +81,12 @@ class BookControllerTest {
                 .andReturn();
 
         log.info(mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void getNotFoundExceptionInBookIdEndpoint() throws Exception {
+        mockMvc.perform(get("/library/book/getBookById/" + UUID.randomUUID())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 }

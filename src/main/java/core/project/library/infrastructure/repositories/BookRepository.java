@@ -6,6 +6,7 @@ import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToPublisher;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,9 +36,13 @@ public class BookRepository {
     }
 
     public Optional<Book> getBookById(UUID bookId) {
-        return Optional.ofNullable(jdbcTemplate
-                .queryForObject("Select * from Book where id=?", rowToBook.orElseThrow(), bookId)
-        );
+        try {
+            return Optional.ofNullable(jdbcTemplate
+                    .queryForObject("Select * from Book where id=?", rowToBook.get(), bookId)
+            );
+        } catch (EmptyResultDataAccessException exception) {
+            return Optional.empty();
+        }
     }
 
     public List<Book> getBooksByOrderId(UUID orderId) {
