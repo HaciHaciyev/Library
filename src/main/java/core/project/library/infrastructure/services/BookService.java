@@ -1,9 +1,6 @@
 package core.project.library.infrastructure.services;
 
-import core.project.library.domain.entities.Author;
-import core.project.library.domain.entities.Book;
-import core.project.library.domain.entities.Order;
-import core.project.library.domain.entities.Publisher;
+import core.project.library.domain.entities.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.AuthorRepository;
 import core.project.library.infrastructure.repositories.BookRepository;
@@ -15,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
 
 @Slf4j
@@ -41,6 +37,16 @@ public class BookService {
                 publisherRepository.getPublisherByBookId(bookId).orElseThrow(NotFoundException::new),
                 authorRepository.getAuthorsByBookId(bookId),
                 orderRepository.getOrderByBookId(bookId)
+        );
+    }
+
+    public Optional<Book> findByName(String title) {
+        Book book = bookRepository.findByName(title).orElseThrow(NotFoundException::new);
+        return entityCollectorForBook(
+                book,
+                publisherRepository.getPublisherByBookId(book.getId()).orElseThrow(NotFoundException::new),
+                authorRepository.getAuthorsByBookId(book.getId()),
+                orderRepository.getOrderByBookId(book.getId())
         );
     }
 

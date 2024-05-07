@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +38,16 @@ public class BookRepository {
         try {
             return Optional.ofNullable(jdbcTemplate
                     .queryForObject("Select * from Book where id=?", rowToBook.get(), bookId)
+            );
+        } catch (EmptyResultDataAccessException exception) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Book> findByName(String title) {
+        try {
+            return Optional.ofNullable(jdbcTemplate
+                    .queryForObject("Select * from Book where title=?", rowToBook.get(), title)
             );
         } catch (EmptyResultDataAccessException exception) {
             return Optional.empty();

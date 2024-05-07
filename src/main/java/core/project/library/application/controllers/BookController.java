@@ -9,7 +9,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,6 +39,15 @@ public class BookController {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+    }
+
+    @GetMapping("/findByName/{title}")
+    public ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(entityMapper.get().toModel(
+                        bookService.findByName(title).orElseThrow(NotFoundException::new)
+                ));
     }
 
     @GetMapping("/page")

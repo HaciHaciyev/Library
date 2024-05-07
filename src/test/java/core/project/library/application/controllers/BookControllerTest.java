@@ -19,9 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
 import java.util.Optional;
-
 import java.util.UUID;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -86,6 +84,34 @@ class BookControllerTest {
     @Test
     void getNotFoundExceptionInBookIdEndpoint() throws Exception {
         mockMvc.perform(get("/library/book/getBookById/" + UUID.randomUUID())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getByTitle() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/library/book/findByName/Title")
+                                .accept(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.title.title", is("Title")))
+                .andExpect(jsonPath("$.description.description", is("Description")))
+                .andExpect(jsonPath("$.isbn.isbn", is("978-161-729-045-9")))
+                .andExpect(jsonPath("$.price", is(12.99)))
+                .andExpect(jsonPath("$.quantityOnHand", is(43)))
+                .andExpect(jsonPath("$.publisher.publisherName.publisherName", is("Publisher")))
+                .andExpect(jsonPath("$.authors[0].firstName.firstName", is("Author")))
+                .andExpect(jsonPath("$.authors[0].email.email", is("author@gmail.com")))
+                .andReturn();
+
+        log.info(mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    void getNotFoundExceptionInBookTitleEndpoint() throws Exception {
+        mockMvc.perform(get("/library/book/findByName/Doesn`t_Exists")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
