@@ -22,7 +22,7 @@ public class AuthorRepository {
         this.rowToAuthor = rowToAuthor;
     }
 
-    public List<Optional<Author>> getAuthorsByBookId(String bookId) {
+    public List<Optional<Author>> getAuthorsByBookId(UUID bookId) {
         List<UUID> uuids = jdbcTemplate.queryForList("Select author_id from Book_Author where book_id=?",
                 UUID.class, bookId);
 

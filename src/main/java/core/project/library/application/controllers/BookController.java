@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -28,7 +30,7 @@ public class BookController {
     }
 
     @GetMapping("/getBookById/{bookId}")
-    public ResponseEntity<?> getBookById(@PathVariable("bookId") String bookId) {
+    public ResponseEntity<?> getBookById(@PathVariable("bookId") UUID bookId) {
         Optional<?> responseBody;
         if (bookMapper.isPresent()) {
             responseBody = Optional.ofNullable(

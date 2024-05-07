@@ -9,7 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Repository
@@ -28,13 +31,13 @@ public class BookRepository {
         this.rowToBook = rowToBook;
     }
 
-    public Optional<Book> getBookById(String bookId) {
+    public Optional<Book> getBookById(UUID bookId) {
         return Optional.ofNullable(jdbcTemplate
                 .queryForObject("Select * from Book where id=?", rowToBook.orElseThrow(), bookId)
         );
     }
 
-    public List<Book> getBooksByOrderId(String orderId) {
+    public List<Book> getBooksByOrderId(UUID orderId) {
         List<UUID> books_uuids = jdbcTemplate.queryForList(
                 "Select book_id from Book_Order where order_id=?", UUID.class, orderId
         );

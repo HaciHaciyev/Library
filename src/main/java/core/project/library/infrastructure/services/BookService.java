@@ -12,10 +12,7 @@ import core.project.library.infrastructure.repositories.PublisherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +26,7 @@ public class BookService {
 
     private final OrderRepository orderRepository;
 
-    public Optional<Book> getBookById(String bookId) {
+    public Optional<Book> getBookById(UUID bookId) {
         return entityCollectorForBook(
                 bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new),
                 publisherRepository.getPublisherByBookId(bookId).orElseThrow(NotFoundException::new),
