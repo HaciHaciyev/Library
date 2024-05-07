@@ -1,12 +1,13 @@
 package core.project.library.domain.entities;
 
 import core.project.library.domain.events.Events;
-import core.project.library.domain.value_objects.Email;
-import core.project.library.domain.value_objects.FirstName;
-import core.project.library.domain.value_objects.LastName;
-import core.project.library.domain.value_objects.Password;
+import core.project.library.domain.value_objects.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -21,6 +22,7 @@ public class Customer {
     private @NotNull LastName lastName;
     private @NotNull Password password;
     private @NotNull Email email;
+    private @NotNull Address address;
     private @NotNull Events events;
     private /**@OneToMany*/ Set<Order> orders;
 
