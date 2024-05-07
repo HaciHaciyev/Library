@@ -5,6 +5,7 @@ import core.project.library.application.model.BookModel;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.BookService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,5 +40,12 @@ public class BookController {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+    }
+
+    @GetMapping("/page")
+    public Page<BookModel> listOfBooks(@RequestParam(required = false) Integer pageNumber,
+                                       @RequestParam(required = false) Integer pageSize) {
+        return bookService.listOfBooks(pageNumber, pageSize)
+                .map(entityMapper.get()::toModel);
     }
 }

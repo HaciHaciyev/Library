@@ -6,6 +6,9 @@ import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToPublisher;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -50,5 +53,16 @@ public class BookRepository {
             bookList.add(optional.orElseThrow());
         }
         return bookList;
+    }
+
+    public Page<Book> listOfBooks(Pageable pageable) {
+        String pageNumber = String.valueOf(pageable.getPageNumber());
+        String pageSize = String.valueOf(pageable.getPageSize());
+        List<Book> list = jdbcTemplate.query(
+                "Select * from Book Limit %s Offset %s".formatted(pageSize, pageNumber),
+                rowToBook.orElseThrow()
+        );
+
+        return new PageImpl<>(list, pageable, pageable.getPageSize());
     }
 }
