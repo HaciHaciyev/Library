@@ -1,6 +1,6 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.BookMapper;
+import core.project.library.application.mappers.EntityMapper;
 import core.project.library.infrastructure.repositories.AuthorRepository;
 import core.project.library.infrastructure.repositories.OrderRepository;
 import core.project.library.infrastructure.repositories.PublisherRepository;
@@ -19,9 +19,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
 import java.util.Optional;
+
 import static org.hamcrest.core.Is.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
@@ -32,7 +34,7 @@ class BookControllerTest {
     @Autowired
     BookController bookController;
     @Autowired
-    Optional<BookMapper> bookMapper;
+    Optional<EntityMapper> entityMapper;
     @Autowired
     PublisherRepository publisherRepository;
     @Autowired
