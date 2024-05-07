@@ -1,11 +1,11 @@
-package core.project.library.infrastructure.sql_mappers;
+package core.project.library.infrastructure.repositories.sql_mappers;
 
-import core.project.library.domain.entities.Publisher;
+import core.project.library.domain.entities.Author;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
-import core.project.library.domain.value_objects.Phone;
-import core.project.library.domain.value_objects.PublisherName;
+import core.project.library.domain.value_objects.FirstName;
+import core.project.library.domain.value_objects.LastName;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import java.sql.ResultSet;
@@ -15,22 +15,22 @@ import java.util.HashSet;
 import java.util.UUID;
 
 @Component
-public class RowToPublisher implements RowMapper<Publisher> {
+public class RowToAuthor implements RowMapper<Author> {
     @Override
-    public Publisher mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return Publisher.builder()
+    public Author mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return Author.builder()
                 .id(UUID.fromString(rs.getString("id")))
-                .publisherName(new PublisherName(rs.getString("publisher_name")))
+                .firstName(new FirstName(rs.getString("first_name")))
+                .lastName(new LastName(rs.getString("last_name")))
+                .email(new Email(rs.getString("email")))
                 .address(new Address(
                         rs.getString("state"),
                         rs.getString("city"),
                         rs.getString("street"),
                         rs.getString("home")
                 ))
-                .phone(new Phone(rs.getString("phone")))
-                .email(new Email(rs.getString("email")))
                 .events(new Events(
-                                rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
+                                rs.getObject("created_date", Timestamp.class).toLocalDateTime(),
                                 rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                         )
                 )
