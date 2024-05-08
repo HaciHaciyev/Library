@@ -5,7 +5,6 @@ import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,6 +28,20 @@ public class PublisherRepository {
         return Optional.ofNullable(jdbcTemplate
                 .queryForObject("Select * from Publisher where id=?",
                         rowToPublisher, publisherId.orElseThrow(NotFoundException::new))
+        );
+    }
+
+    public void savePublisher(Publisher publisher) {
+        jdbcTemplate.update("""
+        Insert into Publisher (id, publisher_name, state, city, street, home,
+                       phone, email, creation_date, last_modified_date)
+                       values (?,?,?,?,?,?,?,?,?,?)
+        """,
+                publisher.getId().toString(), publisher.getPublisherName().publisherName(),
+                publisher.getAddress().state(), publisher.getAddress().city(),
+                publisher.getAddress().street(), publisher.getAddress().home(),
+                publisher.getPhone().phoneNumber(), publisher.getEmail().email(),
+                publisher.getEvents().creation_date(), publisher.getEvents().last_update_date()
         );
     }
 }

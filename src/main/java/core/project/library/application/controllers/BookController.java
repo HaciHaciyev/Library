@@ -62,7 +62,7 @@ public class BookController {
 
     @PostMapping("/saveBook")
     public ResponseEntity saveBook(@RequestBody @Validated BookModel bookModel) {
-        // TODO for Nicat. Replace entityMapper.toEntity() with manual code.
+        // TODO for Nicat. Replace entityMapper.toEntity() with manual code. And validate to Publisher & Authors existing.
         Optional<Book> book = bookService
                 .saveBookAndPublisherWithAuthors(entityMapper.get().toEntity(bookModel));
 
