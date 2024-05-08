@@ -4,7 +4,6 @@ import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import org.springframework.jdbc.core.JdbcTemplate;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -16,7 +15,7 @@ public class BootstrapRepository {
 
     private final Optional<JdbcTemplate> jdbcTemplate;
 
-    public BootstrapRepository(Optional<JdbcTemplate> jdbcTemplate, PublisherRepository publisherRepository) {
+    public BootstrapRepository(Optional<JdbcTemplate> jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

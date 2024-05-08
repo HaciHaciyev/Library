@@ -36,7 +36,7 @@ public class OrderRepository {
         ));
     }
 
-    public List<Optional<Order>> getOrderByBookId(UUID bookId) {
+    public List<Optional<Order>> getOrdersByBookId(UUID bookId) {
         List<UUID> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
                 UUID.class, bookId);
 
