@@ -1,8 +1,6 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Order;
-import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
-import core.project.library.infrastructure.repositories.sql_mappers.RowToCustomer;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,7 +30,7 @@ public class OrderRepository {
         ));
     }
 
-    public List<Optional<Order>> getOrderByBookId(UUID bookId) {
+    public List<Optional<Order>> getOrdersByBookId(UUID bookId) {
         return jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
                 UUID.class, bookId)
                 .stream()
