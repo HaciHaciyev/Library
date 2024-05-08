@@ -23,13 +23,9 @@ public class BookRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final Optional<RowToBook> rowToBook;
+    private final RowToBook rowToBook;
 
-    public BookRepository(JdbcTemplate jdbcTemplate, Optional<RowToBook> rowToBook,
-                          Optional<RowToPublisher> rowToPublisher, Optional<RowToAuthor> rowToAuthor,
-                          Optional<RowToOrder> rowToOrder) {
-        if (rowToBook.isEmpty()) log.info("RowToBook is empty.");
-
+    public BookRepository(JdbcTemplate jdbcTemplate, RowToBook rowToBook) {
         this.jdbcTemplate = jdbcTemplate;
         this.rowToBook = rowToBook;
     }
@@ -37,7 +33,7 @@ public class BookRepository {
     public Optional<Book> getBookById(UUID bookId) {
         try {
             return Optional.ofNullable(jdbcTemplate
-                    .queryForObject("Select * from Book where id=?", rowToBook.get(), bookId)
+                    .queryForObject("Select * from Book where id=?", rowToBook, bookId)
             );
         } catch (EmptyResultDataAccessException exception) {
             return Optional.empty();
@@ -47,13 +43,13 @@ public class BookRepository {
     public Optional<Book> findByName(String title) {
         try {
             return Optional.ofNullable(jdbcTemplate
-                    .queryForObject("Select * from Book where title=?", rowToBook.get(), title)
+                    .queryForObject("Select * from Book where title=?", rowToBook, title)
             );
         } catch (EmptyResultDataAccessException exception) {
             return Optional.empty();
         }
     }
-
+    //TODO refactor this by StreamAPI
     public List<Book> getBooksByOrderId(UUID orderId) {
         List<UUID> books_uuids = jdbcTemplate.queryForList(
                 "Select book_id from Book_Order where order_id=?", UUID.class, orderId
@@ -62,10 +58,11 @@ public class BookRepository {
         List<Book> bookList = new ArrayList<>();
         for (UUID bookId : books_uuids) {
             Optional<Book> optional = Optional.ofNullable(jdbcTemplate
-                    .queryForObject("Select * from Book where id=?", rowToBook.orElseThrow(), bookId)
+                    .queryForObject("Select * from Book where id=?", rowToBook, bookId)
             );
             bookList.add(optional.orElseThrow());
         }
+
         return bookList;
     }
 
@@ -74,8 +71,7 @@ public class BookRepository {
         String pageSize = String.valueOf(pageable.getPageSize());
         List<Book> list = jdbcTemplate.query(
                 "Select * from Book Limit %s Offset %s".formatted(pageSize, pageNumber),
-                rowToBook.orElseThrow()
-        );
+                rowToBook);
 
         return new PageImpl<>(list, pageable, pageable.getPageSize());
     }

@@ -14,20 +14,17 @@ import java.util.UUID;
 @org.springframework.stereotype.Repository
 public class BootstrapRepository {
 
-    private final Optional<JdbcTemplate> jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    public BootstrapRepository(Optional<JdbcTemplate> jdbcTemplate, PublisherRepository publisherRepository) {
+    public BootstrapRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     public Integer count() {
-        return jdbcTemplate.map(jdbc -> jdbc.queryForObject("Select COUNT(id) from Book", Integer.class))
-                .orElse(-1);
+        return jdbcTemplate.queryForObject("Select COUNT(id) from Book", Integer.class);
     }
 
     public void bootstrap() {
-        if (jdbcTemplate.isEmpty()) return;
-
         Publisher publisher = Publisher.builder()
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher"))
@@ -175,7 +172,7 @@ public class BootstrapRepository {
     }
 
     private void saveBook(Book book) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Book (id, title, description, isbn, price,
                   quantity_on_hand, category, created_date, last_modified_date)
                   values (?,?,?,?,?,?,?,?,?)
@@ -187,7 +184,7 @@ public class BootstrapRepository {
     }
 
     private void saveAuthor(Author author) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Author (id, first_name, last_name, email,
                     state, city, street, home, created_date, last_modified_date)
                     values (?,?,?,?,?,?,?,?,?,?)
@@ -200,7 +197,7 @@ public class BootstrapRepository {
     }
 
     private void saveBook_Author(Book book, Author author) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Book_Author (id, book_id, author_id)
                     values (?,?,?)
         """,
@@ -211,7 +208,7 @@ public class BootstrapRepository {
     }
 
     private void savePublisher(Publisher publisher) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Publisher (id, publisher_name, state, city, street, home,
                        phone, email, creation_date, last_modified_date)
                        values (?,?,?,?,?,?,?,?,?,?)
@@ -225,7 +222,7 @@ public class BootstrapRepository {
     }
 
     private void saveBook_Publisher(Book book, Publisher publisher) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Book_Publisher (id, book_id, publisher_id)
                     values (?,?,?)
         """,
@@ -236,7 +233,7 @@ public class BootstrapRepository {
     }
 
     private void saveOrder(Order order) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Order_Line (id, count_of_book, total_price,
                         creation_date, last_modified_date)
                         values (?,?,?,?,?)
@@ -247,7 +244,7 @@ public class BootstrapRepository {
     }
 
     private void saveBook_Order(Book book, Order order) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Book_Order (id, book_id, order_id)
                     values (?,?,?)
         """,
@@ -258,7 +255,7 @@ public class BootstrapRepository {
     }
 
     private void saveCustomer(Customer customer) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Customer (id, first_name, last_name, email, password,
                       state, city, street, home,
                       creation_date, last_modified_date)
@@ -272,7 +269,7 @@ public class BootstrapRepository {
     }
 
     private void saveCustomer_Order(Order order, Customer customer) {
-        jdbcTemplate.get().update("""
+        jdbcTemplate.update("""
         Insert into Customer_Order (id, customer_id, order_id)
                     values (?,?,?)
         """,

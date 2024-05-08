@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,12 +21,11 @@ import java.util.UUID;
 @RequestMapping("/library/book")
 public class BookController {
 
-    private final Optional<EntityMapper> entityMapper;
+    private final EntityMapper entityMapper;
 
     private final BookService bookService;
 
-    public BookController(Optional<EntityMapper> entityMapper, BookService bookService) {
-        if (entityMapper.isEmpty()) log.info("mapper is empty. Now we cannot return a DTO object.");
+    public BookController(EntityMapper entityMapper, BookService bookService) {
         this.entityMapper = entityMapper;
         this.bookService = bookService;
     }
@@ -33,14 +33,9 @@ public class BookController {
     @GetMapping("/getBookById/{bookId}")
     public ResponseEntity<?> getBookById(@PathVariable("bookId") UUID bookId) {
         Optional<?> responseBody;
-        if (entityMapper.isPresent()) {
-            responseBody = Optional.ofNullable(
-                    entityMapper.get().toModel(bookService.getBookById(bookId).orElseThrow(NotFoundException::new))
-            );
-        } else {
-            responseBody = Optional.ofNullable(bookService.getBookById(bookId).orElseThrow(NotFoundException::new));
-        }
-
+        responseBody = Optional.ofNullable(
+                entityMapper.toModel(bookService.getBookById(bookId).orElseThrow(NotFoundException::new))
+        );
         return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
 
@@ -48,7 +43,7 @@ public class BookController {
     public ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(entityMapper.get().toModel(
+                .body(entityMapper.toModel(
                         bookService.findByName(title).orElseThrow(NotFoundException::new)
                 ));
     }
@@ -57,14 +52,14 @@ public class BookController {
     public Page<BookModel> listOfBooks(@RequestParam(required = false) Integer pageNumber,
                                        @RequestParam(required = false) Integer pageSize) {
         return bookService.listOfBooks(pageNumber, pageSize)
-                .map(entityMapper.get()::toModel);
+                .map(entityMapper::toModel);
     }
 
     @PostMapping("/saveBook")
     public ResponseEntity saveBook(@RequestBody @Validated BookModel bookModel) {
         // TODO for Nicat. Replace entityMapper.toEntity() with manual code.
         Optional<Book> book = bookService
-                .saveBookAndPublisherWithAuthors(entityMapper.get().toEntity(bookModel));
+                .saveBookAndPublisherWithAuthors(entityMapper.toEntity(bookModel));
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/library/book/getBookById/" + book.get().getId().toString());

@@ -11,15 +11,15 @@ import java.util.Optional;
 @Component
 public class Bootstrap implements CommandLineRunner {
 
-    private final Optional<BootstrapRepository> repository;
+    private final BootstrapRepository repository;
 
-    public Bootstrap(Optional<BootstrapRepository> repository) {
+    public Bootstrap(BootstrapRepository repository) {
         this.repository = repository;
     }
 
     @Override
     public void run(String... args) throws Exception {
         log.info("Bootstrap is completed. Basic values in database.");
-        repository.filter(repo -> repo.count() < 1).ifPresent(BootstrapRepository::bootstrap);
+        if (repository.count() < 1) repository.bootstrap();
     }
 }

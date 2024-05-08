@@ -18,20 +18,17 @@ public class OrderRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final Optional<RowToOrder> rowToOrder;
+    private final RowToOrder rowToOrder;
 
     public OrderRepository(JdbcTemplate jdbcTemplate,
-                           Optional<RowToOrder> rowToOrder,
-                           Optional<RowToCustomer> rowToCustomer,
-                           Optional<RowToBook> rowToBook) {
-        if (rowToOrder.isEmpty()) log.info("RowToOrder is empty.");
+                           RowToOrder rowToOrder) {
         this.jdbcTemplate = jdbcTemplate;
         this.rowToOrder = rowToOrder;
     }
 
     public Optional<Order> getOrderById(UUID orderId) {
         return Optional.ofNullable(jdbcTemplate.queryForObject(
-                "Select * from Order_Line where id=?", rowToOrder.orElseThrow(), orderId
+                "Select * from Order_Line where id=?", rowToOrder, orderId
         ));
     }
 
@@ -45,6 +42,6 @@ public class OrderRepository {
 
     private Optional<Order> UUIDToOrder(UUID uuid) {
         return Optional.ofNullable(jdbcTemplate.queryForObject("Select * from Order_Line where id=?",
-                rowToOrder.orElseThrow(), uuid));
+                rowToOrder, uuid));
     }
 }

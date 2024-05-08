@@ -29,8 +29,6 @@ public class BookService {
 
     private final AuthorRepository authorRepository;
 
-    private final OrderRepository orderRepository;
-
     public Optional<Book> getBookById(UUID bookId) {
         return entityCollectorForBook(
                 bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new),
