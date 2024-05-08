@@ -2,12 +2,15 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.BookModel;
+import core.project.library.domain.entities.Book;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.BookService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,5 +58,16 @@ public class BookController {
                                        @RequestParam(required = false) Integer pageSize) {
         return bookService.listOfBooks(pageNumber, pageSize)
                 .map(entityMapper.get()::toModel);
+    }
+
+    @PostMapping("/saveBook")
+    public ResponseEntity saveBook(@RequestBody @Validated BookModel bookModel) {
+        // TODO for Nicat. Replace entityMapper.toEntity() with manual code.
+        Optional<Book> book = bookService
+                .saveBookAndPublisherWithAuthors(entityMapper.get().toEntity(bookModel));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Location", "/library/book/getBookById/" + book.get().getId().toString());
+        return new ResponseEntity(headers, HttpStatus.CREATED);
     }
 }

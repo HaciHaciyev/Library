@@ -35,18 +35,15 @@ public class BookService {
         return entityCollectorForBook(
                 bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new),
                 publisherRepository.getPublisherByBookId(bookId).orElseThrow(NotFoundException::new),
-                authorRepository.getAuthorsByBookId(bookId),
-                orderRepository.getOrderByBookId(bookId)
+                authorRepository.getAuthorsByBookId(bookId)
         );
     }
 
     public Optional<Book> findByName(String title) {
         Book book = bookRepository.findByName(title).orElseThrow(NotFoundException::new);
-        return entityCollectorForBook(
-                book,
+        return entityCollectorForBook(book,
                 publisherRepository.getPublisherByBookId(book.getId()).orElseThrow(NotFoundException::new),
-                authorRepository.getAuthorsByBookId(book.getId()),
-                orderRepository.getOrderByBookId(book.getId())
+                authorRepository.getAuthorsByBookId(book.getId())
         );
     }
 
@@ -63,6 +60,11 @@ public class BookService {
             }
         }
         return bookPage;
+    }
+
+    public Optional<Book> saveBookAndPublisherWithAuthors(Book book) {
+        Book savedBook = bookRepository.saveBook(book);
+        return Optional.ofNullable(savedBook);
     }
 
     private PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
@@ -91,13 +93,9 @@ public class BookService {
     }
 
     private static Optional<Book> entityCollectorForBook(
-            Book book, Publisher publisher,
-            List<Optional<Author>> authors, List<Optional<Order>> orders) {
-
+            Book book, Publisher publisher, List<Optional<Author>> authors) {
         Set<Author> authorSet = new HashSet<>();
-        Set<Order> orderSet = new HashSet<>();
         authors.forEach(author -> authorSet.add(author.orElseThrow(NotFoundException::new)));
-        orders.forEach(order -> orderSet.add(order.orElseThrow(NotFoundException::new)));
 
         return Optional.ofNullable(Book.builder()
                 .id(book.getId())
@@ -110,7 +108,7 @@ public class BookService {
                 .events(book.getEvents())
                 .publisher(publisher)
                 .authors(authorSet)
-                .orders(orderSet)
+                .orders(new HashSet<>())
                 .build());
     }
 }

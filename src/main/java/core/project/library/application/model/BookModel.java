@@ -5,7 +5,6 @@ import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
 import core.project.library.domain.value_objects.Title;
 import jakarta.validation.constraints.NotNull;
-
 import java.math.BigDecimal;
 import java.util.Set;
 

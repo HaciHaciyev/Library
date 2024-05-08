@@ -1,6 +1,7 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Book;
+import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToAuthor;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
@@ -12,10 +13,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Slf4j
 @Repository
@@ -78,5 +78,32 @@ public class BookRepository {
         );
 
         return new PageImpl<>(list, pageable, pageable.getPageSize());
+    }
+
+    public Book saveBook(Book book) {
+        Book bookForSave = Book.builder()
+                .id(UUID.randomUUID())
+                .title(book.getTitle())
+                .description(book.getDescription())
+                .isbn(book.getIsbn())
+                .price(book.getPrice())
+                .quantityOnHand(book.getQuantityOnHand())
+                .category(book.getCategory())
+                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .publisher(book.getPublisher())
+                .authors(book.getAuthors())
+                .orders(new HashSet<>())
+                .build();
+
+        jdbcTemplate.update("""
+        Insert into Book (id, title, description, isbn, price,
+                  quantity_on_hand, category, created_date, last_modified_date)
+                  values (?,?,?,?,?,?,?,?,?)
+        """,
+                bookForSave.getId().toString(), bookForSave.getTitle().title(), bookForSave.getDescription().description(),
+                bookForSave.getIsbn().isbn(), bookForSave.getPrice(), bookForSave.getQuantityOnHand(), bookForSave.getCategory().toString(),
+                bookForSave.getEvents().creation_date(), bookForSave.getEvents().last_update_date()
+        );
+        return bookForSave;
     }
 }
