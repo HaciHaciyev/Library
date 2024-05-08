@@ -1,11 +1,14 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Order;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
+import core.project.library.infrastructure.repositories.sql_mappers.RowToCustomer;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,16 +33,14 @@ public class OrderRepository {
         ));
     }
 
-    public List<Optional<Order>> getOrdersByBookId(UUID bookId) {
-        return jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
-                UUID.class, bookId)
-                .stream()
-                .map(this::UUIDToOrder)
-                .toList();
-    }
+    public List<Optional<Order>> getOrderByBookId(UUID bookId) {
+        List<UUID> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
+                UUID.class, bookId);
 
-    private Optional<Order> UUIDToOrder(UUID uuid) {
-        return Optional.ofNullable(jdbcTemplate.queryForObject("Select * from Order_Line where id=?",
-                rowToOrder, uuid));
+        List<Optional<Order>> orders = new ArrayList<>();
+        uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
+                .queryForObject("Select * from Order_Line where id=?", rowToOrder, uuid)
+        )));
+        return orders;
     }
 }
