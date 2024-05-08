@@ -77,29 +77,15 @@ public class BookRepository {
     }
 
     public Book saveBook(Book book) {
-        Book bookForSave = Book.builder()
-                .id(UUID.randomUUID())
-                .title(book.getTitle())
-                .description(book.getDescription())
-                .isbn(book.getIsbn())
-                .price(book.getPrice())
-                .quantityOnHand(book.getQuantityOnHand())
-                .category(book.getCategory())
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
-                .publisher(book.getPublisher())
-                .authors(book.getAuthors())
-                .orders(new HashSet<>())
-                .build();
-
         jdbcTemplate.update("""
         Insert into Book (id, title, description, isbn, price,
                   quantity_on_hand, category, created_date, last_modified_date)
                   values (?,?,?,?,?,?,?,?,?)
         """,
-                bookForSave.getId().toString(), bookForSave.getTitle().title(), bookForSave.getDescription().description(),
-                bookForSave.getIsbn().isbn(), bookForSave.getPrice(), bookForSave.getQuantityOnHand(), bookForSave.getCategory().toString(),
-                bookForSave.getEvents().creation_date(), bookForSave.getEvents().last_update_date()
+                book.getId().toString(), book.getTitle().title(), book.getDescription().description(),
+                book.getIsbn().isbn(), book.getPrice(), book.getQuantityOnHand(), book.getCategory().toString(),
+                book.getEvents().creation_date(), book.getEvents().last_update_date()
         );
-        return bookForSave;
+        return book;
     }
 }
