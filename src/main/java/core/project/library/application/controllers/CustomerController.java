@@ -6,10 +6,9 @@ import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.CustomerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -31,5 +30,15 @@ public class CustomerController {
                 .status(HttpStatus.OK)
                 .body(entityMapper.toModel(
                         customerService.getCustomerById(customerId).orElseThrow(NotFoundException::new)));
+    }
+
+    @PostMapping("/addBookToCustomer/{customerId}")
+    public ResponseEntity<CustomerModel> addBookToCustomerAccount(@PathVariable UUID customerId,
+                                                                  @RequestBody List<UUID> book_uuids) {
+        return ResponseEntity.
+                status(HttpStatus.OK)
+                .body(entityMapper.toModel(
+                        customerService.addBookToCustomer(customerId, book_uuids).orElseThrow(NotFoundException::new)
+                ));
     }
 }

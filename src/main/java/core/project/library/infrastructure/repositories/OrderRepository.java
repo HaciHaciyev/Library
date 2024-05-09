@@ -1,8 +1,6 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Order;
-import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
-import core.project.library.infrastructure.repositories.sql_mappers.RowToCustomer;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -50,8 +48,20 @@ public class OrderRepository {
 
         List<Optional<Order>> orders = new ArrayList<>();
         uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
-                .queryForObject("Select * from Order_Line where id=?", rowToOrder.orElseThrow(), uuid)
+                .queryForObject("Select * from Order_Line where id=?", rowToOrder, uuid)
         )));
         return orders;
+    }
+
+    public Optional<Order> saveOrder(Order order) {
+        jdbcTemplate.update("""
+        Insert into Order_Line (id, count_of_book, total_price,
+                        creation_date, last_modified_date)
+                        values (?,?,?,?,?)
+        """,
+                order.getId().toString(), order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
+                order.getEvents().creation_date(), order.getEvents().last_update_date()
+        );
+        return Optional.of(order);
     }
 }

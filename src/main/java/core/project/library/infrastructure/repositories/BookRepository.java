@@ -2,12 +2,10 @@ package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
+import core.project.library.domain.entities.Order;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
-import core.project.library.infrastructure.repositories.sql_mappers.RowToAuthor;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
-import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
-import core.project.library.infrastructure.repositories.sql_mappers.RowToPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -15,6 +13,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -124,5 +123,15 @@ public class BookRepository {
                 savedBook.getId().toString(),
                 savedAuthor.getId().toString()
         );
+    }
+
+    public void saveBook_Order(Book existingBook, Order existingOrder) {
+       jdbcTemplate.update("""
+       Insert into Book_Order (id, book_id, order_id)
+                   values (?,?,?)
+       """,
+                UUID.randomUUID().toString(),
+                existingBook.getId().toString(),
+                existingOrder.getId().toString());
     }
 }
