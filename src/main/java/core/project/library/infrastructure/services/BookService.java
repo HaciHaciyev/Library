@@ -61,8 +61,18 @@ public class BookService {
     }
 
     public Optional<Book> saveBookAndPublisherWithAuthors(Book book) {
-        Book savedBook = bookRepository.saveBook(book);
-        return Optional.ofNullable(savedBook);
+        Optional<Book> savedBook = bookRepository.saveBook(book);
+
+        Optional<Publisher> savedPublisher = publisherRepository.savePublisher(book.getPublisher());
+        bookRepository.saveBook_Publisher(savedBook.orElseThrow(), savedPublisher.orElseThrow());
+
+        Set<Author> authorsForSave = book.getAuthors();
+        for (Author authorForSave : authorsForSave) {
+            Optional<Author> savedAuthor = authorRepository.saveAuthor(authorForSave);
+            bookRepository.saveBook_Author(savedBook.orElseThrow(), savedAuthor.orElseThrow());
+        }
+
+        return savedBook;
     }
 
     private PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {

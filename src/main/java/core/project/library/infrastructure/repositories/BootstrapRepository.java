@@ -4,7 +4,6 @@ import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import org.springframework.jdbc.core.JdbcTemplate;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -67,7 +66,7 @@ public class BootstrapRepository {
                 .build();
 
         Customer customer = Customer.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.fromString("58e9909b-742f-4cd0-b1a1-0e8689d0fcfd"))
                 .firstName(new FirstName("Customer"))
                 .lastName(new LastName("Customerovich"))
                 .password(new Password("password"))

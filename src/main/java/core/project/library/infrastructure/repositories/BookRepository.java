@@ -1,6 +1,8 @@
 package core.project.library.infrastructure.repositories;
 
+import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
+import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToAuthor;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
@@ -13,7 +15,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -76,7 +77,7 @@ public class BookRepository {
         return new PageImpl<>(list, pageable, pageable.getPageSize());
     }
 
-    public Book saveBook(Book book) {
+    public Optional<Book> saveBook(Book book) {
         Book bookForSave = Book.builder()
                 .id(UUID.randomUUID())
                 .title(book.getTitle())
@@ -84,8 +85,8 @@ public class BookRepository {
                 .isbn(book.getIsbn())
                 .price(book.getPrice())
                 .quantityOnHand(book.getQuantityOnHand())
-                .category(book.getCategory())
                 .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .category(book.getCategory())
                 .publisher(book.getPublisher())
                 .authors(book.getAuthors())
                 .orders(new HashSet<>())
@@ -100,6 +101,28 @@ public class BookRepository {
                 bookForSave.getIsbn().isbn(), bookForSave.getPrice(), bookForSave.getQuantityOnHand(), bookForSave.getCategory().toString(),
                 bookForSave.getEvents().creation_date(), bookForSave.getEvents().last_update_date()
         );
-        return bookForSave;
+        return Optional.of(bookForSave);
+    }
+
+    public void saveBook_Publisher(Book savedBook, Publisher savedPublisher) {
+        jdbcTemplate.update("""
+        Insert into Book_Publisher (id, book_id, publisher_id)
+                    values (?,?,?)
+        """,
+                UUID.randomUUID().toString(),
+                savedBook.getId().toString(),
+                savedPublisher.getId().toString()
+        );
+    }
+
+    public void saveBook_Author(Book savedBook, Author savedAuthor) {
+        jdbcTemplate.update("""
+        Insert into Book_Author (id, book_id, author_id)
+                    values (?,?,?)
+        """,
+                UUID.randomUUID().toString(),
+                savedBook.getId().toString(),
+                savedAuthor.getId().toString()
+        );
     }
 }

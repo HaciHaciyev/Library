@@ -1,14 +1,12 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Author;
+import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToAuthor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Repository
 public class AuthorRepository {
@@ -32,4 +30,31 @@ public class AuthorRepository {
 
         return authors;
     }
+
+    public Optional<Author> saveAuthor(Author author) {
+        Author authorForSave = Author.builder()
+                .id(UUID.randomUUID())
+                .firstName(author.getFirstName())
+                .lastName(author.getLastName())
+                .email(author.getEmail())
+                .address(author.getAddress())
+                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .books(new HashSet<>())
+                .build();
+
+        jdbcTemplate.update("""
+        Insert into Author (id, first_name, last_name, email,
+                    state, city, street, home, created_date, last_modified_date)
+                    values (?,?,?,?,?,?,?,?,?,?)
+        """,
+                authorForSave.getId().toString(), authorForSave.getFirstName().firstName(),
+                authorForSave.getLastName().lastName(), authorForSave.getEmail().email(),
+                authorForSave.getAddress().state(), authorForSave.getAddress().city(),
+                authorForSave.getAddress().street(), authorForSave.getAddress().home(),
+                authorForSave.getEvents().creation_date(), authorForSave.getEvents().last_update_date()
+        );
+
+        return Optional.of(authorForSave);
+    }
+
 }
