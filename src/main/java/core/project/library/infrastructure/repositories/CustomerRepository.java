@@ -1,6 +1,7 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Customer;
+import core.project.library.domain.entities.Order;
 import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToCustomer;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,16 @@ public class CustomerRepository {
         return Optional.ofNullable(jdbcTemplate.queryForObject(
                 "Select * from Customer where id=?", rowToCustomer, customerId.orElseThrow()
         ));
+    }
+
+    public void saveCustomer_Order(Customer existingCustomer, Order existingOrder) {
+        jdbcTemplate.update("""
+       Insert into Customer_Order (id, customer_id, order_id)
+                   values (?,?,?)
+       """,
+                UUID.randomUUID().toString(),
+                existingCustomer.getId().toString(),
+                existingOrder.getId().toString());
     }
 
     public Optional<Customer> saveCustomer(Customer customer) {

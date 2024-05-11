@@ -8,6 +8,7 @@ import core.project.library.domain.value_objects.LastName;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -65,9 +66,5 @@ public class Author {
                 """, id.toString(), firstName.firstName(), lastName.lastName(),
                 email.email(), address.state(), address.city(), address.street(), address.home(),
                 events.creation_date().toString(), events.last_update_date().toString());
-    }
-
-    public void printBooks() {
-        System.out.println(getBooks());
     }
 }

@@ -5,8 +5,8 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -72,25 +72,25 @@ public class DomainTest {
         book.addOrder(order);
 
         System.out.println("Book: " + book);
-        book.printPublisher();
-        book.printAuthors();
-        book.printOrders();
+        System.out.println(book.getPublisher());
+        System.out.println(book.getAuthors());
+        System.out.println(book.getOrders());
         System.out.println("--------------------------------------------------------------------------------------------");
 
         System.out.println("Publisher: " + publisher);
-        publisher.printBooks();
+        System.out.println(publisher.getBooks());
         System.out.println("--------------------------------------------------------------------------------------------");
 
         System.out.println("Author: " + author);
-        author.printBooks();
+        System.out.println(author.getBooks());
         System.out.println("--------------------------------------------------------------------------------------------");
 
         System.out.println("Order: " + order);
-        order.printCustomer();
-        order.printBooks();
+        System.out.println(order.getCustomer());
+        System.out.println(order.getBooks());
         System.out.println("--------------------------------------------------------------------------------------------");
 
         System.out.println("Customer: " + customer);
-        customer.printOrders();
+        System.out.println(customer.getOrders());
     }
 }

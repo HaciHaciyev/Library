@@ -2,6 +2,7 @@ package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
+import core.project.library.domain.entities.Order;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
@@ -12,7 +13,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import java.time.LocalDateTime;
+
 import java.util.*;
 
 @Slf4j
@@ -47,7 +48,7 @@ public class BookRepository {
             return Optional.empty();
         }
     }
-    //TODO refactor this by StreamAPI
+
     public List<Book> getBooksByOrderId(UUID orderId) {
         List<UUID> books_uuids = jdbcTemplate.queryForList(
                 "Select book_id from Book_Order where order_id=?", UUID.class, orderId
@@ -121,5 +122,15 @@ public class BookRepository {
                 savedBook.getId().toString(),
                 savedAuthor.getId().toString()
         );
+    }
+
+    public void saveBook_Order(Book existingBook, Order existingOrder) {
+        jdbcTemplate.update("""
+       Insert into Book_Order (id, book_id, order_id)
+                   values (?,?,?)
+       """,
+                UUID.randomUUID().toString(),
+                existingBook.getId().toString(),
+                existingOrder.getId().toString());
     }
 }

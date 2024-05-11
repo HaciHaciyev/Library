@@ -56,12 +56,4 @@ public class Order {
                 """, id.toString(), countOfBooks, totalPrice.totalPrice(),
                 events.creation_date().toString(), events.last_update_date().toString());
     }
-
-    public void printCustomer() {
-        System.out.println(getCustomer());
-    }
-
-    public void printBooks() {
-        System.out.println(getBooks());
-    }
 }

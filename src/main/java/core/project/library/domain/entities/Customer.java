@@ -86,8 +86,4 @@ public class Customer {
                 password.password(), email.email(),
                 events.creation_date().toString(), events.last_update_date().toString());
     }
-
-    public void printOrders() {
-        System.out.println(getOrders());
-    }
 }

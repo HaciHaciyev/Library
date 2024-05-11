@@ -1,6 +1,7 @@
 package core.project.library.application.controllers;
 
 import core.project.library.domain.entities.Order;
+import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,6 @@ public class OrderController {
     public ResponseEntity<Order> getOrderById(@PathVariable("orderId") UUID orderId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(orderService.getOrderById(orderId).orElseThrow());
+                .body(orderService.getOrderById(orderId).orElseThrow(NotFoundException::new));
     }
 }
