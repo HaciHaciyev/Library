@@ -148,7 +148,7 @@ class BookControllerTest {
                 .address(new Address("State", "City", "Street", "Home"))
                 .phone(new Phone("11122-333-44-55"))
                 .email(new Email("email@gmail.com"))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 
@@ -158,7 +158,7 @@ class BookControllerTest {
                 .lastName(new LastName("Authorovich"))
                 .email(new Email("author@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 
@@ -169,7 +169,7 @@ class BookControllerTest {
                 .isbn(new ISBN("978-161-729-045-9"))
                 .price(new BigDecimal("12.99"))
                 .quantityOnHand(43)
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .category(Category.Adventure)
                 .authors(new HashSet<>())
                 .orders(new HashSet<>())

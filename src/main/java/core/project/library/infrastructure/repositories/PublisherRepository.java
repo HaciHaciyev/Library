@@ -41,7 +41,7 @@ public class PublisherRepository {
                 .address(publisher.getAddress())
                 .phone(publisher.getPhone())
                 .email(publisher.getEmail())
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 

@@ -85,7 +85,7 @@ public class BookRepository {
                 .isbn(book.getIsbn())
                 .price(book.getPrice())
                 .quantityOnHand(book.getQuantityOnHand())
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .category(book.getCategory())
                 .publisher(book.getPublisher())
                 .authors(book.getAuthors())

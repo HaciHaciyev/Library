@@ -6,6 +6,7 @@ import core.project.library.application.model.PublisherDTO;
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
+import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.BookService;
 import lombok.extern.slf4j.Slf4j;
@@ -105,9 +106,9 @@ public class BookController {
                 .price(bookModel.price())
                 .quantityOnHand(bookModel.quantityOnHand())
                 .category(bookModel.category())
-                .events(null)
                 .publisher(publisher)
                 .authors(authors)
+                .events(new Events())
                 .orders(new HashSet<>())
                 .build();
     }
