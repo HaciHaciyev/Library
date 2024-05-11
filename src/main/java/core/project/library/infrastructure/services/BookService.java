@@ -50,15 +50,10 @@ public class BookService {
     public Page<Book> listOfBooks(Integer pageNumber, Integer pageSize) {
         PageRequest pageRequest = buildPageRequest(pageNumber, pageSize);
         Page<Book> bookPage = bookRepository.listOfBooks(pageRequest);
-        for (Book currentBook : bookPage) {
-            Optional<Publisher> currentPublisher = publisherRepository.getPublisherByBookId(currentBook.getId());
-            currentBook.addPublisher(currentPublisher.orElseThrow());
-
-            List<Optional<Author>> currentAuthors = authorRepository.getAuthorsByBookId(currentBook.getId());
-            for (Optional<Author> optionalAuthor : currentAuthors) {
-                currentBook.addAuthor(optionalAuthor.get());
-            }
-        }
+        bookPage.forEach(book -> {
+            book.addPublisher(publisherRepository.getPublisherByBookId(book.getId()).orElseThrow());
+            authorRepository.getAuthorsByBookId(book.getId()).forEach(author -> book.addAuthor(author.orElseThrow()));
+        });
         return bookPage;
     }
 
