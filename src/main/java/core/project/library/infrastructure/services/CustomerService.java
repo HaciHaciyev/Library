@@ -42,4 +42,8 @@ public class CustomerService {
                 .orders(orderSet)
                 .build());
     }
+
+    public Optional<Customer> saveCustomer(Customer customer) {
+        return customerRepository.saveCustomer(customer);
+    }
 }
