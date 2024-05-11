@@ -5,24 +5,26 @@ import core.project.library.domain.value_objects.Category;
 import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
 import core.project.library.domain.value_objects.Title;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
 import java.math.BigDecimal;
 import java.util.*;
 
 @Getter
 @Setter(AccessLevel.PRIVATE)
 @Builder
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Book {
     private final @NotNull UUID id;
-    private final @NotNull Title title;
-    private final @NotNull Description description;
-    private final @NotNull ISBN isbn;
+    private final @NotNull @Valid Title title;
+    private final @NotNull @Valid Description description;
+    private final @NotNull @Valid ISBN isbn;
     private final @NotNull BigDecimal price;
     private final @NotNull Integer quantityOnHand;
     private final @NotNull Category category;
-    private final @NotNull Events events;
+    private final @NotNull @Valid Events events;
     private /**@ManyToOne*/ Publisher publisher;
     private /**@ManyToMany*/ Set<Author> authors;
     private /**@ManyToMany*/ Set<Order> orders;

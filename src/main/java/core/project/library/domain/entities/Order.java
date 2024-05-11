@@ -2,6 +2,7 @@ package core.project.library.domain.entities;
 
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.TotalPrice;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -12,12 +13,12 @@ import java.util.UUID;
 @Getter
 @Setter(AccessLevel.PRIVATE)
 @Builder
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Order {
     private final @NotNull UUID id;
     private final @NotNull Integer countOfBooks;
     private final @NotNull TotalPrice totalPrice;
-    private final @NotNull Events events;
+    private final @NotNull @Valid Events events;
     private /**@ManyToOne*/ @Setter(AccessLevel.PROTECTED) Customer customer;
     private /**@ManyToMany*/ Set<Book> books;
 

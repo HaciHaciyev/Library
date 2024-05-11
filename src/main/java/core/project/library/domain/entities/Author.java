@@ -5,6 +5,7 @@ import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.FirstName;
 import core.project.library.domain.value_objects.LastName;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.util.Objects;
@@ -14,14 +15,14 @@ import java.util.UUID;
 @Getter
 @Setter(AccessLevel.PRIVATE)
 @Builder
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Author {
     private final @NotNull UUID id;
-    private final @NotNull FirstName firstName;
-    private final @NotNull LastName lastName;
-    private final @NotNull Email email;
-    private final @NotNull Address address;
-    private final @NotNull Events events;
+    private final @NotNull @Valid FirstName firstName;
+    private final @NotNull @Valid LastName lastName;
+    private final @NotNull @Valid Email email;
+    private final @NotNull @Valid Address address;
+    private final @NotNull @Valid Events events;
     private /**@ManyToMany*/ Set<Book> books;
 
     @Override
