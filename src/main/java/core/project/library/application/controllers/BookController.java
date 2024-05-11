@@ -64,7 +64,7 @@ public class BookController {
 
     @PostMapping("/saveBook")
     public ResponseEntity saveBook(@RequestBody @Validated BookModel bookModel) {
-        Book bookEntity = modelToEntity(bookModel);
+        Book bookEntity = Book.from(bookModel);
         Optional<Book> book = bookService
                 .saveBookAndPublisherWithAuthors(bookEntity);
 
@@ -73,43 +73,4 @@ public class BookController {
         return new ResponseEntity(headers, HttpStatus.CREATED);
     }
 
-    private Book modelToEntity(BookModel bookModel) {
-        PublisherDTO publisherDTO = bookModel.publisher();
-        Publisher publisher = Publisher.builder()
-                .id(UUID.randomUUID())
-                .publisherName(publisherDTO.publisherName())
-                .address(publisherDTO.address())
-                .phone(publisherDTO.phone())
-                .email(publisherDTO.email())
-                .events(null)
-                .books(new HashSet<>())
-                .build();
-
-        Set<Author> authors = bookModel.authors()
-                .stream()
-                .map(authorDTO -> Author.builder()
-                        .id(UUID.randomUUID())
-                        .firstName(authorDTO.firstName())
-                        .lastName(authorDTO.lastName())
-                        .email(authorDTO.email())
-                        .address(authorDTO.address())
-                        .events(null)
-                        .books(new HashSet<>())
-                        .build()).collect(Collectors.toSet());
-
-
-        return Book.builder()
-                .id(UUID.randomUUID())
-                .title(bookModel.title())
-                .description(bookModel.description())
-                .isbn(bookModel.isbn())
-                .price(bookModel.price())
-                .quantityOnHand(bookModel.quantityOnHand())
-                .category(bookModel.category())
-                .publisher(publisher)
-                .authors(authors)
-                .events(new Events())
-                .orders(new HashSet<>())
-                .build();
-    }
 }

@@ -1,16 +1,21 @@
 package core.project.library.domain.entities;
 
+import core.project.library.application.model.BookModel;
+import core.project.library.application.model.PublisherDTO;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.Category;
 import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
 import core.project.library.domain.value_objects.Title;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter(AccessLevel.PRIVATE)
@@ -28,6 +33,46 @@ public class Book {
     private /**@ManyToOne*/ Publisher publisher;
     private /**@ManyToMany*/ Set<Author> authors;
     private /**@ManyToMany*/ Set<Order> orders;
+
+    public static Book from(BookModel bookModel) {
+        PublisherDTO publisherDTO = bookModel.publisher();
+        Publisher publisher = Publisher.builder()
+                .id(UUID.randomUUID())
+                .publisherName(publisherDTO.publisherName())
+                .address(publisherDTO.address())
+                .phone(publisherDTO.phone())
+                .email(publisherDTO.email())
+                .events(new Events())
+                .books(new HashSet<>())
+                .build();
+
+        Set<Author> authors = bookModel.authors()
+                .stream()
+                .map(authorDTO -> Author.builder()
+                        .id(UUID.randomUUID())
+                        .firstName(authorDTO.firstName())
+                        .lastName(authorDTO.lastName())
+                        .email(authorDTO.email())
+                        .address(authorDTO.address())
+                        .events(new Events())
+                        .books(new HashSet<>())
+                        .build()).collect(Collectors.toSet());
+
+
+        return Book.builder()
+                .id(UUID.randomUUID())
+                .title(bookModel.title())
+                .description(bookModel.description())
+                .isbn(bookModel.isbn())
+                .price(bookModel.price())
+                .quantityOnHand(bookModel.quantityOnHand())
+                .category(bookModel.category())
+                .publisher(publisher)
+                .authors(authors)
+                .events(new Events())
+                .orders(new HashSet<>())
+                .build();
+    }
 
     public void addPublisher(Publisher publisher) {
         this.setPublisher(publisher);

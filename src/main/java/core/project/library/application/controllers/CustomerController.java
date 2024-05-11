@@ -3,7 +3,6 @@ package core.project.library.application.controllers;
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.CustomerModel;
 import core.project.library.domain.entities.Customer;
-import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.CustomerService;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,7 +39,7 @@ public class CustomerController {
 
     @PostMapping("/saveCustomer")
     public ResponseEntity saveCustomer(@RequestBody @Validated CustomerModel model) {
-        Customer customer = modelToEntity(model);
+        Customer customer = Customer.from(model);
         Optional<Customer> savedCustomer = customerService.saveCustomer(customer);
 
         HttpHeaders headers = new HttpHeaders();
@@ -49,18 +47,5 @@ public class CustomerController {
                 + savedCustomer.get().getId().toString());
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
-    }
-
-    private Customer modelToEntity(CustomerModel model) {
-        return Customer.builder()
-                .id(UUID.randomUUID())
-                .firstName(model.firstName())
-                .lastName(model.lastName())
-                .password(model.password())
-                .email(model.email())
-                .address(model.address())
-                .events(new Events())
-                .orders(new HashSet<>())
-                .build();
     }
 }
