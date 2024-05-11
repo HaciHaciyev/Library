@@ -5,7 +5,6 @@ import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToAuthor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Repository
@@ -38,7 +37,7 @@ public class AuthorRepository {
                 .lastName(author.getLastName())
                 .email(author.getEmail())
                 .address(author.getAddress())
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 

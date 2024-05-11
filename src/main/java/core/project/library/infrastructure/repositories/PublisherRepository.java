@@ -6,7 +6,6 @@ import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,7 +40,7 @@ public class PublisherRepository {
                 .address(publisher.getAddress())
                 .phone(publisher.getPhone())
                 .email(publisher.getEmail())
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 

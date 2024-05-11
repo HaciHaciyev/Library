@@ -5,6 +5,7 @@ import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.Phone;
 import core.project.library.domain.value_objects.PublisherName;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.util.Objects;
@@ -14,14 +15,14 @@ import java.util.UUID;
 @Getter
 @Setter(AccessLevel.PRIVATE)
 @Builder
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Publisher {
     private final @NotNull UUID id;
-    private final @NotNull PublisherName publisherName;
-    private final @NotNull Address address;
-    private final @NotNull Phone phone;
-    private final @NotNull Email email;
-    private final @NotNull Events events;
+    private final @NotNull @Valid PublisherName publisherName;
+    private final @NotNull @Valid Address address;
+    private final @NotNull @Valid Phone phone;
+    private final @NotNull @Valid Email email;
+    private final @NotNull @Valid Events events;
     private /**@OneToMany*/ Set<Book> books;
 
     @Override

@@ -4,7 +4,6 @@ import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import org.springframework.jdbc.core.JdbcTemplate;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -31,7 +30,7 @@ public class BootstrapRepository {
                 .address(new Address("State", "City", "Street", "Home"))
                 .phone(new Phone("11122-333-44-55"))
                 .email(new Email("email@gmail.com"))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 
@@ -41,7 +40,7 @@ public class BootstrapRepository {
                 .lastName(new LastName("Authorovich"))
                 .email(new Email("author@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 
@@ -52,7 +51,7 @@ public class BootstrapRepository {
                 .isbn(new ISBN("978-161-729-045-9"))
                 .price(new BigDecimal("12.99"))
                 .quantityOnHand(43)
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .category(Category.Adventure)
                 .authors(new HashSet<>())
                 .orders(new HashSet<>())
@@ -62,7 +61,7 @@ public class BootstrapRepository {
                 .id(UUID.fromString("a486f288-cec3-4205-b753-d4ddf2796f9a"))
                 .countOfBooks(1)
                 .totalPrice(new TotalPrice(new BigDecimal("12.99")))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 
@@ -73,7 +72,7 @@ public class BootstrapRepository {
                 .password(new Password("password"))
                 .email(new Email("customer@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .orders(new HashSet<>())
                 .build();
 
@@ -90,7 +89,7 @@ public class BootstrapRepository {
                 .address(new Address("State", "City", "Street", "Home"))
                 .phone(new Phone("11122-333-44-55"))
                 .email(new Email("email@gmail.com"))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 
@@ -100,7 +99,7 @@ public class BootstrapRepository {
                 .lastName(new LastName("Authorovich"))
                 .email(new Email("author@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 
@@ -111,7 +110,7 @@ public class BootstrapRepository {
                 .isbn(new ISBN("978-161-729-045-9"))
                 .price(new BigDecimal("12.99"))
                 .quantityOnHand(43)
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .category(Category.Adventure)
                 .authors(new HashSet<>())
                 .orders(new HashSet<>())
@@ -121,7 +120,7 @@ public class BootstrapRepository {
                 .id(UUID.randomUUID())
                 .countOfBooks(1)
                 .totalPrice(new TotalPrice(new BigDecimal("12.99")))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .books(new HashSet<>())
                 .build();
 
@@ -132,7 +131,7 @@ public class BootstrapRepository {
                 .password(new Password("password"))
                 .email(new Email("customer@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .events(new Events(LocalDateTime.now(), LocalDateTime.now()))
+                .events(new Events())
                 .orders(new HashSet<>())
                 .build();
 

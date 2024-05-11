@@ -1,10 +1,13 @@
 package core.project.library.domain.entities;
 
+import core.project.library.application.model.CustomerModel;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -12,16 +15,30 @@ import java.util.UUID;
 @Getter
 @Setter(AccessLevel.PRIVATE)
 @Builder
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Customer {
     private final @NotNull UUID id;
-    private final @NotNull FirstName firstName;
-    private final @NotNull LastName lastName;
-    private final @NotNull Password password;
-    private final @NotNull Email email;
-    private final @NotNull Address address;
-    private final @NotNull Events events;
+    private final @NotNull @Valid FirstName firstName;
+    private final @NotNull @Valid LastName lastName;
+    private final @NotNull @Valid Password password;
+    private final @NotNull @Valid Email email;
+    private final @NotNull @Valid Address address;
+    private final @NotNull @Valid Events events;
     private /**@OneToMany*/ Set<Order> orders;
+
+
+    public static Customer from(CustomerModel model) {
+        return Customer.builder()
+                .id(UUID.randomUUID())
+                .firstName(model.firstName())
+                .lastName(model.lastName())
+                .password(model.password())
+                .email(model.email())
+                .address(model.address())
+                .events(new Events())
+                .orders(new HashSet<>())
+                .build();
+    }
 
     public void addOrder(Order order) {
         this.orders.add(order);
