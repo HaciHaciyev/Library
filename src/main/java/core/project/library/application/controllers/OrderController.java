@@ -1,6 +1,7 @@
 package core.project.library.application.controllers;
 
-import core.project.library.domain.entities.Order;
+import core.project.library.application.mappers.EntityMapper;
+import core.project.library.application.model.OrderModel;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.OrderService;
 import org.springframework.http.HttpStatus;
@@ -18,14 +19,17 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
+    private final EntityMapper entityMapper;
+
+    public OrderController(OrderService orderService, EntityMapper entityMapper) {
         this.orderService = orderService;
+        this.entityMapper = entityMapper;
     }
 
     @GetMapping("/getOrderById/{orderId}")
-    public ResponseEntity<Order> getOrderById(@PathVariable("orderId") UUID orderId) {
+    public ResponseEntity<OrderModel> getOrderById(@PathVariable("orderId") UUID orderId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(orderService.getOrderById(orderId).orElseThrow(NotFoundException::new));
+                .body(entityMapper.toModel(orderService.getOrderById(orderId).orElseThrow(NotFoundException::new)));
     }
 }

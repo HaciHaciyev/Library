@@ -33,34 +33,19 @@ public class Book {
     private /**@ManyToMany*/ Set<Author> authors;
     private /**@ManyToMany*/ Set<Order> orders;
 
-    public void addPublisher(Publisher publisher) {
+    public final void addPublisher(Publisher publisher) {
         this.publisher = publisher;
         publisher.getBooks().add(this);
     }
 
-    public void removePublisher(Publisher publisher) {
-        this.publisher = null;
-        publisher.getBooks().remove(this);
-    }
-
-    public void addAuthor(Author author) {
+    public final void addAuthor(Author author) {
         this.getAuthors().add(author);
         author.getBooks().add(this);
     }
 
-    public void removeAuthor(Author author) {
-        this.authors.remove(author);
-        author.getBooks().remove(this);
-    }
-
-    public void addOrder(Order order) {
+    public final void addOrder(Order order) {
         this.orders.add(order);
         order.getBooks().add(this);
-    }
-
-    public void removeOrder(Order order) {
-        this.orders.remove(order);
-        order.getBooks().remove(this);
     }
 
     public static Builder builder() {
@@ -71,10 +56,8 @@ public class Book {
                                 ISBN isbn, BigDecimal price, Integer quantityOnHand,
                                 Category category, Events events, Publisher publisher,
                                 Set<Author> authors, Set<Order> orders) {
-        // TODO Implement all validation
-        /** In this place we can initialize all required validation.*/
-        /**validateToNullAndBlank(new Object[] {id, title, description, isbn, price, quantityOnHand,
-                category, events, publisher, authors, orders});*/
+        validateToNullAndBlank(new Object[]{id, title, description, isbn,
+                price, quantityOnHand, category, events});
 
         return new Book(id, title, description, isbn, price, quantityOnHand,
                 category, events, publisher, authors, orders);
@@ -122,15 +105,16 @@ public class Book {
                 .build();
     }
 
-    private static void validateToNullAndBlank(Object[] o) {
-        for (Object object : o) {
-            Objects.requireNonNull(object);
-            if (object instanceof String) {
-                if (((String) object).isBlank()) {
-                    throw new IllegalArgumentException("String should`t be blank.");
-                }
-            }
-        }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Book book = (Book) o;
+        return Objects.equals(id, book.id) && Objects.equals(title, book.title) &&
+                Objects.equals(description, book.description) && Objects.equals(isbn, book.isbn) &&
+                Objects.equals(price, book.price) && Objects.equals(quantityOnHand, book.quantityOnHand) &&
+                Objects.equals(events, book.events) && category == book.category;
     }
 
     @Override
@@ -144,18 +128,6 @@ public class Book {
         result = 31 * result + Objects.hashCode(events);
         result = 31 * result + Objects.hashCode(category);
         return result;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Book book = (Book) o;
-        return Objects.equals(id, book.id) && Objects.equals(title, book.title) &&
-                Objects.equals(description, book.description) && Objects.equals(isbn, book.isbn) &&
-                Objects.equals(price, book.price) && Objects.equals(quantityOnHand, book.quantityOnHand) &&
-                Objects.equals(events, book.events) && category == book.category;
     }
 
     @Override
@@ -176,6 +148,7 @@ public class Book {
                 isbn.isbn(), category.toString(), price, quantityOnHand,
                 events.creation_date().toString(), events.last_update_date().toString());
     }
+
     public static class Builder {
         private UUID id;
         private Title title;
@@ -187,7 +160,6 @@ public class Book {
         private Events events;
         private Publisher publisher;
         private Set<Author> authors;
-
         private Set<Order> orders;
 
         private Builder() {}
@@ -252,6 +224,17 @@ public class Book {
                     this.isbn, this.price, this.quantityOnHand,
                     this.category, this.events, this.publisher,
                     this.authors, this.orders);
+        }
+    }
+
+    private static void validateToNullAndBlank(Object[] o) {
+        for (Object object : o) {
+            Objects.requireNonNull(object);
+            if (object instanceof String) {
+                if (((String) object).isBlank()) {
+                    throw new IllegalArgumentException("String should`t be blank.");
+                }
+            }
         }
     }
 }

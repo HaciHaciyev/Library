@@ -62,6 +62,7 @@ public class DomainTest {
                 .lastName(new LastName("Customerovich"))
                 .password(new Password("password"))
                 .email(new Email("customer@gmail.com"))
+                .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events())
                 .orders(new HashSet<>())
                 .build();

@@ -11,7 +11,6 @@ public interface EntityMapper {
 
     BookDTO toDTO(Book book);
     BookModel toModel(Book book);
-    Book toEntity(BookModel bookModel);
 
     CustomerDTO toDTO(Customer customer);
     CustomerModel toModel(Customer customer);
