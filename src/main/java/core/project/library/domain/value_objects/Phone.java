@@ -19,7 +19,7 @@ public record Phone(@NotBlank String phoneNumber) {
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid phone number.");
         }
-        // TODO in future we need to validate phone for unique, before production.
+
         this.phoneNumber = phoneNumber;
     }
 }

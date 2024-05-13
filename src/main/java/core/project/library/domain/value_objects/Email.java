@@ -21,7 +21,7 @@ public record Email(@NotBlank
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid email.");
         }
-        // TODO in future we need to validate email for unique, before production.
+
         this.email = email;
     }
 }

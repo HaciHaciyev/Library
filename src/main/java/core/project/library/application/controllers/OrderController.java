@@ -30,6 +30,8 @@ public class OrderController {
     public ResponseEntity<OrderModel> getOrderById(@PathVariable("orderId") UUID orderId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(entityMapper.toModel(orderService.getOrderById(orderId).orElseThrow(NotFoundException::new)));
+                .body(entityMapper.toModel(
+                        orderService.getOrderById(orderId).orElseThrow(NotFoundException::new))
+                );
     }
 }

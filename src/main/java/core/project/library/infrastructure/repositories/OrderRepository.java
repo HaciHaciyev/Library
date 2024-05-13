@@ -3,6 +3,7 @@ package core.project.library.infrastructure.repositories;
 import core.project.library.domain.entities.Order;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -26,9 +27,13 @@ public class OrderRepository {
     }
 
     public Optional<Order> getOrderById(UUID orderId) {
-        return Optional.ofNullable(jdbcTemplate.queryForObject(
-                "Select * from Order_Line where id=?", rowToOrder, orderId
-        ));
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject(
+                    "Select * from Order_Line where id=?", rowToOrder, orderId
+            ));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
     public List<Optional<Order>> getOrderByBookId(UUID bookId) {

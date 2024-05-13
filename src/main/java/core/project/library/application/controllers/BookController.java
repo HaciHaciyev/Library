@@ -2,11 +2,7 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.BookModel;
-import core.project.library.application.model.PublisherDTO;
-import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
-import core.project.library.domain.entities.Publisher;
-import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.BookService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -38,12 +31,12 @@ public class BookController {
     }
 
     @GetMapping("/getBookById/{bookId}")
-    public ResponseEntity<?> getBookById(@PathVariable("bookId") UUID bookId) {
-        Optional<?> responseBody;
-        responseBody = Optional.ofNullable(
-                entityMapper.toModel(bookService.getBookById(bookId).orElseThrow(NotFoundException::new))
-        );
-        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+    public ResponseEntity<BookModel> getBookById(@PathVariable("bookId") UUID bookId) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(entityMapper.toModel(
+                        bookService.getBookById(bookId).orElseThrow(NotFoundException::new))
+                );
     }
 
     @GetMapping("/findByName/{title}")

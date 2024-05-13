@@ -16,7 +16,7 @@ public record ISBN(@org.hibernate.validator.constraints.ISBN
         if (!isIsbn13Valid(isbn)) {
             throw new IllegalArgumentException("Invalid ISBN number.");
         }
-        // TODO in future we need to validate isbn for unique, before production.
+
         this.isbn = isbn;
     }
 
