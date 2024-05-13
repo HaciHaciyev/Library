@@ -3,6 +3,7 @@ package core.project.library.domain;
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.UUID;
 
+@Slf4j
 @SpringBootTest
 public class DomainTest {
 
@@ -19,7 +21,7 @@ public class DomainTest {
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .phone(new Phone("11122-333-44-55"))
+                .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
                 .books(new HashSet<>())
@@ -39,7 +41,7 @@ public class DomainTest {
                 .id(UUID.randomUUID())
                 .title(new Title("Title"))
                 .description(new Description("Description"))
-                .isbn(new ISBN("978-161-729-045-9"))
+                .isbn(new ISBN("9781861972712"))
                 .price(new BigDecimal("12.99"))
                 .quantityOnHand(43)
                 .events(new Events())

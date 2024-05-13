@@ -3,5 +3,18 @@ package core.project.library.domain.value_objects;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record Password(@NotBlank @Size(max = 48) String password) {
+import java.util.Objects;
+
+public record Password(@NotBlank @Size(min = 5, max = 48) String password) {
+
+    public Password(String password) {
+        Objects.requireNonNull(password);
+        if (password.isBlank()) {
+            throw new IllegalArgumentException("Password should`t be blank.");
+        }
+        if (password.length() < 4 || password.length() > 48) {
+            throw new IllegalArgumentException("Password length should be greater than 4 characters and smaller than 48 characters.");
+        }
+        this.password = password;
+    }
 }

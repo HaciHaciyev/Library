@@ -3,11 +3,11 @@ package core.project.library.infrastructure.repositories;
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
+import net.datafaker.Faker;
 import org.springframework.jdbc.core.JdbcTemplate;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.UUID;
 
 @org.springframework.stereotype.Repository
@@ -15,7 +15,7 @@ public class BootstrapRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public BootstrapRepository(JdbcTemplate jdbcTemplate) {
+    public BootstrapRepository(JdbcTemplate jdbcTemplate, Faker faker) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -28,7 +28,7 @@ public class BootstrapRepository {
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .phone(new Phone("11122-333-44-55"))
+                .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
                 .books(new HashSet<>())
@@ -48,7 +48,7 @@ public class BootstrapRepository {
                 .id(UUID.fromString("d4f0aa27-317b-4e00-9462-9a7f0faa7a5e"))
                 .title(new Title("Title"))
                 .description(new Description("Description"))
-                .isbn(new ISBN("978-161-729-045-9"))
+                .isbn(new ISBN("9781861972712"))
                 .price(new BigDecimal("12.99"))
                 .quantityOnHand(43)
                 .events(new Events())
@@ -87,7 +87,7 @@ public class BootstrapRepository {
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher2"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .phone(new Phone("11122-333-44-55"))
+                .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
                 .books(new HashSet<>())
@@ -107,7 +107,7 @@ public class BootstrapRepository {
                 .id(UUID.randomUUID())
                 .title(new Title("Title2"))
                 .description(new Description("Description"))
-                .isbn(new ISBN("978-161-729-045-9"))
+                .isbn(new ISBN("9781861972712"))
                 .price(new BigDecimal("12.99"))
                 .quantityOnHand(43)
                 .events(new Events())

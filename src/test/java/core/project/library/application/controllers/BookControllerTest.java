@@ -26,10 +26,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
+
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -82,7 +84,7 @@ class BookControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.title.title", is("Title")))
                 .andExpect(jsonPath("$.description.description", is("Description")))
-                .andExpect(jsonPath("$.isbn.isbn", is("978-161-729-045-9")))
+                .andExpect(jsonPath("$.isbn.isbn", is("9781861972712")))
                 .andExpect(jsonPath("$.price", is(12.99)))
                 .andExpect(jsonPath("$.quantityOnHand", is(43)))
                 .andExpect(jsonPath("$.publisher.publisherName.publisherName", is("Publisher")))
@@ -110,7 +112,7 @@ class BookControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.title.title", is("Title")))
                 .andExpect(jsonPath("$.description.description", is("Description")))
-                .andExpect(jsonPath("$.isbn.isbn", is("978-161-729-045-9")))
+                .andExpect(jsonPath("$.isbn.isbn", is("9781861972712")))
                 .andExpect(jsonPath("$.price", is(12.99)))
                 .andExpect(jsonPath("$.quantityOnHand", is(43)))
                 .andExpect(jsonPath("$.publisher.publisherName.publisherName", is("Publisher")))
@@ -145,7 +147,7 @@ class BookControllerTest {
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Test Publisher"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .phone(new Phone("11122-333-44-55"))
+                .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
                 .books(new HashSet<>())
@@ -165,7 +167,7 @@ class BookControllerTest {
                 .id(UUID.fromString("d4f0aa27-317b-4e00-9462-9a7f0faa7a5e"))
                 .title(new Title("Test Title"))
                 .description(new Description("Description"))
-                .isbn(new ISBN("978-161-729-045-9"))
+                .isbn(new ISBN("9781861972712"))
                 .price(new BigDecimal("12.99"))
                 .quantityOnHand(43)
                 .events(new Events())
