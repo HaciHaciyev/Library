@@ -23,7 +23,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.Collections;
 import java.util.UUID;
 
 import static org.hamcrest.core.Is.is;
@@ -71,6 +70,7 @@ class CustomerControllerTest {
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName.firstName", is("Customer")))
+                .andExpect(jsonPath("$.orders[0].countOfBooks", is(1)))
                 .andReturn();
 
         log.info(mvcResult.getResponse().getContentAsString());
@@ -109,7 +109,6 @@ class CustomerControllerTest {
                         faker.address().streetAddress(),
                         faker.address().buildingNumber()))
                 .events(new Events())
-                .orders(Collections.emptySet())
                 .build();
     }
 }

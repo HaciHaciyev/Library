@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -28,14 +29,14 @@ public class Publisher {
         return new Builder();
     }
 
-    private static Publisher factory(UUID id, PublisherName publisherName,
-                                     Address address, Phone phone, Email email,
-                                     Events events, Set<Book> books) {
+    private static Publisher of(UUID id, PublisherName publisherName,
+                                Address address, Phone phone, Email email,
+                                Events events) {
         validateToNullAndBlank(new Object[]{id, publisherName, address,
                 phone, email, events});
 
         return new Publisher(id, publisherName, address,
-                phone, email, events, books);
+                phone, email, events, new HashSet<>());
     }
 
     @Override
@@ -86,7 +87,6 @@ public class Publisher {
         private Phone phone;
         private Email email;
         private Events events;
-        private Set<Book> books;
 
         private Builder() {}
 
@@ -120,15 +120,10 @@ public class Publisher {
             return this;
         }
 
-        public Builder books(final Set<Book> books) {
-            this.books = books;
-            return this;
-        }
-
         public Publisher build() {
-            return factory(this.id, this.publisherName,
+            return of(this.id, this.publisherName,
                     this.address, this.phone, this.email,
-                    this.events, this.books);
+                    this.events);
         }
     }
 

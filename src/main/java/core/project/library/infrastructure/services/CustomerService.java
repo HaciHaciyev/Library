@@ -62,9 +62,11 @@ public class CustomerService {
                 .countOfBooks(booksForOrder.size())
                 .totalPrice(new TotalPrice(BigDecimal.valueOf(totalPrice)))
                 .events(new Events())
-                .customer(optionalCustomer.get())
-                .books(booksForOrder)
                 .build();
+
+        optionalCustomer.get().addOrder(newOrder);
+        booksForOrder.forEach(book -> book.addOrder(newOrder));
+
         /** Save new Order*/
         Optional<Order> savedOrder = orderRepository.saveOrder(newOrder);
         /**Save IDs for Book_Order join table*/
@@ -83,7 +85,7 @@ public class CustomerService {
         Set<Order> orderSet = new HashSet<>();
         orders.forEach(order -> orderSet.add(order.orElseThrow(NotFoundException::new)));
 
-        return Optional.ofNullable(Customer.builder()
+        Customer resultCustomer = Customer.builder()
                 .id(customer.getId())
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
@@ -91,7 +93,10 @@ public class CustomerService {
                 .email(customer.getEmail())
                 .address(customer.getAddress())
                 .events(customer.getEvents())
-                .orders(orderSet)
-                .build());
+                .build();
+
+        orderSet.forEach(resultCustomer::addOrder);
+
+        return Optional.of(resultCustomer);
     }
 }

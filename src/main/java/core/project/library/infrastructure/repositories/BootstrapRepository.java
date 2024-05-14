@@ -7,7 +7,6 @@ import net.datafaker.Faker;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
 import java.util.UUID;
 
 @org.springframework.stereotype.Repository
@@ -31,7 +30,6 @@ public class BootstrapRepository {
                 .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Author author = Author.builder()
@@ -41,7 +39,6 @@ public class BootstrapRepository {
                 .email(new Email("author@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Book book = Book.builder()
@@ -53,8 +50,6 @@ public class BootstrapRepository {
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
-                .authors(new HashSet<>())
-                .orders(new HashSet<>())
                 .build();
 
         Order order = Order.builder()
@@ -62,7 +57,6 @@ public class BootstrapRepository {
                 .countOfBooks(1)
                 .totalPrice(new TotalPrice(new BigDecimal("12.99")))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Customer customer = Customer.builder()
@@ -73,7 +67,6 @@ public class BootstrapRepository {
                 .email(new Email("customer@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events())
-                .orders(new HashSet<>())
                 .build();
 
         book.addAuthor(author);
@@ -90,7 +83,6 @@ public class BootstrapRepository {
                 .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Author author2 = Author.builder()
@@ -100,7 +92,6 @@ public class BootstrapRepository {
                 .email(new Email("author@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Book book2 = Book.builder()
@@ -112,8 +103,6 @@ public class BootstrapRepository {
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
-                .authors(new HashSet<>())
-                .orders(new HashSet<>())
                 .build();
 
         Order order2 = Order.builder()
@@ -121,7 +110,6 @@ public class BootstrapRepository {
                 .countOfBooks(1)
                 .totalPrice(new TotalPrice(new BigDecimal("12.99")))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Customer customer2 = Customer.builder()
@@ -132,7 +120,6 @@ public class BootstrapRepository {
                 .email(new Email("customer@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events())
-                .orders(new HashSet<>())
                 .build();
 
         book2.addAuthor(author2);

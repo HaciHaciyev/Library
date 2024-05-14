@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.HashSet;
 import java.util.UUID;
 
 @Component
@@ -37,7 +36,6 @@ public class RowToAuthor implements RowMapper<Author> {
                                     rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                             )
                     )
-                    .books(new HashSet<>())
                     .build();
         } catch (EmptyResultDataAccessException e) {
             return null;

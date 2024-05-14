@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -28,14 +29,13 @@ public class Author {
         return new Builder();
     }
 
-    private static Author factory(UUID id, FirstName firstName, LastName lastName,
-                                Email email, Address address, Events events,
-                                Set<Book> books) {
+    private static Author of(UUID id, FirstName firstName, LastName lastName,
+                             Email email, Address address, Events events) {
         validateToNullAndBlank(new Object[]{id, firstName, lastName,
                 email, address, events});
 
         return new Author(id, firstName, lastName,
-                email, address, events, books);
+                email, address, events, new HashSet<>());
     }
 
     @Override
@@ -87,7 +87,6 @@ public class Author {
         private Email email;
         private Address address;
         private Events events;
-        private Set<Book> books;
 
         private Builder() {}
 
@@ -121,15 +120,10 @@ public class Author {
             return this;
         }
 
-        public Builder books(final Set<Book> books) {
-            this.books = books;
-            return this;
-        }
-
         public Author build() {
-            return factory(this.id, this.firstName,
-                    this.lastName, this.email, this.address,
-                    this.events, this.books);
+            return of(this.id, this.firstName,
+                    this.lastName, this.email,
+                    this.address, this.events);
         }
     }
 

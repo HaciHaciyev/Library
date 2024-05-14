@@ -6,10 +6,10 @@ import core.project.library.domain.value_objects.*;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.HashSet;
 import java.util.UUID;
 
 @Component
@@ -35,7 +35,6 @@ public class RowToCustomer implements RowMapper<Customer> {
                                     rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                             )
                     )
-                    .orders(new HashSet<>())
                     .build();
         } catch (EmptyResultDataAccessException exception) {
             return null;

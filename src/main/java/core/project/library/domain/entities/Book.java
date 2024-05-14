@@ -34,16 +34,19 @@ public class Book {
     private /**@ManyToMany*/ Set<Order> orders;
 
     public final void addPublisher(Publisher publisher) {
+        Objects.requireNonNull(publisher);
         this.publisher = publisher;
         publisher.getBooks().add(this);
     }
 
     public final void addAuthor(Author author) {
-        this.getAuthors().add(author);
+        Objects.requireNonNull(author);
+        this.authors.add(author);
         author.getBooks().add(this);
     }
 
     public final void addOrder(Order order) {
+        Objects.requireNonNull(order);
         this.orders.add(order);
         order.getBooks().add(this);
     }
@@ -52,15 +55,14 @@ public class Book {
         return new Builder();
     }
 
-    private static Book factory(UUID id, Title title, Description description,
-                                ISBN isbn, BigDecimal price, Integer quantityOnHand,
-                                Category category, Events events, Publisher publisher,
-                                Set<Author> authors, Set<Order> orders) {
+    private static Book of(UUID id, Title title, Description description,
+                           ISBN isbn, BigDecimal price, Integer quantityOnHand,
+                           Category category, Events events) {
         validateToNullAndBlank(new Object[]{id, title, description, isbn,
                 price, quantityOnHand, category, events});
 
         return new Book(id, title, description, isbn, price, quantityOnHand,
-                category, events, publisher, authors, orders);
+                category, events, null, new HashSet<>(), new HashSet<>());
     }
 
     public static Book from(BookModel bookModel) {
@@ -74,7 +76,6 @@ public class Book {
                 .phone(publisherDTO.phone())
                 .email(publisherDTO.email())
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Set<Author> authors = bookModel.authors()
@@ -86,11 +87,9 @@ public class Book {
                         .email(authorDTO.email())
                         .address(authorDTO.address())
                         .events(new Events())
-                        .books(new HashSet<>())
                         .build()).collect(Collectors.toSet());
 
-
-        return Book.builder()
+        Book resultBook = Book.builder()
                 .id(UUID.randomUUID())
                 .title(bookModel.title())
                 .description(bookModel.description())
@@ -98,11 +97,12 @@ public class Book {
                 .price(bookModel.price())
                 .quantityOnHand(bookModel.quantityOnHand())
                 .category(bookModel.category())
-                .publisher(publisher)
-                .authors(authors)
                 .events(new Events())
-                .orders(new HashSet<>())
                 .build();
+        resultBook.addPublisher(publisher);
+        authors.forEach(resultBook::addAuthor);
+
+        return resultBook;
     }
 
     @Override
@@ -158,9 +158,6 @@ public class Book {
         private Integer quantityOnHand;
         private Category category;
         private Events events;
-        private Publisher publisher;
-        private Set<Author> authors;
-        private Set<Order> orders;
 
         private Builder() {}
 
@@ -204,26 +201,10 @@ public class Book {
             return this;
         }
 
-        public Builder publisher(final Publisher publisher) {
-            this.publisher = publisher;
-            return this;
-        }
-
-        public Builder authors(final Set<Author> authors) {
-            this.authors = authors;
-            return this;
-        }
-
-        public Builder orders(final Set<Order> orders) {
-            this.orders = orders;
-            return this;
-        }
-
         public Book build() {
-            return factory(this.id, this.title, this.description,
+            return of(this.id, this.title, this.description,
                     this.isbn, this.price, this.quantityOnHand,
-                    this.category, this.events, this.publisher,
-                    this.authors, this.orders);
+                    this.category, this.events);
         }
     }
 

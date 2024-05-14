@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -25,14 +26,13 @@ public class Order {
         return new Builder();
     }
 
-    private static Order factory(UUID id, Integer countOfBooks,
-                                 TotalPrice totalPrice, Events events,
-                                 Customer customer, Set<Book> books) {
+    private static Order of(UUID id, Integer countOfBooks,
+                            TotalPrice totalPrice, Events events) {
         validateToNullAndBlank(new Object[]{id, countOfBooks,
                 totalPrice, events});
 
         return new Order(id, countOfBooks, totalPrice,
-                events, customer, books);
+                events, null, new HashSet<>());
     }
 
     @Override
@@ -75,8 +75,6 @@ public class Order {
         private Integer countOfBooks;
         private TotalPrice totalPrice;
         private Events events;
-        private Customer customer;
-        private Set<Book> books;
 
         private Builder() {}
 
@@ -100,20 +98,10 @@ public class Order {
             return this;
         }
 
-        public Builder customer(final Customer customer) {
-            this.customer = customer;
-            return this;
-        }
-
-        public Builder books(final Set<Book> books) {
-            this.books = books;
-            return this;
-        }
-
         public Order build() {
-            return factory(this.id, this.countOfBooks,
-                    this.totalPrice, this.events,
-                    this.customer, this.books);
+            return of(this.id, this.countOfBooks,
+                    this.totalPrice,
+                    this.events);
         }
     }
 

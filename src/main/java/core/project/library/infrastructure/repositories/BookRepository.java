@@ -4,7 +4,6 @@ import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Order;
 import core.project.library.domain.entities.Publisher;
-import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -14,7 +13,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Repository
@@ -75,21 +77,7 @@ public class BookRepository {
         return new PageImpl<>(list, pageable, pageable.getPageSize());
     }
 
-    public Optional<Book> saveBook(Book book) {
-        Book bookForSave = Book.builder()
-                .id(UUID.randomUUID())
-                .title(book.getTitle())
-                .description(book.getDescription())
-                .isbn(book.getIsbn())
-                .price(book.getPrice())
-                .quantityOnHand(book.getQuantityOnHand())
-                .events(new Events())
-                .category(book.getCategory())
-                .publisher(book.getPublisher())
-                .authors(book.getAuthors())
-                .orders(new HashSet<>())
-                .build();
-
+    public Optional<Book> saveBook(Book bookForSave) {
         jdbcTemplate.update("""
         Insert into Book (id, title, description, isbn, price,
                   quantity_on_hand, category, created_date, last_modified_date)

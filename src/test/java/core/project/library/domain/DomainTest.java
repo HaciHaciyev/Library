@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
 import java.util.UUID;
 
 @Slf4j
@@ -24,7 +23,6 @@ public class DomainTest {
                 .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Author author = Author.builder()
@@ -34,7 +32,6 @@ public class DomainTest {
                 .email(new Email("author@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Book book = Book.builder()
@@ -46,8 +43,6 @@ public class DomainTest {
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
-                .authors(new HashSet<>())
-                .orders(new HashSet<>())
                 .build();
 
         Order order = Order.builder()
@@ -55,7 +50,6 @@ public class DomainTest {
                 .countOfBooks(1)
                 .totalPrice(new TotalPrice(new BigDecimal("12.99")))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Customer customer = Customer.builder()
@@ -66,7 +60,6 @@ public class DomainTest {
                 .email(new Email("customer@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events())
-                .orders(new HashSet<>())
                 .build();
 
         book.addAuthor(author);

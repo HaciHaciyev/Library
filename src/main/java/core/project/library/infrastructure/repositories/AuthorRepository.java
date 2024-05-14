@@ -5,7 +5,11 @@ import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToAuthor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class AuthorRepository {
@@ -38,7 +42,6 @@ public class AuthorRepository {
                 .email(author.getEmail())
                 .address(author.getAddress())
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         jdbcTemplate.update("""

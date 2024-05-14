@@ -12,7 +12,7 @@ public class Bootstrap implements CommandLineRunner {
     private final BootstrapRepository repository;
 
     public Bootstrap(BootstrapRepository repository) {
-        this.repository = repository;;
+        this.repository = repository;
     }
 
     @Override

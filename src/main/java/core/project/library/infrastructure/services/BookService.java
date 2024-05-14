@@ -107,18 +107,8 @@ public class BookService {
         Set<Author> authorSet = new HashSet<>();
         authors.forEach(author -> authorSet.add(author.orElseThrow(NotFoundException::new)));
 
-        return Optional.ofNullable(Book.builder()
-                .id(book.getId())
-                .title(book.getTitle())
-                .description(book.getDescription())
-                .isbn(book.getIsbn())
-                .price(book.getPrice())
-                .quantityOnHand(book.getQuantityOnHand())
-                .category(book.getCategory())
-                .events(book.getEvents())
-                .publisher(publisher)
-                .authors(authorSet)
-                .orders(new HashSet<>())
-                .build());
+        book.addPublisher(publisher);
+        authorSet.forEach(book::addAuthor);
+        return Optional.of(book);
     }
 }

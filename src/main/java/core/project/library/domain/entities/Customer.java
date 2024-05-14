@@ -25,6 +25,7 @@ public class Customer {
     private /**@OneToMany*/ Set<Order> orders;
 
     public final void addOrder(Order order) {
+        Objects.requireNonNull(order);
         this.orders.add(order);
         order.setCustomer(this);
     }
@@ -36,12 +37,12 @@ public class Customer {
     private static Customer factory(UUID id, FirstName firstName,
                                     LastName lastName, Password password,
                                     Email email, Address address,
-                                    Events events, Set<Order> orders) {
+                                    Events events) {
         validateToNullAndBlank(new Object[]{id, firstName, lastName,
                 password, email, address, events});
 
         return new Customer(id, firstName, lastName, password,
-                email, address, events, orders);
+                email, address, events, new HashSet<>());
     }
 
     public static Customer from(CustomerModel model) {
@@ -53,7 +54,6 @@ public class Customer {
                 .email(model.email())
                 .address(model.address())
                 .events(new Events())
-                .orders(new HashSet<>())
                 .build();
     }
 
@@ -102,7 +102,6 @@ public class Customer {
         private Email email;
         private Address address;
         private Events events;
-        private Set<Order> orders;
 
         private Builder() {}
 
@@ -141,15 +140,10 @@ public class Customer {
             return this;
         }
 
-        public Builder orders(final Set<Order> orders) {
-            this.orders = orders;
-            return this;
-        }
-
         public Customer build() {
             return factory(this.id, this.firstName,
                     this.lastName, this.password, this.email,
-                    this.address, this.events, this.orders);
+                    this.address, this.events);
         }
     }
 

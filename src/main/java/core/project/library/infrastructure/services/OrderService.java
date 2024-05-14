@@ -10,10 +10,7 @@ import core.project.library.infrastructure.repositories.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,15 +31,17 @@ public class OrderService {
     }
 
     private static Optional<Order> entityCollectorForOrder(Order order, Customer customer, List<Book> bookList) {
-        return Optional.ofNullable(
-                Order.builder()
-                        .id(order.getId())
-                        .countOfBooks(order.getCountOfBooks())
-                        .totalPrice(order.getTotalPrice())
-                        .events(order.getEvents())
-                        .customer(customer)
-                        .books(new HashSet<>(bookList))
-                        .build()
-        );
+        Order resultOrder = Order.builder()
+                .id(order.getId())
+                .countOfBooks(order.getCountOfBooks())
+                .totalPrice(order.getTotalPrice())
+                .events(order.getEvents())
+                .build();
+
+        customer.addOrder(resultOrder);
+        Set<Book> books = new HashSet<>(bookList);
+        books.forEach(book -> book.addOrder(resultOrder));
+
+        return Optional.ofNullable(resultOrder);
     }
 }

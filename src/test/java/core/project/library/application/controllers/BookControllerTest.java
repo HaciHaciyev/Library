@@ -28,7 +28,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -150,7 +149,6 @@ class BookControllerTest {
                 .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Author author = Author.builder()
@@ -160,7 +158,6 @@ class BookControllerTest {
                 .email(new Email("author@gmail.com"))
                 .address(new Address("State", "City", "Street", "Home"))
                 .events(new Events())
-                .books(new HashSet<>())
                 .build();
 
         Book book = Book.builder()
@@ -172,8 +169,6 @@ class BookControllerTest {
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
-                .authors(new HashSet<>())
-                .orders(new HashSet<>())
                 .build();
 
         book.addAuthor(author);

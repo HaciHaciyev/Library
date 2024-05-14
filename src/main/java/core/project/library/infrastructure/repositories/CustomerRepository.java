@@ -2,14 +2,12 @@ package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
-import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToCustomer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -57,18 +55,7 @@ public class CustomerRepository {
                 existingOrder.getId().toString());
     }
 
-    public Optional<Customer> saveCustomer(Customer customer) {
-        Customer customerForSave = Customer.builder()
-                .id(customer.getId())
-                .firstName(customer.getFirstName())
-                .lastName(customer.getLastName())
-                .password(customer.getPassword())
-                .email(customer.getEmail())
-                .address(customer.getAddress())
-                .events(new Events())
-                .orders(new HashSet<>())
-                .build();
-
+    public Optional<Customer> saveCustomer(Customer customerForSave) {
         jdbcTemplate.update("""
                         Insert into Customer (id, first_name, last_name, email, password,
                          state, city,street, home, creation_date, last_modified_date)

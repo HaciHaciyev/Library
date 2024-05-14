@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.HashSet;
 import java.util.UUID;
 
 @Component
@@ -28,8 +27,6 @@ public class RowToOrder implements RowMapper<Order> {
                                     rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                             )
                     )
-                    .customer(null)
-                    .books(new HashSet<>())
                     .build();
         } catch (EmptyResultDataAccessException e) {
             return null;

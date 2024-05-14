@@ -9,11 +9,11 @@ import core.project.library.domain.value_objects.Title;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.HashSet;
 import java.util.UUID;
 
 @Component
@@ -34,8 +34,6 @@ public class RowToBook implements RowMapper<Book> {
                             )
                     )
                     .category(Category.valueOf(rs.getString("category")))
-                    .authors(new HashSet<>())
-                    .orders(new HashSet<>())
                     .build();
         } catch (EmptyResultDataAccessException exception) {
             return null;
