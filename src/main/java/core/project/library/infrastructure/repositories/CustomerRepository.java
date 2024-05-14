@@ -55,20 +55,31 @@ public class CustomerRepository {
                 existingOrder.getId().toString());
     }
 
-    public Optional<Customer> saveCustomer(Customer customerForSave) {
+    public Optional<Customer> saveCustomer(Customer customer) {
         jdbcTemplate.update("""
-                        Insert into Customer (id, first_name, last_name, email, password,
-                         state, city,street, home, creation_date, last_modified_date)
-                         values (?,?,?,?,?,?,?,?,?,?,?)
+                        INSERT INTO Customer (
+                              id,
+                              first_name,
+                              last_name,
+                              email,
+                              password,
+                              state,
+                              city,
+                              street,
+                              home,
+                              creation_date,
+                              last_modified_date
+                          )
+                          VALUES (?,?,?,?,?,?,?,?,?,?,?);
                         """,
-                customerForSave.getId().toString(), customerForSave.getFirstName().firstName(),
-                customerForSave.getLastName().lastName(), customerForSave.getEmail().email(),
-                customerForSave.getPassword().password(), customerForSave.getAddress().state(),
-                customerForSave.getAddress().city(), customerForSave.getAddress().street(),
-                customerForSave.getAddress().home(), customerForSave.getEvents().creation_date(),
-                customerForSave.getEvents().last_update_date());
+                customer.getId().toString(), customer.getFirstName().firstName(),
+                customer.getLastName().lastName(), customer.getEmail().email(),
+                customer.getPassword().password(), customer.getAddress().state(),
+                customer.getAddress().city(), customer.getAddress().street(),
+                customer.getAddress().home(), customer.getEvents().creation_date(),
+                customer.getEvents().last_update_date());
 
-        return Optional.of(customerForSave);
+        return Optional.of(customer);
     }
 
     public Optional<Customer> updateCustomer(Customer customer) {

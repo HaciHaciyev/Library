@@ -99,4 +99,8 @@ public class CustomerService {
 
         return Optional.of(resultCustomer);
     }
+
+    public Optional<Customer> updateCustomer(Customer customer) {
+        return customerRepository.updateCustomer(customer);
+    }
 }
