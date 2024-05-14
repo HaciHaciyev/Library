@@ -18,7 +18,6 @@ public interface EntityMapper {
     OrderDTO toDto(Order order);
     OrderModel toModel(Order order);
 
-    PublisherDTO toDto(Publisher publisher)
-;
+    PublisherDTO toDto(Publisher publisher);
     PublisherModel toModel(Publisher publisher);
 }

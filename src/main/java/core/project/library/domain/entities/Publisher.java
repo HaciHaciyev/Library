@@ -122,8 +122,8 @@ public class Publisher {
 
         public Publisher build() {
             return of(this.id, this.publisherName,
-                    this.address, this.phone, this.email,
-                    this.events);
+                    this.address, this.phone,
+                    this.email, this.events);
         }
     }
 
