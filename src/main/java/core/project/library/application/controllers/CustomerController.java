@@ -59,4 +59,15 @@ public class CustomerController {
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
+
+    @PutMapping("/updateCustomer")
+    public ResponseEntity updateCustomer(@RequestBody @Validated CustomerModel model) {
+        Customer customer = Customer.from(model);
+        Optional<Customer> updatedCustomer = customerService.updateCustomer(customer);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Location", "/library/customer/updateCustomer"
+                + updatedCustomer.get().getId().toString());
+
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+    }
 }

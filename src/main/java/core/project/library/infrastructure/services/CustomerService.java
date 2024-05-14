@@ -75,6 +75,10 @@ public class CustomerService {
         return getCustomerById(customerId);
     }
 
+    public Optional<Customer> updateCustomer(Customer customer) {
+        return customerRepository.updateCustomer(customer);
+    }
+
     private Optional<Customer> entityCollectorForCustomer(Customer customer, List<Optional<Order>> orders) {
         Set<Order> orderSet = new HashSet<>();
         orders.forEach(order -> orderSet.add(order.orElseThrow(NotFoundException::new)));
