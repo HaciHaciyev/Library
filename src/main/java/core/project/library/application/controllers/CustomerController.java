@@ -5,6 +5,7 @@ import core.project.library.application.model.CustomerModel;
 import core.project.library.domain.entities.Customer;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.services.CustomerService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -49,7 +50,7 @@ public class CustomerController {
     }
 
     @PostMapping("/saveCustomer")
-    public ResponseEntity saveCustomer(@RequestBody @Validated CustomerModel model) {
+    public ResponseEntity saveCustomer(@RequestBody @Valid CustomerModel model) {
         Customer customer = Customer.from(model);
         Optional<Customer> savedCustomer = customerService.saveCustomer(customer);
 
@@ -61,7 +62,7 @@ public class CustomerController {
     }
 
     @PutMapping("/updateCustomer")
-    public ResponseEntity updateCustomer(@RequestBody @Validated CustomerModel model) {
+    public ResponseEntity updateCustomer(@RequestBody @Valid CustomerModel model) {
         Customer customer = Customer.from(model);
         Optional<Customer> updatedCustomer = customerService.updateCustomer(customer);
         HttpHeaders headers = new HttpHeaders();
