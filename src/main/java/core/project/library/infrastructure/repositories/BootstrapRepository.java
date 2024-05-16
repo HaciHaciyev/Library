@@ -19,7 +19,7 @@ public class BootstrapRepository {
     }
 
     public Integer count() {
-        return jdbcTemplate.queryForObject("Select COUNT(id) from Book", Integer.class);
+        return jdbcTemplate.queryForObject("Select count(*) from Book", Integer.class);
     }
 
     public void bootstrap() {

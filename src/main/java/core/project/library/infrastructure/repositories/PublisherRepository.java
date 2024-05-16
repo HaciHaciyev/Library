@@ -23,9 +23,9 @@ public class PublisherRepository {
     }
 
     public Optional<Publisher> getPublisherByBookId(UUID bookId) {
-        Optional<UUID> publisherId = Optional.ofNullable(jdbcTemplate
+        Optional<String> publisherId = Optional.ofNullable(jdbcTemplate
                 .queryForObject("Select publisher_id from Book_Publisher where book_id=?",
-                        UUID.class, bookId));
+                        String.class, bookId.toString()));
 
         return Optional.ofNullable(jdbcTemplate
                 .queryForObject("Select * from Publisher where id=?",

@@ -34,7 +34,7 @@ public class BookRepository {
     public Optional<Book> getBookById(UUID bookId) {
         try {
             return Optional.ofNullable(jdbcTemplate
-                    .queryForObject("Select * from Book where id=?", rowToBook, bookId)
+                    .queryForObject("Select * from Book where id=?", rowToBook, bookId.toString())
             );
         } catch (EmptyResultDataAccessException exception) {
             return Optional.empty();
@@ -52,12 +52,12 @@ public class BookRepository {
     }
 
     public List<Book> getBooksByOrderId(UUID orderId) {
-        List<UUID> books_uuids = jdbcTemplate.queryForList(
-                "Select book_id from Book_Order where order_id=?", UUID.class, orderId
+        List<String> books_uuids = jdbcTemplate.queryForList(
+                "Select book_id from Book_Order where order_id=?", String.class, orderId.toString()
         );
 
         List<Book> bookList = new ArrayList<>();
-        for (UUID bookId : books_uuids) {
+        for (String bookId : books_uuids) {
             Optional<Book> optional = Optional.ofNullable(jdbcTemplate
                     .queryForObject("Select * from Book where id=?", rowToBook, bookId)
             );

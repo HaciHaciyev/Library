@@ -27,7 +27,7 @@ public class CustomerRepository {
     public Optional<Customer> getCustomerById(UUID customerId) {
         try {
             return Optional.ofNullable(jdbcTemplate
-                    .queryForObject("Select * from Customer where id=?", rowToCustomer, customerId)
+                    .queryForObject("Select * from Customer where id=?", rowToCustomer, customerId.toString())
             );
         } catch (EmptyResultDataAccessException exception) {
             return Optional.empty();
@@ -35,9 +35,9 @@ public class CustomerRepository {
     }
 
     public Optional<Customer> getCustomerByOrderId(UUID orderId) {
-        Optional<UUID> customerId = Optional.ofNullable(jdbcTemplate.queryForObject(
+        Optional<String> customerId = Optional.ofNullable(jdbcTemplate.queryForObject(
                 "Select customer_id from Customer_Order where order_id=?",
-                UUID.class, orderId
+                String.class, orderId.toString()
         ));
 
         return Optional.ofNullable(jdbcTemplate.queryForObject(

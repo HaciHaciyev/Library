@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Bean;
 public class LibraryApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(LibraryApplication.class, args);
+        SpringApplication application = new SpringApplication(LibraryApplication.class);
+        application.setAdditionalProfiles("dev");
+        application.run(args);
     }
 
     @Bean

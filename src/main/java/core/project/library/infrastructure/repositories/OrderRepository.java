@@ -29,7 +29,7 @@ public class OrderRepository {
     public Optional<Order> getOrderById(UUID orderId) {
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(
-                    "Select * from Order_Line where id=?", rowToOrder, orderId
+                    "Select * from Order_Line where id=?", rowToOrder, orderId.toString()
             ));
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -37,8 +37,8 @@ public class OrderRepository {
     }
 
     public List<Optional<Order>> getOrderByBookId(UUID bookId) {
-        List<UUID> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
-                UUID.class, bookId);
+        List<String> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
+                String.class, bookId.toString());
 
         List<Optional<Order>> orders = new ArrayList<>();
         uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
@@ -48,8 +48,8 @@ public class OrderRepository {
     }
 
     public List<Optional<Order>> getOrdersByCustomerId(UUID customerId) {
-        List<UUID> uuids = jdbcTemplate.queryForList("Select order_id from Customer_Order where customer_id=?",
-                UUID.class, customerId);
+        List<String> uuids = jdbcTemplate.queryForList("Select order_id from Customer_Order where customer_id=?",
+                String.class, customerId.toString());
 
         List<Optional<Order>> orders = new ArrayList<>();
         uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
