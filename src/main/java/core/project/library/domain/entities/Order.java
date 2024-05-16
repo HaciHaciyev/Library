@@ -108,10 +108,8 @@ public class Order {
     private static void validateToNullAndBlank(Object[] o) {
         for (Object object : o) {
             Objects.requireNonNull(object);
-            if (object instanceof String) {
-                if (((String) object).isBlank()) {
-                    throw new IllegalArgumentException("String should`t be blank.");
-                }
+            if (object instanceof String string && string.isBlank()) {
+                throw new IllegalArgumentException("String should`t be blank.");
             }
         }
     }

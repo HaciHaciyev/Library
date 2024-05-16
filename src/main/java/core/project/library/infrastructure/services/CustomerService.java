@@ -40,14 +40,14 @@ public class CustomerService {
         return customerRepository.saveCustomer(customer);
     }
 
-    public Optional<Customer> addBookToCustomer(UUID customerId, List<UUID> book_uuids) {
+    public Optional<Customer> addBookToCustomer(UUID customerId, List<UUID> bookUUIDs) {
         /** Get exists Customer and validate to existing in database.*/
         Optional<Customer> optionalCustomer = getCustomerById(customerId);
         if (optionalCustomer.isEmpty()) return Optional.empty();
         /** Count of total price of order and prepare books for order.*/
         long totalPrice = 0;
         Set<Book> booksForOrder = new HashSet<>();
-        for (UUID bookId : book_uuids) {
+        for (UUID bookId : bookUUIDs) {
             Optional<Book> optionalBook = bookRepository.getBookById(bookId);
             if (optionalBook.isEmpty()) return Optional.empty();
             else {
@@ -70,9 +70,9 @@ public class CustomerService {
         /** Save new Order*/
         Optional<Order> savedOrder = orderRepository.saveOrder(newOrder);
         /**Save IDs for Book_Order join table*/
-        booksForOrder.forEach(book -> bookRepository.saveBook_Order(book, savedOrder.get()));
+        booksForOrder.forEach(book -> bookRepository.saveBookOrder(book, savedOrder.orElseThrow()));
         /**Save IDs for Customer_Order join table*/
-        customerRepository.saveCustomer_Order(optionalCustomer.get(), savedOrder.get());
+        customerRepository.saveCustomerOrder(optionalCustomer.get(), savedOrder.orElseThrow());
 
         return getCustomerById(customerId);
     }

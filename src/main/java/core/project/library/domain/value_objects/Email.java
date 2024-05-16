@@ -10,18 +10,17 @@ public record Email(@NotBlank
                     @jakarta.validation.constraints.Email
                     String email) {
 
-    public Email(String email) {
+    public Email {
         Objects.requireNonNull(email);
         if (email.isBlank()) {
             throw new IllegalArgumentException("Email should`t be blank.");
         }
+
         String emailRegex = "^(\\S+)@(\\S+)$";
         Pattern pattern = Pattern.compile(emailRegex);
         Matcher matcher = pattern.matcher(email);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid email.");
         }
-
-        this.email = email;
     }
 }

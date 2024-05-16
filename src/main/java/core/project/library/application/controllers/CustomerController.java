@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,33 +40,35 @@ public class CustomerController {
 
     @PostMapping("/addBookToCustomer/{customerId}")
     public ResponseEntity<CustomerModel> addBookToCustomerAccount(@PathVariable UUID customerId,
-                                                                  @RequestBody List<UUID> book_uuids) {
+                                                                  @RequestBody List<UUID> bookUUIDs) {
         return ResponseEntity.
                 status(HttpStatus.OK)
                 .body(entityMapper.toModel(
-                        customerService.addBookToCustomer(customerId, book_uuids).orElseThrow(NotFoundException::new)
+                        customerService.addBookToCustomer(customerId, bookUUIDs).orElseThrow(NotFoundException::new)
                 ));
     }
 
     @PostMapping("/saveCustomer")
-    public ResponseEntity saveCustomer(@RequestBody @Valid CustomerModel model) {
+    public ResponseEntity<Void> saveCustomer(@RequestBody @Valid CustomerModel model) {
         Customer customer = Customer.from(model);
         Optional<Customer> savedCustomer = customerService.saveCustomer(customer);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/library/customer/getCustomerById/"
-                + savedCustomer.orElseThrow().getId().toString());
+                + savedCustomer.orElseThrow(NotFoundException::new)
+                .getId().toString());
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     @PutMapping("/updateCustomer")
-    public ResponseEntity updateCustomer(@RequestBody @Valid CustomerModel model) {
+    public ResponseEntity<Void> updateCustomer(@RequestBody @Valid CustomerModel model) {
         Customer customer = Customer.from(model);
         Optional<Customer> updatedCustomer = customerService.updateCustomer(customer);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/library/customer/updateCustomer"
-                + updatedCustomer.get().getId().toString());
+                + updatedCustomer.orElseThrow(NotFoundException::new)
+                .getId().toString());
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }

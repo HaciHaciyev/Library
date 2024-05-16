@@ -40,8 +40,9 @@ class PublisherNameTest {
     @Test
     void validPublisherName() {
         PublisherName publisherName = new PublisherName("Publisher");
-        assertThat(publisherName).isNotNull();
-        assertThat(publisherName).isEqualTo(new PublisherName("Publisher"));
+        assertThat(publisherName)
+                .isNotNull()
+                .isEqualTo(new PublisherName("Publisher"));
         assertThat(publisherName.publisherName()).isEqualTo("Publisher");
     }
 }

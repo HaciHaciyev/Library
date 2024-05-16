@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Slf4j
 @SpringBootTest
-public class DomainTest {
+class DomainTest {
 
     @Test
     void testDomain() {

@@ -8,18 +8,17 @@ import java.util.regex.Pattern;
 
 public record Phone(@NotBlank String phoneNumber) {
 
-    public Phone(String phoneNumber) {
+    public Phone {
         Objects.requireNonNull(phoneNumber);
         if (phoneNumber.isBlank()) {
             throw new IllegalArgumentException("Phone number should`t be blank.");
         }
+
         String phoneRegex = "[+](\\d{3})( )?(\\d{2})([- ])?(\\d{3})([- ])?(\\d{2})([- ])?(\\d{2})";
         Pattern pattern = Pattern.compile(phoneRegex);
         Matcher matcher = pattern.matcher(phoneNumber);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid phone number.");
         }
-
-        this.phoneNumber = phoneNumber;
     }
 }

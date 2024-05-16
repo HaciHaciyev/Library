@@ -56,14 +56,16 @@ public class BookController {
     }
 
     @PostMapping("/saveBook")
-    public ResponseEntity saveBook(@RequestBody @Validated BookModel bookModel) {
+    public ResponseEntity<Void> saveBook(@RequestBody @Validated BookModel bookModel) {
         Book bookEntity = Book.from(bookModel);
         Optional<Book> book = bookService
                 .saveBookAndPublisherWithAuthors(bookEntity);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", "/library/book/getBookById/" + book.get().getId().toString());
-        return new ResponseEntity(headers, HttpStatus.CREATED);
+        headers.add("Location", "/library/book/getBookById/" +
+                book.orElseThrow(NotFoundException::new)
+                .getId().toString());
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
 }

@@ -45,7 +45,7 @@ public class CustomerRepository {
         ));
     }
 
-    public void saveCustomer_Order(Customer existingCustomer, Order existingOrder) {
+    public void saveCustomerOrder(Customer existingCustomer, Order existingOrder) {
         jdbcTemplate.update("""
        Insert into Customer_Order (id, customer_id, order_id)
                    values (?,?,?)

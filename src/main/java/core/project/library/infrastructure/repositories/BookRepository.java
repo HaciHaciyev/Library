@@ -52,12 +52,12 @@ public class BookRepository {
     }
 
     public List<Book> getBooksByOrderId(UUID orderId) {
-        List<String> books_uuids = jdbcTemplate.queryForList(
+        List<String> bookUUIDs = jdbcTemplate.queryForList(
                 "Select book_id from Book_Order where order_id=?", String.class, orderId.toString()
         );
 
         List<Book> bookList = new ArrayList<>();
-        for (String bookId : books_uuids) {
+        for (String bookId : bookUUIDs) {
             Optional<Book> optional = Optional.ofNullable(jdbcTemplate
                     .queryForObject("Select * from Book where id=?", rowToBook, bookId)
             );
@@ -90,7 +90,7 @@ public class BookRepository {
         return Optional.of(bookForSave);
     }
 
-    public void saveBook_Publisher(Book savedBook, Publisher savedPublisher) {
+    public void saveBookPublisher(Book savedBook, Publisher savedPublisher) {
         jdbcTemplate.update("""
         Insert into Book_Publisher (id, book_id, publisher_id)
                     values (?,?,?)
@@ -101,7 +101,7 @@ public class BookRepository {
         );
     }
 
-    public void saveBook_Author(Book savedBook, Author savedAuthor) {
+    public void saveBookAuthor(Book savedBook, Author savedAuthor) {
         jdbcTemplate.update("""
         Insert into Book_Author (id, book_id, author_id)
                     values (?,?,?)
@@ -112,7 +112,7 @@ public class BookRepository {
         );
     }
 
-    public void saveBook_Order(Book existingBook, Order existingOrder) {
+    public void saveBookOrder(Book existingBook, Order existingOrder) {
         jdbcTemplate.update("""
        Insert into Book_Order (id, book_id, order_id)
                    values (?,?,?)

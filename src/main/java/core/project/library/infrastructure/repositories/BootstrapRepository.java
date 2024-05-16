@@ -3,7 +3,6 @@ package core.project.library.infrastructure.repositories;
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
-import net.datafaker.Faker;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
@@ -14,7 +13,13 @@ public class BootstrapRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public BootstrapRepository(JdbcTemplate jdbcTemplate, Faker faker) {
+    private static final Address DEFAULT_ADDRESS =
+            new Address("State", "City", "Street", "Home");
+
+    private static final BigDecimal DEFAULT_PRICE =
+            new BigDecimal("12.99");
+
+    public BootstrapRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -26,7 +31,7 @@ public class BootstrapRepository {
         Publisher publisher = Publisher.builder()
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher"))
-                .address(new Address("State", "City", "Street", "Home"))
+                .address(DEFAULT_ADDRESS)
                 .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
@@ -37,7 +42,7 @@ public class BootstrapRepository {
                 .firstName(new FirstName("Author"))
                 .lastName(new LastName("Authorovich"))
                 .email(new Email("author@gmail.com"))
-                .address(new Address("State", "City", "Street", "Home"))
+                .address(DEFAULT_ADDRESS)
                 .events(new Events())
                 .build();
 
@@ -46,7 +51,7 @@ public class BootstrapRepository {
                 .title(new Title("Title"))
                 .description(new Description("Description"))
                 .isbn(new ISBN("9781861972712"))
-                .price(new BigDecimal("12.99"))
+                .price(DEFAULT_PRICE)
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
@@ -55,7 +60,7 @@ public class BootstrapRepository {
         Order order = Order.builder()
                 .id(UUID.fromString("a486f288-cec3-4205-b753-d4ddf2796f9a"))
                 .countOfBooks(1)
-                .totalPrice(new TotalPrice(new BigDecimal("12.99")))
+                .totalPrice(new TotalPrice(DEFAULT_PRICE))
                 .events(new Events())
                 .build();
 
@@ -65,7 +70,7 @@ public class BootstrapRepository {
                 .lastName(new LastName("Customerovich"))
                 .password(new Password("password"))
                 .email(new Email("customer@gmail.com"))
-                .address(new Address("State", "City", "Street", "Home"))
+                .address(DEFAULT_ADDRESS)
                 .events(new Events())
                 .build();
 
@@ -79,7 +84,7 @@ public class BootstrapRepository {
         Publisher publisher2 = Publisher.builder()
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher2"))
-                .address(new Address("State", "City", "Street", "Home"))
+                .address(DEFAULT_ADDRESS)
                 .phone(new Phone("+994 50 1112233"))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
@@ -90,7 +95,7 @@ public class BootstrapRepository {
                 .firstName(new FirstName("Author2"))
                 .lastName(new LastName("Authorovich"))
                 .email(new Email("author@gmail.com"))
-                .address(new Address("State", "City", "Street", "Home"))
+                .address(DEFAULT_ADDRESS)
                 .events(new Events())
                 .build();
 
@@ -99,7 +104,7 @@ public class BootstrapRepository {
                 .title(new Title("Title2"))
                 .description(new Description("Description"))
                 .isbn(new ISBN("9781861972712"))
-                .price(new BigDecimal("12.99"))
+                .price(DEFAULT_PRICE)
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
@@ -108,7 +113,7 @@ public class BootstrapRepository {
         Order order2 = Order.builder()
                 .id(UUID.randomUUID())
                 .countOfBooks(1)
-                .totalPrice(new TotalPrice(new BigDecimal("12.99")))
+                .totalPrice(new TotalPrice(DEFAULT_PRICE))
                 .events(new Events())
                 .build();
 
@@ -118,7 +123,7 @@ public class BootstrapRepository {
                 .lastName(new LastName("Customerovich"))
                 .password(new Password("password"))
                 .email(new Email("customer@gmail.com"))
-                .address(new Address("State", "City", "Street", "Home"))
+                .address(DEFAULT_ADDRESS)
                 .events(new Events())
                 .build();
 
@@ -135,26 +140,26 @@ public class BootstrapRepository {
         saveAuthor(author);
         saveAuthor(author2);
 
-        saveBook_Author(book, author);
-        saveBook_Author(book2, author2);
+        saveBookAuthor(book, author);
+        saveBookAuthor(book2, author2);
 
         savePublisher(publisher);
         savePublisher(publisher2);
 
-        saveBook_Publisher(book, publisher);
-        saveBook_Publisher(book2, publisher2);
+        saveBookPublisher(book, publisher);
+        saveBookPublisher(book2, publisher2);
 
         saveOrder(order);
         saveOrder(order2);
 
-        saveBook_Order(book, order);
-        saveBook_Order(book2, order2);
+        saveBookOrder(book, order);
+        saveBookOrder(book2, order2);
 
         saveCustomer(customer);
         saveCustomer(customer2);
 
-        saveCustomer_Order(order, customer);
-        saveCustomer_Order(order2, customer2);
+        saveCustomerOrder(order, customer);
+        saveCustomerOrder(order2, customer2);
     }
 
     private void saveBook(Book book) {
@@ -182,7 +187,7 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveBook_Author(Book book, Author author) {
+    private void saveBookAuthor(Book book, Author author) {
         jdbcTemplate.update("""
         Insert into Book_Author (id, book_id, author_id)
                     values (?,?,?)
@@ -207,7 +212,7 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveBook_Publisher(Book book, Publisher publisher) {
+    private void saveBookPublisher(Book book, Publisher publisher) {
         jdbcTemplate.update("""
         Insert into Book_Publisher (id, book_id, publisher_id)
                     values (?,?,?)
@@ -229,7 +234,7 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveBook_Order(Book book, Order order) {
+    private void saveBookOrder(Book book, Order order) {
         jdbcTemplate.update("""
         Insert into Book_Order (id, book_id, order_id)
                     values (?,?,?)
@@ -254,7 +259,7 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveCustomer_Order(Order order, Customer customer) {
+    private void saveCustomerOrder(Order order, Customer customer) {
         jdbcTemplate.update("""
         Insert into Customer_Order (id, customer_id, order_id)
                     values (?,?,?)

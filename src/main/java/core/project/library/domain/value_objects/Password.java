@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public record Password(@NotBlank @Size(min = 5, max = 48) String password) {
 
-    public Password(String password) {
+    public Password {
         Objects.requireNonNull(password);
         if (password.isBlank()) {
             throw new IllegalArgumentException("Password should`t be blank.");
@@ -15,6 +15,5 @@ public record Password(@NotBlank @Size(min = 5, max = 48) String password) {
         if (password.length() < 4 || password.length() > 48) {
             throw new IllegalArgumentException("Password length should be greater than 4 characters and smaller than 48 characters.");
         }
-        this.password = password;
     }
 }

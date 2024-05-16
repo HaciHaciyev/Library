@@ -34,10 +34,10 @@ public class Customer {
         return new Builder();
     }
 
-    private static Customer factory(UUID id, FirstName firstName,
-                                    LastName lastName, Password password,
-                                    Email email, Address address,
-                                    Events events) {
+    private static Customer of(UUID id, FirstName firstName,
+                               LastName lastName, Password password,
+                               Email email, Address address,
+                               Events events) {
         validateToNullAndBlank(new Object[]{id, firstName, lastName,
                 password, email, address, events});
 
@@ -141,7 +141,7 @@ public class Customer {
         }
 
         public Customer build() {
-            return factory(this.id, this.firstName,
+            return of(this.id, this.firstName,
                     this.lastName, this.password, this.email,
                     this.address, this.events);
         }
@@ -150,10 +150,8 @@ public class Customer {
     private static void validateToNullAndBlank(Object[] o) {
         for (Object object : o) {
             Objects.requireNonNull(object);
-            if (object instanceof String) {
-                if (((String) object).isBlank()) {
-                    throw new IllegalArgumentException("String should`t be blank.");
-                }
+            if (object instanceof String string && string.isBlank()) {
+                throw new IllegalArgumentException("String should`t be blank.");
             }
         }
     }

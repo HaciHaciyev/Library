@@ -56,7 +56,9 @@ public class BookService {
 
             List<Optional<Author>> currentAuthors = authorRepository.getAuthorsByBookId(currentBook.getId());
             for (Optional<Author> optionalAuthor : currentAuthors) {
-                currentBook.addAuthor(optionalAuthor.get());
+                if (optionalAuthor.isPresent()) {
+                    currentBook.addAuthor(optionalAuthor.get());
+                }
             }
         }
         return bookPage;
@@ -66,12 +68,12 @@ public class BookService {
         Optional<Book> savedBook = bookRepository.saveBook(book);
 
         Optional<Publisher> savedPublisher = publisherRepository.savePublisher(book.getPublisher());
-        bookRepository.saveBook_Publisher(savedBook.orElseThrow(), savedPublisher.orElseThrow());
+        bookRepository.saveBookPublisher(savedBook.orElseThrow(), savedPublisher.orElseThrow());
 
         Set<Author> authorsForSave = book.getAuthors();
         for (Author authorForSave : authorsForSave) {
             Optional<Author> savedAuthor = authorRepository.saveAuthor(authorForSave);
-            bookRepository.saveBook_Author(savedBook.orElseThrow(), savedAuthor.orElseThrow());
+            bookRepository.saveBookAuthor(savedBook.orElseThrow(), savedAuthor.orElseThrow());
         }
 
         return savedBook;

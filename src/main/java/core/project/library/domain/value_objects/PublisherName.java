@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public record PublisherName(@NotBlank @Size(min = 5, max = 25) String publisherName) {
 
-     public PublisherName(String publisherName) {
+     public PublisherName {
          Objects.requireNonNull(publisherName);
          if (publisherName.isBlank()) {
              throw new IllegalArgumentException("Publisher name should`t be blank.");
@@ -15,6 +15,5 @@ public record PublisherName(@NotBlank @Size(min = 5, max = 25) String publisherN
          if (publisherName.length() < 5 || publisherName.length() > 25) {
              throw new IllegalArgumentException("Publisher name should`t be longer than 25 characters and shorter than 5 characters.");
          }
-         this.publisherName = publisherName;
      }
 }

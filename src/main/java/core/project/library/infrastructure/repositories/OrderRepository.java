@@ -20,6 +20,8 @@ public class OrderRepository {
 
     private final RowToOrder rowToOrder;
 
+    private static final String SELECT_BY_ID = "Select * from Order_Line where id=?";
+
     public OrderRepository(JdbcTemplate jdbcTemplate,
                            RowToOrder rowToOrder) {
         this.jdbcTemplate = jdbcTemplate;
@@ -28,8 +30,8 @@ public class OrderRepository {
 
     public Optional<Order> getOrderById(UUID orderId) {
         try {
-            return Optional.ofNullable(jdbcTemplate.queryForObject(
-                    "Select * from Order_Line where id=?", rowToOrder, orderId.toString()
+            return Optional.ofNullable(jdbcTemplate.queryForObject(SELECT_BY_ID,
+                    rowToOrder, orderId.toString()
             ));
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -41,8 +43,8 @@ public class OrderRepository {
                 String.class, bookId.toString());
 
         List<Optional<Order>> orders = new ArrayList<>();
-        uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
-                .queryForObject("Select * from Order_Line where id=?", rowToOrder, uuid)
+        uuids.forEach(uuid -> orders.add(Optional.ofNullable(
+                jdbcTemplate.queryForObject(SELECT_BY_ID, rowToOrder, uuid)
         )));
         return orders;
     }
@@ -52,8 +54,8 @@ public class OrderRepository {
                 String.class, customerId.toString());
 
         List<Optional<Order>> orders = new ArrayList<>();
-        uuids.forEach(uuid -> orders.add(Optional.ofNullable(jdbcTemplate
-                .queryForObject("Select * from Order_Line where id=?", rowToOrder, uuid)
+        uuids.forEach(uuid -> orders.add(Optional.ofNullable(
+                jdbcTemplate.queryForObject(SELECT_BY_ID, rowToOrder, uuid)
         )));
         return orders;
     }

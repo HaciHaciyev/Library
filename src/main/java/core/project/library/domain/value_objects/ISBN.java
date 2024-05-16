@@ -8,7 +8,7 @@ public record ISBN(@org.hibernate.validator.constraints.ISBN
                    @NotBlank
                    String isbn) {
 
-    public ISBN(String isbn) {
+    public ISBN {
         Objects.requireNonNull(isbn);
         if (isbn.isBlank()) {
             throw new IllegalArgumentException("ISBN should`t be blank.");
@@ -16,8 +16,6 @@ public record ISBN(@org.hibernate.validator.constraints.ISBN
         if (!isIsbn13Valid(isbn)) {
             throw new IllegalArgumentException("Invalid ISBN number.");
         }
-
-        this.isbn = isbn;
     }
 
     private static boolean isIsbn13Valid(String isbn) {
