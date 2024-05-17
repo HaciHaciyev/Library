@@ -84,6 +84,11 @@ public class BookService {
         return getBookById(bookId);
     }
 
+    public Optional<Book> patchBook(UUID bookId, Map<String, String> values) {
+        bookRepository.patchBook(bookId, values);
+        return getBookById(bookId);
+    }
+
     private PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
         int queryPageNumber;
         int queryPageSize;

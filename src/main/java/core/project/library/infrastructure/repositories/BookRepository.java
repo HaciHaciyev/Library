@@ -13,10 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.*;
 
 @Slf4j
 @Repository
@@ -112,6 +110,59 @@ public class BookRepository {
                 bookForUpdate.getCategory().toString(), bookForUpdate.getEvents().last_update_date(),
                 bookId.toString()
         );
+    }
+
+    public void patchBook(UUID bookId, Map<String, String> values) {
+        if (values.containsKey("title")) {
+            jdbcTemplate.update("""
+                    Update Book
+                    Set
+                        title = ?
+                    Where id = ?
+            """,
+                    values.get("title"), bookId.toString()
+            );
+        }
+        if (values.containsKey("description")) {
+            jdbcTemplate.update("""
+                    Update Book
+                    Set
+                        description = ?
+                    Where id = ?
+            """,
+                    values.get("description"), bookId.toString()
+            );
+        }
+        if (values.containsKey("price")) {
+            jdbcTemplate.update("""
+                    Update Book
+                    Set
+                        price = ?
+                    Where id = ?
+            """,
+                    new BigDecimal(values.get("price")), bookId.toString()
+            );
+        }
+        if (values.containsKey("quantity_on_hand")) {
+            jdbcTemplate.update("""
+                    Update Book
+                    Set
+                        quantity_on_hand = ?
+                    Where id = ?
+            """,
+                    Integer.valueOf(values.get("quantity_on_hand")), bookId.toString()
+            );
+        }
+        if (values.containsKey("category")) {
+            jdbcTemplate.update("""
+                    Update Book
+                    Set
+                        category = ?
+                    Where id = ?
+            """,
+                    values.get("category"), bookId.toString()
+            );
+        }
     }
 
     public void saveBookPublisher(Book savedBook, Publisher savedPublisher) {

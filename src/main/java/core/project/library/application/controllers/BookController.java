@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -61,15 +62,9 @@ public class BookController {
         Optional<Book> book = bookService
                 .saveBookAndPublisherWithAuthors(bookEntity);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", String.format(
-                "/library/book/getBookById/%s",
-                book.orElseThrow(NotFoundException::new)
-                .getId().toString()));
-
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .headers(headers)
+                .headers(locationHeader(book))
                 .body(entityMapper.toModel(
                         book.orElseThrow(NotFoundException::new)
                 ));
@@ -82,17 +77,34 @@ public class BookController {
         Optional<Book> book = bookService
                 .updateBook(bookId, bookEntity);
 
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .headers(locationHeader(book))
+                .body(entityMapper.toModel(
+                        book.orElseThrow(NotFoundException::new)
+                ));
+    }
+
+    @PatchMapping("/patchBook/{bookId}")
+    public ResponseEntity<BookModel> patchBook(@PathVariable("bookId") UUID bookId,
+                                               @RequestBody Map<String, String> values) {
+        Optional<Book> book = bookService
+                .patchBook(bookId, values);
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .headers(locationHeader(book))
+                .body(entityMapper.toModel(
+                        book.orElseThrow(NotFoundException::new)
+                ));
+    }
+
+    private HttpHeaders locationHeader(Optional<Book> book) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", String.format(
                 "/library/book/getBookById/%s",
                 book.orElseThrow(NotFoundException::new)
                 .getId().toString()));
-
-        return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
-                .headers(headers)
-                .body(entityMapper.toModel(
-                        book.orElseThrow(NotFoundException::new)
-                ));
+        return headers;
     }
 }
