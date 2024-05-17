@@ -29,16 +29,6 @@ public class Publisher {
         return new Builder();
     }
 
-    private static Publisher of(UUID id, PublisherName publisherName,
-                                Address address, Phone phone, Email email,
-                                Events events) {
-        validateToNullAndBlank(new Object[]{id, publisherName, address,
-                phone, email, events});
-
-        return new Publisher(id, publisherName, address,
-                phone, email, events, new HashSet<>());
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -121,9 +111,11 @@ public class Publisher {
         }
 
         public Publisher build() {
-            return of(this.id, this.publisherName,
-                    this.address, this.phone,
-                    this.email, this.events);
+            validateToNullAndBlank(new Object[]{id, publisherName, address,
+                    phone, email, events});
+
+            return new Publisher(id, publisherName, address,
+                    phone, email, events, new HashSet<>());
         }
     }
 

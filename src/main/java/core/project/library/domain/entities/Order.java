@@ -26,15 +26,6 @@ public class Order {
         return new Builder();
     }
 
-    private static Order of(UUID id, Integer countOfBooks,
-                            TotalPrice totalPrice, Events events) {
-        validateToNullAndBlank(new Object[]{id, countOfBooks,
-                totalPrice, events});
-
-        return new Order(id, countOfBooks, totalPrice,
-                events, null, new HashSet<>());
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -99,9 +90,11 @@ public class Order {
         }
 
         public Order build() {
-            return of(this.id, this.countOfBooks,
-                    this.totalPrice,
-                    this.events);
+            validateToNullAndBlank(new Object[]{id, countOfBooks,
+                    totalPrice, events});
+
+            return new Order(id, countOfBooks, totalPrice,
+                    events, null, new HashSet<>());
         }
     }
 

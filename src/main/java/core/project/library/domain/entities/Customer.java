@@ -34,17 +34,6 @@ public class Customer {
         return new Builder();
     }
 
-    private static Customer of(UUID id, FirstName firstName,
-                               LastName lastName, Password password,
-                               Email email, Address address,
-                               Events events) {
-        validateToNullAndBlank(new Object[]{id, firstName, lastName,
-                password, email, address, events});
-
-        return new Customer(id, firstName, lastName, password,
-                email, address, events, new HashSet<>());
-    }
-
     public static Customer from(CustomerModel model) {
         return Customer.builder()
                 .id(UUID.randomUUID())
@@ -141,9 +130,11 @@ public class Customer {
         }
 
         public Customer build() {
-            return of(this.id, this.firstName,
-                    this.lastName, this.password, this.email,
-                    this.address, this.events);
+            validateToNullAndBlank(new Object[]{id, firstName, lastName,
+                    password, email, address, events});
+
+            return new Customer(id, firstName, lastName, password,
+                    email, address, events, new HashSet<>());
         }
     }
 

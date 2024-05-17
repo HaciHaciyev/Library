@@ -29,15 +29,6 @@ public class Author {
         return new Builder();
     }
 
-    private static Author of(UUID id, FirstName firstName, LastName lastName,
-                             Email email, Address address, Events events) {
-        validateToNullAndBlank(new Object[]{id, firstName, lastName,
-                email, address, events});
-
-        return new Author(id, firstName, lastName,
-                email, address, events, new HashSet<>());
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -121,9 +112,11 @@ public class Author {
         }
 
         public Author build() {
-            return of(this.id, this.firstName,
-                    this.lastName, this.email,
-                    this.address, this.events);
+            validateToNullAndBlank(new Object[]{id, firstName, lastName,
+                    email, address, events});
+
+            return new Author(id, firstName, lastName,
+                    email, address, events, new HashSet<>());
         }
     }
 

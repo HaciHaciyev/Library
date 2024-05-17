@@ -55,16 +55,6 @@ public class Book {
         return new Builder();
     }
 
-    private static Book of(UUID id, Title title, Description description,
-                           ISBN isbn, BigDecimal price, Integer quantityOnHand,
-                           Category category, Events events) {
-        validateToNullAndBlank(new Object[]{id, title, description, isbn,
-                price, quantityOnHand, category, events});
-
-        return new Book(id, title, description, isbn, price, quantityOnHand,
-                category, events, null, new HashSet<>(), new HashSet<>());
-    }
-
     public static Book from(BookModel bookModel) {
         Objects.requireNonNull(bookModel);
 
@@ -202,9 +192,11 @@ public class Book {
         }
 
         public Book build() {
-            return of(this.id, this.title, this.description,
-                    this.isbn, this.price, this.quantityOnHand,
-                    this.category, this.events);
+            validateToNullAndBlank(new Object[]{id, title, description, isbn,
+                    price, quantityOnHand, category, events});
+
+            return new Book(id, title, description, isbn, price, quantityOnHand,
+                    category, events, null, new HashSet<>(), new HashSet<>());
         }
     }
 
