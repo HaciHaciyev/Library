@@ -68,10 +68,14 @@ public class BookRepository {
     }
 
     public Page<Book> listOfBooks(Pageable pageable) {
-        String pageNumber = String.valueOf(pageable.getPageNumber());
-        String pageSize = String.valueOf(pageable.getPageSize());
-        List<Book> list = jdbcTemplate.query(
-                "Select * from Book Limit %s Offset %s".formatted(pageSize, pageNumber),
+        String pageNumber =
+                String.valueOf(pageable.getPageNumber());
+        String pageSize =
+                String.valueOf(pageable.getPageSize());
+        List<Book> list =
+                jdbcTemplate.query(
+                "Select * from Book Limit %s Offset %s"
+                .formatted(pageSize, pageNumber),
                 rowToBook);
 
         return new PageImpl<>(list, pageable, pageable.getPageSize());
@@ -88,6 +92,26 @@ public class BookRepository {
                 bookForSave.getEvents().creation_date(), bookForSave.getEvents().last_update_date()
         );
         return Optional.of(bookForSave);
+    }
+
+    public void updateBook(UUID bookId, Book bookForUpdate) {
+        jdbcTemplate.update("""
+               Update Book
+               Set
+                    title = ?,
+                    description = ?,
+                    isbn = ?,
+                    price = ?,
+                    quantity_on_hand = ?,
+                    category = ?,
+                    last_modified_date = ?
+               Where id = ?
+        """,
+                bookForUpdate.getTitle().title(), bookForUpdate.getDescription().description(),
+                bookForUpdate.getIsbn().isbn(), bookForUpdate.getPrice(), bookForUpdate.getQuantityOnHand(),
+                bookForUpdate.getCategory().toString(), bookForUpdate.getEvents().last_update_date(),
+                bookId.toString()
+        );
     }
 
     public void saveBookPublisher(Book savedBook, Publisher savedPublisher) {
@@ -113,12 +137,13 @@ public class BookRepository {
     }
 
     public void saveBookOrder(Book existingBook, Order existingOrder) {
-        jdbcTemplate.update("""
+       jdbcTemplate.update("""
        Insert into Book_Order (id, book_id, order_id)
                    values (?,?,?)
        """,
                 UUID.randomUUID().toString(),
                 existingBook.getId().toString(),
-                existingOrder.getId().toString());
+                existingOrder.getId().toString()
+       );
     }
 }

@@ -56,16 +56,43 @@ public class BookController {
     }
 
     @PostMapping("/saveBook")
-    public ResponseEntity<Void> saveBook(@RequestBody @Validated BookModel bookModel) {
+    public ResponseEntity<BookModel> saveBook(@RequestBody @Validated BookModel bookModel) {
         Book bookEntity = Book.from(bookModel);
         Optional<Book> book = bookService
                 .saveBookAndPublisherWithAuthors(bookEntity);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", "/library/book/getBookById/" +
+        headers.add("Location", String.format(
+                "/library/book/getBookById/%s",
                 book.orElseThrow(NotFoundException::new)
-                .getId().toString());
-        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+                .getId().toString()));
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .headers(headers)
+                .body(entityMapper.toModel(
+                        book.orElseThrow(NotFoundException::new)
+                ));
     }
 
+    @PutMapping("/updateBook/{bookId}")
+    public ResponseEntity<BookModel> updateBook(@PathVariable("bookId") UUID bookId,
+                                                @RequestBody @Validated BookModel bookModel) {
+        Book bookEntity = Book.from(bookModel);
+        Optional<Book> book = bookService
+                .updateBook(bookId, bookEntity);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Location", String.format(
+                "/library/book/getBookById/%s",
+                book.orElseThrow(NotFoundException::new)
+                .getId().toString()));
+
+        return ResponseEntity
+                .status(HttpStatus.ACCEPTED)
+                .headers(headers)
+                .body(entityMapper.toModel(
+                        book.orElseThrow(NotFoundException::new)
+                ));
+    }
 }

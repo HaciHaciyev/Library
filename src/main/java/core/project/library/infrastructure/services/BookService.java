@@ -79,6 +79,11 @@ public class BookService {
         return savedBook;
     }
 
+    public Optional<Book> updateBook(UUID bookId, Book book) {
+        bookRepository.updateBook(bookId, book);
+        return getBookById(bookId);
+    }
+
     private PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
         int queryPageNumber;
         int queryPageSize;

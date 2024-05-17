@@ -35,14 +35,18 @@ public class CustomerRepository {
     }
 
     public Optional<Customer> getCustomerByOrderId(UUID orderId) {
-        Optional<String> customerId = Optional.ofNullable(jdbcTemplate.queryForObject(
-                "Select customer_id from Customer_Order where order_id=?",
-                String.class, orderId.toString()
-        ));
+        try {
+            Optional<String> customerId = Optional.ofNullable(jdbcTemplate.queryForObject(
+                    "Select customer_id from Customer_Order where order_id=?",
+                    String.class, orderId.toString()
+            ));
 
-        return Optional.ofNullable(jdbcTemplate.queryForObject(
-                "Select * from Customer where id=?", rowToCustomer, customerId.orElseThrow()
-        ));
+            return Optional.ofNullable(jdbcTemplate.queryForObject(
+                    "Select * from Customer where id=?", rowToCustomer, customerId.orElseThrow()
+            ));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
     public void saveCustomerOrder(Customer existingCustomer, Order existingOrder) {

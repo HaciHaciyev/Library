@@ -50,8 +50,10 @@ public class OrderRepository {
     }
 
     public List<Optional<Order>> getOrdersByCustomerId(UUID customerId) {
-        List<String> uuids = jdbcTemplate.queryForList("Select order_id from Customer_Order where customer_id=?",
-                String.class, customerId.toString());
+        List<String> uuids = jdbcTemplate.queryForList(
+                "Select order_id from Customer_Order where customer_id=?",
+                String.class, customerId.toString()
+        );
 
         List<Optional<Order>> orders = new ArrayList<>();
         uuids.forEach(uuid -> orders.add(Optional.ofNullable(
