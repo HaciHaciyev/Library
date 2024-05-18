@@ -1,9 +1,8 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Publisher;
-import core.project.library.domain.events.Events;
-import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToPublisher;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -22,27 +21,17 @@ public class PublisherRepository {
         this.rowToPublisher = rowToPublisher;
     }
 
-    public Optional<Publisher> getPublisherByBookId(UUID bookId) {
-        Optional<String> publisherId = Optional.ofNullable(jdbcTemplate
-                .queryForObject("Select publisher_id from Book_Publisher where book_id=?",
-                        String.class, bookId.toString()));
-
-        return Optional.ofNullable(jdbcTemplate
-                .queryForObject("Select * from Publisher where id=?",
-                        rowToPublisher, publisherId.orElseThrow(NotFoundException::new))
-        );
+    public Optional<Publisher> getPublisherById(UUID publisherId) {
+        try {
+            return Optional.ofNullable(jdbcTemplate
+                    .queryForObject("Select * from Publisher where id=?", rowToPublisher, publisherId.toString())
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
-    public Optional<Publisher> savePublisher(Publisher publisher) {
-        Publisher publisherForSave = Publisher.builder()
-                .id(UUID.randomUUID())
-                .publisherName(publisher.getPublisherName())
-                .address(publisher.getAddress())
-                .phone(publisher.getPhone())
-                .email(publisher.getEmail())
-                .events(new Events())
-                .build();
-
+    public Optional<Publisher> savePublisher(Publisher publisherForSave) {
         jdbcTemplate.update("""
         Insert into Publisher (id, publisher_name, state, city, street, home,
                        phone, email, creation_date, last_modified_date)

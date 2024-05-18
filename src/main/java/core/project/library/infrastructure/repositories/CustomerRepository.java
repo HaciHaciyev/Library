@@ -1,7 +1,6 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Customer;
-import core.project.library.domain.entities.Order;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToCustomer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -32,31 +31,6 @@ public class CustomerRepository {
         } catch (EmptyResultDataAccessException exception) {
             return Optional.empty();
         }
-    }
-
-    public Optional<Customer> getCustomerByOrderId(UUID orderId) {
-        try {
-            Optional<String> customerId = Optional.ofNullable(jdbcTemplate.queryForObject(
-                    "Select customer_id from Customer_Order where order_id=?",
-                    String.class, orderId.toString()
-            ));
-
-            return Optional.ofNullable(jdbcTemplate.queryForObject(
-                    "Select * from Customer where id=?", rowToCustomer, customerId.orElseThrow()
-            ));
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
-    }
-
-    public void saveCustomerOrder(Customer existingCustomer, Order existingOrder) {
-        jdbcTemplate.update("""
-       Insert into Customer_Order (id, customer_id, order_id)
-                   values (?,?,?)
-       """,
-                UUID.randomUUID().toString(),
-                existingCustomer.getId().toString(),
-                existingOrder.getId().toString());
     }
 
     public Optional<Customer> saveCustomer(Customer customer) {

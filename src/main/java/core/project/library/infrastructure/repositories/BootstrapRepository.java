@@ -100,7 +100,7 @@ public class BootstrapRepository {
                 .build();
 
         Book book2 = Book.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.fromString("9f16fea8-4482-406c-aa53-43593d1cb480"))
                 .title(new Title("Title2"))
                 .description(new Description("Description"))
                 .isbn(new ISBN("9781861972712"))
@@ -134,68 +134,26 @@ public class BootstrapRepository {
 
         //-----------------------------------------------------------------------------------------------------------
 
-        saveBook(book);
-        saveBook(book2);
+        savePublisher(publisher);
+        savePublisher(publisher2);
 
         saveAuthor(author);
         saveAuthor(author2);
 
+        saveBook(book);
+        saveBook(book2);
+
         saveBookAuthor(book, author);
         saveBookAuthor(book2, author2);
 
-        savePublisher(publisher);
-        savePublisher(publisher2);
-
-        saveBookPublisher(book, publisher);
-        saveBookPublisher(book2, publisher2);
+        saveCustomer(customer);
+        saveCustomer(customer2);
 
         saveOrder(order);
         saveOrder(order2);
 
         saveBookOrder(book, order);
         saveBookOrder(book2, order2);
-
-        saveCustomer(customer);
-        saveCustomer(customer2);
-
-        saveCustomerOrder(order, customer);
-        saveCustomerOrder(order2, customer2);
-    }
-
-    private void saveBook(Book book) {
-        jdbcTemplate.update("""
-        Insert into Book (id, title, description, isbn, price,
-                  quantity_on_hand, category, created_date, last_modified_date)
-                  values (?,?,?,?,?,?,?,?,?)
-        """,
-                book.getId().toString(), book.getTitle().title(), book.getDescription().description(),
-                book.getIsbn().isbn(), book.getPrice(), book.getQuantityOnHand(), book.getCategory().toString(),
-                book.getEvents().creation_date(), book.getEvents().last_update_date()
-        );
-    }
-
-    private void saveAuthor(Author author) {
-        jdbcTemplate.update("""
-        Insert into Author (id, first_name, last_name, email,
-                    state, city, street, home, created_date, last_modified_date)
-                    values (?,?,?,?,?,?,?,?,?,?)
-        """,
-                author.getId().toString(), author.getFirstName().firstName(), author.getLastName().lastName(),
-                author.getEmail().email(), author.getAddress().state(), author.getAddress().city(),
-                author.getAddress().street(), author.getAddress().home(),
-                author.getEvents().creation_date(), author.getEvents().last_update_date()
-        );
-    }
-
-    private void saveBookAuthor(Book book, Author author) {
-        jdbcTemplate.update("""
-        Insert into Book_Author (id, book_id, author_id)
-                    values (?,?,?)
-        """,
-                UUID.randomUUID().toString(),
-                book.getId().toString(),
-                author.getId().toString()
-        );
     }
 
     private void savePublisher(Publisher publisher) {
@@ -212,36 +170,41 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveBookPublisher(Book book, Publisher publisher) {
+    private void saveAuthor(Author author) {
         jdbcTemplate.update("""
-        Insert into Book_Publisher (id, book_id, publisher_id)
+        Insert into Author (id, first_name, last_name, email,
+                    state, city, street, home, created_date, last_modified_date)
+                    values (?,?,?,?,?,?,?,?,?,?)
+        """,
+                author.getId().toString(), author.getFirstName().firstName(), author.getLastName().lastName(),
+                author.getEmail().email(), author.getAddress().state(), author.getAddress().city(),
+                author.getAddress().street(), author.getAddress().home(),
+                author.getEvents().creation_date(), author.getEvents().last_update_date()
+        );
+    }
+
+    private void saveBook(Book book) {
+        jdbcTemplate.update("""
+        Insert into Book (id, publisher_id, title, description, isbn, price,
+                  quantity_on_hand, category, created_date, last_modified_date)
+                  values (?,?,?,?,?,?,?,?,?,?)
+        """,
+                book.getId().toString(), book.getPublisher().getId().toString(),
+                book.getTitle().title(), book.getDescription().description(),
+                book.getIsbn().isbn(), book.getPrice(), book.getQuantityOnHand(),
+                book.getCategory().toString(), book.getEvents().creation_date(),
+                book.getEvents().last_update_date()
+        );
+    }
+
+    private void saveBookAuthor(Book book, Author author) {
+        jdbcTemplate.update("""
+        Insert into Book_Author (id, book_id, author_id)
                     values (?,?,?)
         """,
                 UUID.randomUUID().toString(),
                 book.getId().toString(),
-                publisher.getId().toString()
-        );
-    }
-
-    private void saveOrder(Order order) {
-        jdbcTemplate.update("""
-        Insert into Order_Line (id, count_of_book, total_price,
-                        creation_date, last_modified_date)
-                        values (?,?,?,?,?)
-        """,
-                order.getId().toString(), order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
-                order.getEvents().creation_date(), order.getEvents().last_update_date()
-        );
-    }
-
-    private void saveBookOrder(Book book, Order order) {
-        jdbcTemplate.update("""
-        Insert into Book_Order (id, book_id, order_id)
-                    values (?,?,?)
-        """,
-                UUID.randomUUID().toString(),
-                book.getId().toString(),
-                order.getId().toString()
+                author.getId().toString()
         );
     }
 
@@ -259,13 +222,26 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveCustomerOrder(Order order, Customer customer) {
+    private void saveOrder(Order order) {
         jdbcTemplate.update("""
-        Insert into Customer_Order (id, customer_id, order_id)
+        Insert into Order_Line (id, customer_id,
+                        count_of_book, total_price,
+                        creation_date, last_modified_date)
+                        values (?,?,?,?,?,?)
+        """,
+                order.getId().toString(), order.getCustomer().getId().toString(),
+                order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
+                order.getEvents().creation_date(), order.getEvents().last_update_date()
+        );
+    }
+
+    private void saveBookOrder(Book book, Order order) {
+        jdbcTemplate.update("""
+        Insert into Book_Order (id, book_id, order_id)
                     values (?,?,?)
         """,
                 UUID.randomUUID().toString(),
-                customer.getId().toString(),
+                book.getId().toString(),
                 order.getId().toString()
         );
     }

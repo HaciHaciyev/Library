@@ -5,7 +5,6 @@ import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.TotalPrice;
-import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.BookRepository;
 import core.project.library.infrastructure.repositories.CustomerRepository;
 import core.project.library.infrastructure.repositories.OrderRepository;
@@ -45,7 +44,9 @@ public class CustomerService {
         long totalPrice = 0;
         Set<Book> booksForOrder = new HashSet<>();
         for (UUID bookId : bookUUIDs) {
-            Optional<Book> optionalBook = bookRepository.getBookById(bookId);
+            Optional<Book> optionalBook =
+                    bookRepository.getBookById(bookId);
+
             if (optionalBook.isEmpty()) {
                 return Optional.empty();
             } else {
@@ -69,8 +70,6 @@ public class CustomerService {
         Optional<Order> savedOrder = orderRepository.saveOrder(newOrder);
         /**Save IDs for Book_Order join table*/
         booksForOrder.forEach(book -> bookRepository.saveBookOrder(book, savedOrder.orElseThrow()));
-        /**Save IDs for Customer_Order join table*/
-        customerRepository.saveCustomerOrder(optionalCustomer.get(), savedOrder.orElseThrow());
 
         return getCustomerById(customerId);
     }
@@ -79,10 +78,7 @@ public class CustomerService {
         return customerRepository.updateCustomer(customer);
     }
 
-    private Optional<Customer> entityCollectorForCustomer(Customer customer, List<Optional<Order>> orders) {
-        Set<Order> orderSet = new HashSet<>();
-        orders.forEach(order -> orderSet.add(order.orElseThrow(NotFoundException::new)));
-
+    private Optional<Customer> entityCollectorForCustomer(Customer customer, List<Order> orders) {
         Customer resultCustomer = Customer.builder()
                 .id(customer.getId())
                 .firstName(customer.getFirstName())
@@ -93,6 +89,7 @@ public class CustomerService {
                 .events(customer.getEvents())
                 .build();
 
+        Set<Order> orderSet = new HashSet<>(orders);
         orderSet.forEach(resultCustomer::addOrder);
 
         return Optional.of(resultCustomer);

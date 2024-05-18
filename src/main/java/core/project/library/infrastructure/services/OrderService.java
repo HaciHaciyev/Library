@@ -23,11 +23,13 @@ public class OrderService {
     private final BookRepository bookRepository;
 
     public Optional<Order> getOrderById(UUID orderId) {
-        return entityCollectorForOrder(
-                orderRepository.getOrderById(orderId).orElseThrow(NotFoundException::new),
-                customerRepository.getCustomerByOrderId(orderId).orElseThrow(NotFoundException::new),
-                bookRepository.getBooksByOrderId(orderId)
-        );
+        Order order = orderRepository.getOrderById(orderId).orElseThrow(NotFoundException::new);
+        Customer customer = customerRepository.getCustomerById(
+                orderRepository.getCustomerId(orderId)
+        ).orElseThrow(NotFoundException::new);
+        List<Book> bookList = bookRepository.getBooksByOrderId(orderId);
+
+        return entityCollectorForOrder(order, customer, bookList);
     }
 
     private static Optional<Order> entityCollectorForOrder(Order order, Customer customer, List<Book> bookList) {

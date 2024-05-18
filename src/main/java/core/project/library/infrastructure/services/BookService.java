@@ -32,43 +32,46 @@ public class BookService {
     private final AuthorRepository authorRepository;
 
     public Optional<Book> getBookById(UUID bookId) {
-        return entityCollectorForBook(
-                bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new),
-                publisherRepository.getPublisherByBookId(bookId).orElseThrow(NotFoundException::new),
-                authorRepository.getAuthorsByBookId(bookId)
-        );
+        if (bookRepository.getPublisherId(bookId).isEmpty()) {
+            return Optional.empty();
+        }
+        Publisher publisher = publisherRepository.getPublisherById(
+                bookRepository.getPublisherId(bookId).get()
+        ).orElseThrow(NotFoundException::new);
+        List<Author> authors = authorRepository.getAuthorsByBookId(bookId);
+        Book book = bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new);
+
+        return entityCollectorForBook(book, publisher, authors);
     }
 
     public Optional<Book> findByName(String title) {
         Book book = bookRepository.findByName(title).orElseThrow(NotFoundException::new);
-        return entityCollectorForBook(book,
-                publisherRepository.getPublisherByBookId(book.getId()).orElseThrow(NotFoundException::new),
-                authorRepository.getAuthorsByBookId(book.getId())
-        );
+        Publisher publisher = publisherRepository.getPublisherById(
+                bookRepository.getPublisherId(book.getId()).orElseThrow()
+        ).orElseThrow(NotFoundException::new);
+        List<Author> authors = authorRepository.getAuthorsByBookId(book.getId());
+
+        return entityCollectorForBook(book, publisher, authors);
     }
 
     public Page<Book> listOfBooks(Integer pageNumber, Integer pageSize) {
         PageRequest pageRequest = buildPageRequest(pageNumber, pageSize);
         Page<Book> bookPage = bookRepository.listOfBooks(pageRequest);
-        for (Book currentBook : bookPage) {
-            Optional<Publisher> currentPublisher = publisherRepository.getPublisherByBookId(currentBook.getId());
-            currentBook.addPublisher(currentPublisher.orElseThrow());
+        for (Book book : bookPage) {
+            Optional<Publisher> currentPublisher = publisherRepository.getPublisherById(
+                    bookRepository.getPublisherId(book.getId()).orElseThrow()
+            );
+            book.addPublisher(currentPublisher.orElseThrow());
 
-            List<Optional<Author>> currentAuthors = authorRepository.getAuthorsByBookId(currentBook.getId());
-            for (Optional<Author> optionalAuthor : currentAuthors) {
-                if (optionalAuthor.isPresent()) {
-                    currentBook.addAuthor(optionalAuthor.get());
-                }
-            }
+            List<Author> currentAuthors = authorRepository.getAuthorsByBookId(book.getId());
+            currentAuthors.forEach(book::addAuthor);
         }
         return bookPage;
     }
 
     public Optional<Book> saveBookAndPublisherWithAuthors(Book book) {
+        publisherRepository.savePublisher(book.getPublisher());
         Optional<Book> savedBook = bookRepository.saveBook(book);
-
-        Optional<Publisher> savedPublisher = publisherRepository.savePublisher(book.getPublisher());
-        bookRepository.saveBookPublisher(savedBook.orElseThrow(), savedPublisher.orElseThrow());
 
         Set<Author> authorsForSave = book.getAuthors();
         for (Author authorForSave : authorsForSave) {
@@ -115,10 +118,8 @@ public class BookService {
     }
 
     private static Optional<Book> entityCollectorForBook(
-            Book book, Publisher publisher, List<Optional<Author>> authors) {
-        Set<Author> authorSet = new HashSet<>();
-        authors.forEach(author -> authorSet.add(author.orElseThrow(NotFoundException::new)));
-
+            Book book, Publisher publisher, List<Author> authors) {
+        Set<Author> authorSet = new HashSet<>(authors);
         book.addPublisher(publisher);
         authorSet.forEach(book::addAuthor);
         return Optional.of(book);

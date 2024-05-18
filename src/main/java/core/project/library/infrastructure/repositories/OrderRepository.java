@@ -1,16 +1,17 @@
 package core.project.library.infrastructure.repositories;
 
 import core.project.library.domain.entities.Order;
+import core.project.library.domain.events.Events;
+import core.project.library.domain.value_objects.TotalPrice;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.*;
 
 @Slf4j
 @Repository
@@ -38,7 +39,33 @@ public class OrderRepository {
         }
     }
 
-    public List<Optional<Order>> getOrderByBookId(UUID bookId) {
+    public UUID getCustomerId(UUID orderId) {
+        return UUID.fromString(Objects.requireNonNull(jdbcTemplate.queryForObject(
+                "Select customer_id from Order_Line where id=?", String.class, orderId.toString()
+        )));
+    }
+
+    public List<Order> getOrdersByCustomerId(UUID customerId) {
+        List<Order> orders = new ArrayList<>();
+        List<Map<String, Object>> query = jdbcTemplate.queryForList(
+                "Select * from Order_Line where customer_id=?", customerId.toString()
+        );
+        query.forEach(rs -> orders.add(Order.builder()
+                .id(UUID.fromString(rs.get("id").toString()))
+                .countOfBooks(Integer.valueOf(rs.get("count_of_book").toString()))
+                .totalPrice(new TotalPrice(new BigDecimal(rs.get("total_price").toString())))
+                .events(new Events(
+                        Timestamp.valueOf(rs.get("creation_date").toString()).toLocalDateTime(),
+                        Timestamp.valueOf(rs.get("last_modified_date").toString()).toLocalDateTime()
+                        )
+                )
+                .build()
+        ));
+
+        return orders;
+    }
+
+    public List<Optional<Order>> getOrdersByBookId(UUID bookId) {
         List<String> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
                 String.class, bookId.toString());
 
@@ -49,26 +76,14 @@ public class OrderRepository {
         return orders;
     }
 
-    public List<Optional<Order>> getOrdersByCustomerId(UUID customerId) {
-        List<String> uuids = jdbcTemplate.queryForList(
-                "Select order_id from Customer_Order where customer_id=?",
-                String.class, customerId.toString()
-        );
-
-        List<Optional<Order>> orders = new ArrayList<>();
-        uuids.forEach(uuid -> orders.add(Optional.ofNullable(
-                jdbcTemplate.queryForObject(SELECT_BY_ID, rowToOrder, uuid)
-        )));
-        return orders;
-    }
-
     public Optional<Order> saveOrder(Order order) {
         jdbcTemplate.update("""
-        Insert into Order_Line (id, count_of_book, total_price,
+        Insert into Order_Line (id, customer_id, count_of_book, total_price,
                         creation_date, last_modified_date)
-                        values (?,?,?,?,?)
+                        values (?,?,?,?,?,?)
         """,
-                order.getId().toString(), order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
+                order.getId().toString(), order.getCustomer().getId().toString(),
+                order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
                 order.getEvents().creation_date(), order.getEvents().last_update_date()
         );
         return Optional.of(order);

@@ -3,7 +3,6 @@ package core.project.library.infrastructure.repositories;
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Order;
-import core.project.library.domain.entities.Publisher;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -49,6 +48,16 @@ public class BookRepository {
         }
     }
 
+    public Optional<UUID> getPublisherId(UUID bookId) {
+        try {
+            return Optional.of(UUID.fromString(Objects.requireNonNull(jdbcTemplate.queryForObject(
+                    "Select publisher_id from Book where id=?", String.class, bookId.toString()
+            ))));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
     public List<Book> getBooksByOrderId(UUID orderId) {
         List<String> bookUUIDs = jdbcTemplate.queryForList(
                 "Select book_id from Book_Order where order_id=?", String.class, orderId.toString()
@@ -59,6 +68,7 @@ public class BookRepository {
             Optional<Book> optional = Optional.ofNullable(jdbcTemplate
                     .queryForObject("Select * from Book where id=?", rowToBook, bookId)
             );
+
             bookList.add(optional.orElseThrow());
         }
 
@@ -81,12 +91,14 @@ public class BookRepository {
 
     public Optional<Book> saveBook(Book bookForSave) {
         jdbcTemplate.update("""
-        Insert into Book (id, title, description, isbn, price,
+        Insert into Book (id, publisher_id, title, description, isbn, price,
                   quantity_on_hand, category, created_date, last_modified_date)
-                  values (?,?,?,?,?,?,?,?,?)
+                  values (?,?,?,?,?,?,?,?,?,?)
         """,
-                bookForSave.getId().toString(), bookForSave.getTitle().title(), bookForSave.getDescription().description(),
-                bookForSave.getIsbn().isbn(), bookForSave.getPrice(), bookForSave.getQuantityOnHand(), bookForSave.getCategory().toString(),
+                bookForSave.getId().toString(), bookForSave.getPublisher().getId().toString(),
+                bookForSave.getTitle().title(), bookForSave.getDescription().description(),
+                bookForSave.getIsbn().isbn(), bookForSave.getPrice(),
+                bookForSave.getQuantityOnHand(), bookForSave.getCategory().toString(),
                 bookForSave.getEvents().creation_date(), bookForSave.getEvents().last_update_date()
         );
         return Optional.of(bookForSave);
@@ -163,17 +175,6 @@ public class BookRepository {
                     values.get("category"), bookId.toString()
             );
         }
-    }
-
-    public void saveBookPublisher(Book savedBook, Publisher savedPublisher) {
-        jdbcTemplate.update("""
-        Insert into Book_Publisher (id, book_id, publisher_id)
-                    values (?,?,?)
-        """,
-                UUID.randomUUID().toString(),
-                savedBook.getId().toString(),
-                savedPublisher.getId().toString()
-        );
     }
 
     public void saveBookAuthor(Book savedBook, Author savedAuthor) {
