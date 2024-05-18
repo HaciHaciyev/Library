@@ -92,7 +92,8 @@ public class CustomerController {
     @PostMapping("/saveCustomer")
     public ResponseEntity<Void> saveCustomer(@RequestBody @Valid CustomerModel model) {
         Customer customer = Customer.from(model);
-        Optional<Customer> savedCustomer = customerService.saveCustomer(customer);
+        Optional<Customer> savedCustomer =
+                customerService.saveCustomer(customer);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/library/customer/getCustomerById/"
@@ -112,7 +113,9 @@ public class CustomerController {
     @PutMapping("/updateCustomer")
     public ResponseEntity<Void> updateCustomer(@RequestBody @Valid CustomerModel model) {
         Customer customer = Customer.from(model);
-        Optional<Customer> updatedCustomer = customerService.updateCustomer(customer);
+        Optional<Customer> updatedCustomer =
+                customerService.updateCustomer(customer);
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/library/customer/updateCustomer"
                 + updatedCustomer.orElseThrow(NotFoundException::new)
