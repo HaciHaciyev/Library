@@ -97,14 +97,13 @@ public class CustomerRepository {
                             city = ?,
                             street = ?,
                             home = ?,
-                            creation_date = ?,
                             last_modified_date = ?
                         WHERE id = ?
                         """,
                 customer.getFirstName().firstName(), customer.getLastName().lastName(), customer.getEmail().email(),
                 customer.getPassword().password(), customer.getAddress().state(), customer.getAddress().city(),
-                customer.getAddress().street(), customer.getAddress().home(), customer.getEvents().creation_date(),
-                customer.getEvents().last_update_date(), customer.getId().toString());
+                customer.getAddress().street(), customer.getAddress().home(), customer.getEvents().last_update_date(),
+                customer.getId().toString());
 
         return Optional.of(customer);
     }
