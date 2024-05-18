@@ -120,9 +120,9 @@ public class BootstrapRepository {
         Customer customer2 = Customer.builder()
                 .id(UUID.randomUUID())
                 .firstName(new FirstName("Customer2"))
-                .lastName(new LastName("Customerovich"))
+                .lastName(new LastName("Customerovich2"))
                 .password(new Password("password"))
-                .email(new Email("customer@gmail.com"))
+                .email(new Email("customer2@gmail.com"))
                 .address(DEFAULT_ADDRESS)
                 .events(new Events())
                 .build();
