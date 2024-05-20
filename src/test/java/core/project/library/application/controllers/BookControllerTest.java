@@ -200,10 +200,10 @@ class BookControllerTest {
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
+                .publisher(publisher)
                 .build();
 
         book.addAuthor(author);
-        book.addPublisher(publisher);
 
         return book;
     }

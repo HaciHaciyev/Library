@@ -3,6 +3,7 @@ package core.project.library.infrastructure.services;
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
+import core.project.library.infrastructure.data_transfer.BookDTO;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.AuthorRepository;
 import core.project.library.infrastructure.repositories.BookRepository;
@@ -10,6 +11,7 @@ import core.project.library.infrastructure.repositories.PublisherRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -32,41 +34,37 @@ public class BookService {
     private final AuthorRepository authorRepository;
 
     public Optional<Book> getBookById(UUID bookId) {
-        if (bookRepository.getPublisherId(bookId).isEmpty()) {
+        Optional<UUID> publisherId = bookRepository.getPublisherId(bookId);
+        if (publisherId.isEmpty()) {
             return Optional.empty();
         }
-        Publisher publisher = publisherRepository.getPublisherById(
-                bookRepository.getPublisherId(bookId).get()
-        ).orElseThrow(NotFoundException::new);
         List<Author> authors = authorRepository.getAuthorsByBookId(bookId);
-        Book book = bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new);
+        BookDTO bookDTO = bookRepository.getBookById(bookId).orElseThrow(NotFoundException::new);
+        Publisher publisher = publisherRepository.getPublisherById(publisherId.get()).orElseThrow(NotFoundException::new);
 
-        return entityCollectorForBook(book, publisher, authors);
+        return entityCollectorForBook(bookDTO, publisher, authors);
     }
 
     public Optional<Book> findByName(String title) {
-        Book book = bookRepository.findByName(title).orElseThrow(NotFoundException::new);
-        Publisher publisher = publisherRepository.getPublisherById(
-                bookRepository.getPublisherId(book.getId()).orElseThrow()
-        ).orElseThrow(NotFoundException::new);
-        List<Author> authors = authorRepository.getAuthorsByBookId(book.getId());
+        BookDTO bookDTO = bookRepository.findByName(title).orElseThrow(NotFoundException::new);
+        List<Author> authors = authorRepository.getAuthorsByBookId(bookDTO.id());
+        Publisher publisher = publisherRepository.getPublisherById(bookDTO.publisherId()).orElseThrow(NotFoundException::new);
 
-        return entityCollectorForBook(book, publisher, authors);
+        return entityCollectorForBook(bookDTO, publisher, authors);
     }
 
     public Page<Book> listOfBooks(Integer pageNumber, Integer pageSize) {
         PageRequest pageRequest = buildPageRequest(pageNumber, pageSize);
-        Page<Book> bookPage = bookRepository.listOfBooks(pageRequest);
-        for (Book book : bookPage) {
-            Optional<Publisher> currentPublisher = publisherRepository.getPublisherById(
-                    bookRepository.getPublisherId(book.getId()).orElseThrow()
-            );
-            book.addPublisher(currentPublisher.orElseThrow());
+        Page<BookDTO> bookPage = bookRepository.listOfBooks(pageRequest);
 
-            List<Author> currentAuthors = authorRepository.getAuthorsByBookId(book.getId());
-            currentAuthors.forEach(book::addAuthor);
+        List<Book> listOfBooks = new ArrayList<>();
+        for (BookDTO bookDTO : bookPage) {
+            List<Author> authors = authorRepository.getAuthorsByBookId(bookDTO.id());
+            UUID publisherId = bookRepository.getPublisherId(bookDTO.id()).orElseThrow(InternalError::new);
+            Publisher publisher = publisherRepository.getPublisherById(publisherId).orElseThrow();
+            listOfBooks.add(entityCollectorForBook(bookDTO, publisher, authors).orElseThrow());
         }
-        return bookPage;
+        return new PageImpl<>(listOfBooks);
     }
 
     public Optional<Book> saveBookAndPublisherWithAuthors(Book book) {
@@ -117,10 +115,22 @@ public class BookService {
         return PageRequest.of(queryPageNumber, queryPageSize, sort);
     }
 
-    private static Optional<Book> entityCollectorForBook(
-            Book book, Publisher publisher, List<Author> authors) {
+    private Optional<Book> entityCollectorForBook(
+            BookDTO bookDTO, Publisher publisher, List<Author> authors) {
+        Book book = Book.builder()
+                .id(bookDTO.id())
+                .title(bookDTO.title())
+                .description(bookDTO.description())
+                .isbn(bookDTO.isbn())
+                .price(bookDTO.price())
+                .quantityOnHand(bookDTO.quantityOnHand())
+                .category(bookDTO.category())
+                .events(bookDTO.events())
+                .category(bookDTO.category())
+                .publisher(publisher)
+                .build();
+
         Set<Author> authorSet = new HashSet<>(authors);
-        book.addPublisher(publisher);
         authorSet.forEach(book::addAuthor);
         return Optional.of(book);
     }

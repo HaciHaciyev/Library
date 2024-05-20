@@ -3,6 +3,7 @@ package core.project.library.infrastructure.repositories;
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Order;
+import core.project.library.infrastructure.data_transfer.BookDTO;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToBook;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -28,7 +29,7 @@ public class BookRepository {
         this.rowToBook = rowToBook;
     }
 
-    public Optional<Book> getBookById(UUID bookId) {
+    public Optional<BookDTO> getBookById(UUID bookId) {
         try {
             return Optional.ofNullable(jdbcTemplate
                     .queryForObject("Select * from Book where id=?", rowToBook, bookId.toString())
@@ -38,7 +39,7 @@ public class BookRepository {
         }
     }
 
-    public Optional<Book> findByName(String title) {
+    public Optional<BookDTO> findByName(String title) {
         try {
             return Optional.ofNullable(jdbcTemplate
                     .queryForObject("Select * from Book where title=?", rowToBook, title)
@@ -58,14 +59,14 @@ public class BookRepository {
         }
     }
 
-    public List<Book> getBooksByOrderId(UUID orderId) {
+    public List<BookDTO> getBooksByOrderId(UUID orderId) {
         List<String> bookUUIDs = jdbcTemplate.queryForList(
                 "Select book_id from Book_Order where order_id=?", String.class, orderId.toString()
         );
 
-        List<Book> bookList = new ArrayList<>();
+        List<BookDTO> bookList = new ArrayList<>();
         for (String bookId : bookUUIDs) {
-            Optional<Book> optional = Optional.ofNullable(jdbcTemplate
+            Optional<BookDTO> optional = Optional.ofNullable(jdbcTemplate
                     .queryForObject("Select * from Book where id=?", rowToBook, bookId)
             );
 
@@ -75,12 +76,12 @@ public class BookRepository {
         return bookList;
     }
 
-    public Page<Book> listOfBooks(Pageable pageable) {
+    public Page<BookDTO> listOfBooks(Pageable pageable) {
         String pageNumber =
                 String.valueOf(pageable.getPageNumber());
         String pageSize =
                 String.valueOf(pageable.getPageSize());
-        List<Book> list =
+        List<BookDTO> list =
                 jdbcTemplate.query(
                 "Select * from Book Limit %s Offset %s"
                 .formatted(pageSize, pageNumber),

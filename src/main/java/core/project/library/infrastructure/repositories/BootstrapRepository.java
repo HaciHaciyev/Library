@@ -55,6 +55,7 @@ public class BootstrapRepository {
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
+                .publisher(publisher)
                 .build();
 
         Order order = Order.builder()
@@ -75,7 +76,6 @@ public class BootstrapRepository {
                 .build();
 
         book.addAuthor(author);
-        book.addPublisher(publisher);
         customer.addOrder(order);
         book.addOrder(order);
 
@@ -108,6 +108,7 @@ public class BootstrapRepository {
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
+                .publisher(publisher)
                 .build();
 
         Order order2 = Order.builder()
@@ -128,7 +129,6 @@ public class BootstrapRepository {
                 .build();
 
         book2.addAuthor(author2);
-        book2.addPublisher(publisher2);
         customer2.addOrder(order2);
         book2.addOrder(order2);
 

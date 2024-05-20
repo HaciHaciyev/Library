@@ -43,6 +43,7 @@ class DomainTest {
                 .quantityOnHand(43)
                 .events(new Events())
                 .category(Category.Adventure)
+                .publisher(publisher)
                 .build();
 
         Order order = Order.builder()
@@ -63,9 +64,8 @@ class DomainTest {
                 .build();
 
         book.addAuthor(author);
-        book.addPublisher(publisher);
-        customer.addOrder(order);
         book.addOrder(order);
+        customer.addOrder(order);
 
         System.out.println("Book: " + book);
         System.out.println(book.getPublisher());

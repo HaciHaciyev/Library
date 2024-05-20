@@ -29,15 +29,15 @@ public class Book {
     private final Integer quantityOnHand;
     private final Category category;
     private final Events events;
-    private /**@ManyToOne*/ Publisher publisher;
+    private final /**@ManyToOne*/ Publisher publisher;
     private /**@ManyToMany*/ Set<Author> authors;
     private /**@ManyToMany*/ Set<Order> orders;
 
-    public final void addPublisher(Publisher publisher) {
+    /**public final void addPublisher(Publisher publisher) {
         Objects.requireNonNull(publisher);
         this.publisher = publisher;
         publisher.getBooks().add(this);
-    }
+    }*/
 
     public final void addAuthor(Author author) {
         Objects.requireNonNull(author);
@@ -88,8 +88,8 @@ public class Book {
                 .quantityOnHand(bookModel.quantityOnHand())
                 .category(bookModel.category())
                 .events(new Events())
+                .publisher(publisher)
                 .build();
-        resultBook.addPublisher(publisher);
         authors.forEach(resultBook::addAuthor);
 
         return resultBook;
@@ -148,6 +148,7 @@ public class Book {
         private Integer quantityOnHand;
         private Category category;
         private Events events;
+        private /**@ManyToOne*/ Publisher publisher;
 
         private Builder() {}
 
@@ -191,12 +192,19 @@ public class Book {
             return this;
         }
 
+        public Builder publisher(final Publisher publisher) {
+            this.publisher = publisher;
+            return this;
+        }
+
         public Book build() {
             validateToNullAndBlank(new Object[]{id, title, description, isbn,
-                    price, quantityOnHand, category, events});
+                    price, quantityOnHand, category, events, publisher});
 
-            return new Book(id, title, description, isbn, price, quantityOnHand,
-                    category, events, null, new HashSet<>(), new HashSet<>());
+            Book book = new Book(id, title, description, isbn, price, quantityOnHand,
+                    category, events, publisher, new HashSet<>(), new HashSet<>());
+            publisher.getBooks().add(book);
+            return book;
         }
     }
 

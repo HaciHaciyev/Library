@@ -1,13 +1,11 @@
 package core.project.library.infrastructure.services;
 
-import core.project.library.domain.entities.Book;
-import core.project.library.domain.entities.Customer;
-import core.project.library.domain.entities.Order;
+import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.TotalPrice;
-import core.project.library.infrastructure.repositories.BookRepository;
-import core.project.library.infrastructure.repositories.CustomerRepository;
-import core.project.library.infrastructure.repositories.OrderRepository;
+import core.project.library.infrastructure.data_transfer.BookDTO;
+import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +21,10 @@ public class CustomerService {
     private final OrderRepository orderRepository;
 
     private final BookRepository bookRepository;
+
+    private final PublisherRepository publisherRepository;
+
+    private final AuthorRepository authorRepository;
 
     public Optional<Customer> getCustomerById(UUID customerId) {
         return entityCollectorForCustomer(
@@ -44,15 +46,21 @@ public class CustomerService {
         long totalPrice = 0;
         Set<Book> booksForOrder = new HashSet<>();
         for (UUID bookId : bookUUIDs) {
-            Optional<Book> optionalBook =
+            Optional<BookDTO> optionalBook =
                     bookRepository.getBookById(bookId);
 
             if (optionalBook.isEmpty()) {
                 return Optional.empty();
             } else {
-                totalPrice = totalPrice + optionalBook.get()
-                        .getPrice().longValue();
-                booksForOrder.add(optionalBook.get());
+                totalPrice = totalPrice + optionalBook.get().price().longValue();
+
+                Optional<UUID> publisherId = bookRepository.getPublisherId(bookId);
+                if (publisherId.isEmpty()) {
+                    return Optional.empty();
+                }
+                List<Author> authors = authorRepository.getAuthorsByBookId(bookId);
+                Publisher publisher = publisherRepository.getPublisherById(publisherId.get()).orElseThrow(NotFoundException::new);
+                booksForOrder.add(entityCollectorForBook(optionalBook.get(), publisher, authors));
             }
         }
 
@@ -93,5 +101,25 @@ public class CustomerService {
         orderSet.forEach(resultCustomer::addOrder);
 
         return Optional.of(resultCustomer);
+    }
+
+    private Book entityCollectorForBook(
+            BookDTO bookDTO, Publisher publisher, List<Author> authors) {
+        Book book = Book.builder()
+                .id(bookDTO.id())
+                .title(bookDTO.title())
+                .description(bookDTO.description())
+                .isbn(bookDTO.isbn())
+                .price(bookDTO.price())
+                .quantityOnHand(bookDTO.quantityOnHand())
+                .category(bookDTO.category())
+                .events(bookDTO.events())
+                .category(bookDTO.category())
+                .publisher(publisher)
+                .build();
+
+        Set<Author> authorSet = new HashSet<>(authors);
+        authorSet.forEach(book::addAuthor);
+        return book;
     }
 }
