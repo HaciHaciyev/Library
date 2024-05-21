@@ -23,7 +23,7 @@ public class Author {
     private final Email email;
     private final Address address;
     private final Events events;
-    private /**@ManyToMany*/ Set<Book> books;
+    private final /**@ManyToMany*/ Set<Book> books;
 
     public static Builder builder() {
         return new Builder();

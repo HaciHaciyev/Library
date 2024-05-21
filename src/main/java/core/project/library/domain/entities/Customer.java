@@ -22,7 +22,7 @@ public class Customer {
     private final Email email;
     private final Address address;
     private final Events events;
-    private /**@OneToMany*/ Set<Order> orders;
+    private final /**@OneToMany*/ Set<Order> orders;
 
     public final void addOrder(Order order) {
         Objects.requireNonNull(order);

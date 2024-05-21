@@ -5,13 +5,14 @@ import core.project.library.domain.value_objects.TotalPrice;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Order {
@@ -19,8 +20,27 @@ public class Order {
     private final Integer countOfBooks;
     private final TotalPrice totalPrice;
     private final Events events;
-    private /**@ManyToOne*/ @Setter(AccessLevel.PROTECTED) Customer customer;
-    private /**@ManyToMany*/ Set<Book> books;
+    private /**@ManyToOne*/ Customer customer;
+    private final /**@ManyToMany*/ Set<Book> books;
+
+    protected void setCustomer(Customer customer) {
+        if (customer != null) {
+            log.info("Customer of order can`t be changed.");
+        }
+        this.customer = customer;
+    }
+
+    public Customer getCustomer() {
+        return Customer.builder()
+                .id(customer.getId())
+                .firstName(customer.getFirstName())
+                .lastName(customer.getLastName())
+                .password(customer.getPassword())
+                .email(customer.getEmail())
+                .address(customer.getAddress())
+                .events(customer.getEvents())
+                .build();
+    }
 
     public static Builder builder() {
         return new Builder();

@@ -117,6 +117,7 @@ public class CustomerService {
                 .category(bookDTO.category())
                 .publisher(publisher)
                 .authors(new HashSet<>(authors))
+                .orders(new HashSet<>())
                 .build();
     }
 }

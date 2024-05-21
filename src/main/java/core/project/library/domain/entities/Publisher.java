@@ -23,7 +23,7 @@ public class Publisher {
     private final Phone phone;
     private final Email email;
     private final Events events;
-    private /**@OneToMany*/ Set<Book> books;
+    private final /**@OneToMany*/ Set<Book> books;
 
     public static Builder builder() {
         return new Builder();

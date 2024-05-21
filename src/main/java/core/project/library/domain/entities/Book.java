@@ -199,7 +199,7 @@ public class Book {
 
         public final Book build() {
             validateToNullAndBlank(new Object[]{id, title, description, isbn,
-                    price, quantityOnHand, category, events, publisher});
+                    price, quantityOnHand, category, events, publisher, authors, orders});
             if (authors.isEmpty()) {
                 throw new IllegalArgumentException("Authors can`t be empty.");
             }
