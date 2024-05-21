@@ -68,13 +68,20 @@ public class BookService {
     }
 
     public Optional<Book> saveBookAndPublisherWithAuthors(Book book) {
-        publisherRepository.savePublisher(book.getPublisher());
+        if (publisherRepository.getPublisherById(book.getId()).isEmpty()) {
+            publisherRepository.savePublisher(book.getPublisher());
+        }
         Optional<Book> savedBook = bookRepository.saveBook(book);
 
         Set<Author> authorsForSave = book.getAuthors();
         for (Author authorForSave : authorsForSave) {
-            Optional<Author> savedAuthor = authorRepository.saveAuthor(authorForSave);
-            bookRepository.saveBookAuthor(savedBook.orElseThrow(), savedAuthor.orElseThrow());
+            if (authorRepository.getAuthorsByBookId(book.getId()).isEmpty()) {
+                Optional<Author> savedAuthor = authorRepository.saveAuthor(authorForSave);
+                bookRepository.saveBookAuthor(savedBook.orElseThrow(), savedAuthor.orElseThrow());
+            } else {
+                Author savedAuthor = authorRepository.getAuthorsByBookId(book.getId()).getFirst();
+                bookRepository.saveBookAuthor(savedBook.orElseThrow(), savedAuthor);
+            }
         }
 
         return savedBook;
@@ -115,9 +122,8 @@ public class BookService {
         return PageRequest.of(queryPageNumber, queryPageSize, sort);
     }
 
-    private Optional<Book> entityCollectorForBook(
-            BookDTO bookDTO, Publisher publisher, List<Author> authors) {
-        Book book = Book.builder()
+    private Optional<Book> entityCollectorForBook(BookDTO bookDTO, Publisher publisher, List<Author> authors) {
+        return Optional.of(Book.builder()
                 .id(bookDTO.id())
                 .title(bookDTO.title())
                 .description(bookDTO.description())
@@ -128,10 +134,9 @@ public class BookService {
                 .events(bookDTO.events())
                 .category(bookDTO.category())
                 .publisher(publisher)
-                .build();
-
-        Set<Author> authorSet = new HashSet<>(authors);
-        authorSet.forEach(book::addAuthor);
-        return Optional.of(book);
+                .authors(new HashSet<>(authors))
+                .orders(new HashSet<>())
+                .build()
+        );
     }
 }

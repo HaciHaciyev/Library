@@ -45,9 +45,10 @@ public class OrderService {
                     .events(bookDTO.events())
                     .category(bookDTO.category())
                     .publisher(publisher)
+                    .authors(new HashSet<>(authorList))
+                    .orders(new HashSet<>())
                     .build();
             book.addOrder(order);
-            authorList.forEach(book::addAuthor);
 
             bookList.add(book);
         }

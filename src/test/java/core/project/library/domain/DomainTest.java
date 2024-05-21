@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.UUID;
 
 @Slf4j
@@ -44,6 +46,8 @@ class DomainTest {
                 .events(new Events())
                 .category(Category.Adventure)
                 .publisher(publisher)
+                .authors(new HashSet<>(Collections.singleton(author)))
+                .orders(new HashSet<>())
                 .build();
 
         Order order = Order.builder()
@@ -63,7 +67,6 @@ class DomainTest {
                 .events(new Events())
                 .build();
 
-        book.addAuthor(author);
         book.addOrder(order);
         customer.addOrder(order);
 

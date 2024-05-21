@@ -12,10 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -30,25 +27,17 @@ public class Book {
     private final Category category;
     private final Events events;
     private final /**@ManyToOne*/ Publisher publisher;
-    private /**@ManyToMany*/ Set<Author> authors;
-    private /**@ManyToMany*/ Set<Order> orders;
-
-    /**public final void addPublisher(Publisher publisher) {
-        Objects.requireNonNull(publisher);
-        this.publisher = publisher;
-        publisher.getBooks().add(this);
-    }*/
-
-    public final void addAuthor(Author author) {
-        Objects.requireNonNull(author);
-        this.authors.add(author);
-        author.getBooks().add(this);
-    }
+    private final /**@ManyToMany*/ Set<Author> authors;
+    private final /**@ManyToMany*/ Set<Order> orders;
 
     public final void addOrder(Order order) {
         Objects.requireNonNull(order);
         this.orders.add(order);
         order.getBooks().add(this);
+    }
+
+    public Set<Order> getOrders() {
+        return new HashSet<>(orders);
     }
 
     public static Builder builder() {
@@ -79,7 +68,7 @@ public class Book {
                         .events(new Events())
                         .build()).collect(Collectors.toSet());
 
-        Book resultBook = Book.builder()
+        return Book.builder()
                 .id(UUID.randomUUID())
                 .title(bookModel.title())
                 .description(bookModel.description())
@@ -89,10 +78,9 @@ public class Book {
                 .category(bookModel.category())
                 .events(new Events())
                 .publisher(publisher)
+                .authors(authors)
+                .orders(new HashSet<>())
                 .build();
-        authors.forEach(resultBook::addAuthor);
-
-        return resultBook;
     }
 
     @Override
@@ -149,6 +137,8 @@ public class Book {
         private Category category;
         private Events events;
         private /**@ManyToOne*/ Publisher publisher;
+        private /**@ManyToMany*/ Set<Author> authors;
+        private /**@ManyToMany*/ Set<Order> orders;
 
         private Builder() {}
 
@@ -197,13 +187,28 @@ public class Book {
             return this;
         }
 
-        public Book build() {
+        public Builder authors(Set<Author> authors) {
+            this.authors = authors;
+            return this;
+        }
+
+        public Builder orders(Set<Order> orders) {
+            this.orders = orders;
+            return this;
+        }
+
+        public final Book build() {
             validateToNullAndBlank(new Object[]{id, title, description, isbn,
                     price, quantityOnHand, category, events, publisher});
+            if (authors.isEmpty()) {
+                throw new IllegalArgumentException("Authors can`t be empty.");
+            }
 
             Book book = new Book(id, title, description, isbn, price, quantityOnHand,
-                    category, events, publisher, new HashSet<>(), new HashSet<>());
+                    category, events, publisher, Collections.unmodifiableSet(authors), orders);
             publisher.getBooks().add(book);
+            authors.forEach(author -> author.getBooks().add(book));
+            orders.forEach(order -> order.getBooks().add(book));
             return book;
         }
     }

@@ -6,6 +6,8 @@ import core.project.library.domain.value_objects.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.UUID;
 
 @org.springframework.stereotype.Repository
@@ -56,6 +58,8 @@ public class BootstrapRepository {
                 .events(new Events())
                 .category(Category.Adventure)
                 .publisher(publisher)
+                .authors(new HashSet<>(Collections.singleton(author)))
+                .orders(new HashSet<>())
                 .build();
 
         Order order = Order.builder()
@@ -75,7 +79,6 @@ public class BootstrapRepository {
                 .events(new Events())
                 .build();
 
-        book.addAuthor(author);
         customer.addOrder(order);
         book.addOrder(order);
 
@@ -109,6 +112,8 @@ public class BootstrapRepository {
                 .events(new Events())
                 .category(Category.Adventure)
                 .publisher(publisher)
+                .authors(new HashSet<>(Collections.singleton(author2)))
+                .orders(new HashSet<>())
                 .build();
 
         Order order2 = Order.builder()
@@ -128,7 +133,6 @@ public class BootstrapRepository {
                 .events(new Events())
                 .build();
 
-        book2.addAuthor(author2);
         customer2.addOrder(order2);
         book2.addOrder(order2);
 

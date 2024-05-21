@@ -28,6 +28,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -191,7 +193,7 @@ class BookControllerTest {
                 .events(new Events())
                 .build();
 
-        Book book = Book.builder()
+        return Book.builder()
                 .id(UUID.fromString("d4f0aa27-317b-4e00-9462-9a7f0faa7a5e"))
                 .title(new Title("Title"))
                 .description(new Description("Description"))
@@ -201,10 +203,8 @@ class BookControllerTest {
                 .events(new Events())
                 .category(Category.Adventure)
                 .publisher(publisher)
+                .authors(new HashSet<>(Collections.singleton(author)))
+                .orders(new HashSet<>())
                 .build();
-
-        book.addAuthor(author);
-
-        return book;
     }
 }

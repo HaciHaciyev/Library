@@ -105,7 +105,7 @@ public class CustomerService {
 
     private Book entityCollectorForBook(
             BookDTO bookDTO, Publisher publisher, List<Author> authors) {
-        Book book = Book.builder()
+        return Book.builder()
                 .id(bookDTO.id())
                 .title(bookDTO.title())
                 .description(bookDTO.description())
@@ -116,10 +116,7 @@ public class CustomerService {
                 .events(bookDTO.events())
                 .category(bookDTO.category())
                 .publisher(publisher)
+                .authors(new HashSet<>(authors))
                 .build();
-
-        Set<Author> authorSet = new HashSet<>(authors);
-        authorSet.forEach(book::addAuthor);
-        return book;
     }
 }
