@@ -70,9 +70,9 @@ public class CustomerService {
                 .countOfBooks(booksForOrder.size())
                 .totalPrice(new TotalPrice(BigDecimal.valueOf(totalPrice)))
                 .events(new Events())
+                .customer(optionalCustomer.get())
+                .books(booksForOrder)
                 .build();
-        optionalCustomer.get().addOrder(newOrder);
-        booksForOrder.forEach(book -> book.addOrder(newOrder));
 
         /** Save new Order*/
         Optional<Order> savedOrder = orderRepository.saveOrder(newOrder);
@@ -97,8 +97,14 @@ public class CustomerService {
                 .events(customer.getEvents())
                 .build();
 
-        Set<Order> orderSet = new HashSet<>(orders);
-        orderSet.forEach(resultCustomer::addOrder);
+        orders.forEach(order -> Order.builder()
+                .id(order.getId())
+                .countOfBooks(order.getCountOfBooks())
+                .totalPrice(order.getTotalPrice())
+                .events(order.getEvents())
+                .customer(resultCustomer)
+                .books(order.getBooks())
+                .build());
 
         return Optional.of(resultCustomer);
     }
@@ -117,7 +123,6 @@ public class CustomerService {
                 .category(bookDTO.category())
                 .publisher(publisher)
                 .authors(new HashSet<>(authors))
-                .orders(new HashSet<>())
                 .build();
     }
 }

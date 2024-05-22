@@ -30,10 +30,8 @@ public class Book {
     private final /**@ManyToMany*/ Set<Author> authors;
     private final /**@ManyToMany*/ Set<Order> orders;
 
-    public final void addOrder(Order order) {
-        Objects.requireNonNull(order);
+    protected void addOrder(Order order) {
         this.orders.add(order);
-        order.getBooks().add(this);
     }
 
     public Set<Order> getOrders() {
@@ -79,7 +77,6 @@ public class Book {
                 .events(new Events())
                 .publisher(publisher)
                 .authors(authors)
-                .orders(new HashSet<>())
                 .build();
     }
 
@@ -138,7 +135,6 @@ public class Book {
         private Events events;
         private /**@ManyToOne*/ Publisher publisher;
         private /**@ManyToMany*/ Set<Author> authors;
-        private /**@ManyToMany*/ Set<Order> orders;
 
         private Builder() {}
 
@@ -192,23 +188,17 @@ public class Book {
             return this;
         }
 
-        public Builder orders(Set<Order> orders) {
-            this.orders = orders;
-            return this;
-        }
-
         public final Book build() {
             validateToNullAndBlank(new Object[]{id, title, description, isbn,
-                    price, quantityOnHand, category, events, publisher, authors, orders});
+                    price, quantityOnHand, category, events, publisher, authors});
             if (authors.isEmpty()) {
                 throw new IllegalArgumentException("Authors can`t be empty.");
             }
 
             Book book = new Book(id, title, description, isbn, price, quantityOnHand,
-                    category, events, publisher, Collections.unmodifiableSet(authors), orders);
-            publisher.getBooks().add(book);
-            authors.forEach(author -> author.getBooks().add(book));
-            orders.forEach(order -> order.getBooks().add(book));
+                    category, events, publisher, Collections.unmodifiableSet(authors), new HashSet<>());
+            publisher.addBook(book);
+            authors.forEach(author -> author.addBook(book));
             return book;
         }
     }

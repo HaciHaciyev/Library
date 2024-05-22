@@ -59,14 +59,6 @@ public class BootstrapRepository {
                 .category(Category.Adventure)
                 .publisher(publisher)
                 .authors(new HashSet<>(Collections.singleton(author)))
-                .orders(new HashSet<>())
-                .build();
-
-        Order order = Order.builder()
-                .id(UUID.fromString("a486f288-cec3-4205-b753-d4ddf2796f9a"))
-                .countOfBooks(1)
-                .totalPrice(new TotalPrice(DEFAULT_PRICE))
-                .events(new Events())
                 .build();
 
         Customer customer = Customer.builder()
@@ -79,8 +71,14 @@ public class BootstrapRepository {
                 .events(new Events())
                 .build();
 
-        customer.addOrder(order);
-        book.addOrder(order);
+        Order order = Order.builder()
+                .id(UUID.fromString("a486f288-cec3-4205-b753-d4ddf2796f9a"))
+                .countOfBooks(1)
+                .totalPrice(new TotalPrice(DEFAULT_PRICE))
+                .events(new Events())
+                .customer(customer)
+                .books(new HashSet<>(Collections.singleton(book)))
+                .build();
 
         //-----------------------------------------------------------------------------------------------------------
 
@@ -113,14 +111,6 @@ public class BootstrapRepository {
                 .category(Category.Adventure)
                 .publisher(publisher)
                 .authors(new HashSet<>(Collections.singleton(author2)))
-                .orders(new HashSet<>())
-                .build();
-
-        Order order2 = Order.builder()
-                .id(UUID.randomUUID())
-                .countOfBooks(1)
-                .totalPrice(new TotalPrice(DEFAULT_PRICE))
-                .events(new Events())
                 .build();
 
         Customer customer2 = Customer.builder()
@@ -133,8 +123,14 @@ public class BootstrapRepository {
                 .events(new Events())
                 .build();
 
-        customer2.addOrder(order2);
-        book2.addOrder(order2);
+        Order order2 = Order.builder()
+                .id(UUID.randomUUID())
+                .countOfBooks(1)
+                .totalPrice(new TotalPrice(DEFAULT_PRICE))
+                .events(new Events())
+                .customer(customer)
+                .books(new HashSet<>(Collections.singleton(book)))
+                .build();
 
         //-----------------------------------------------------------------------------------------------------------
 

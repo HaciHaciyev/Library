@@ -7,10 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Getter
@@ -20,15 +17,8 @@ public class Order {
     private final Integer countOfBooks;
     private final TotalPrice totalPrice;
     private final Events events;
-    private /**@ManyToOne*/ Customer customer;
+    private final /**@ManyToOne*/ Customer customer;
     private final /**@ManyToMany*/ Set<Book> books;
-
-    protected void setCustomer(Customer customer) {
-        if (customer != null) {
-            log.info("Customer of order can`t be changed.");
-        }
-        this.customer = customer;
-    }
 
     public Customer getCustomer() {
         return Customer.builder()
@@ -40,6 +30,10 @@ public class Order {
                 .address(customer.getAddress())
                 .events(customer.getEvents())
                 .build();
+    }
+
+    public Set<Book> getBooks() {
+        return new HashSet<>(books);
     }
 
     public static Builder builder() {
@@ -86,6 +80,8 @@ public class Order {
         private Integer countOfBooks;
         private TotalPrice totalPrice;
         private Events events;
+        private /**@ManyToOne*/ Customer customer;
+        private /**@ManyToMany*/ Set<Book> books;
 
         private Builder() {}
 
@@ -109,12 +105,29 @@ public class Order {
             return this;
         }
 
+        public Builder customer(Customer customer) {
+            this.customer = customer;
+            return this;
+        }
+
+        public Builder books(Set<Book> books) {
+            this.books = books;
+            return this;
+        }
+
         public Order build() {
             validateToNullAndBlank(new Object[]{id, countOfBooks,
-                    totalPrice, events});
+                    totalPrice, events, customer, books});
+            if (books.isEmpty()) {
+                throw new IllegalArgumentException("Books in order can`t be empty.");
+            }
 
-            return new Order(id, countOfBooks, totalPrice,
-                    events, null, new HashSet<>());
+            Order order = new Order(id, countOfBooks, totalPrice,
+                    events, customer, Collections.unmodifiableSet(books));
+
+            customer.addOrder(order);
+            books.forEach(book -> book.addOrder(order));
+            return order;
         }
     }
 

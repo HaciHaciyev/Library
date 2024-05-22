@@ -204,7 +204,6 @@ class BookControllerTest {
                 .category(Category.Adventure)
                 .publisher(publisher)
                 .authors(new HashSet<>(Collections.singleton(author)))
-                .orders(new HashSet<>())
                 .build();
     }
 }

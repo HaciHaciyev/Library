@@ -24,10 +24,12 @@ public class Customer {
     private final Events events;
     private final /**@OneToMany*/ Set<Order> orders;
 
-    public final void addOrder(Order order) {
-        Objects.requireNonNull(order);
+    protected void addOrder(Order order) {
         this.orders.add(order);
-        order.setCustomer(this);
+    }
+
+    public Set<Order> getOrders() {
+        return new HashSet<>(orders);
     }
 
     public static Builder builder() {
@@ -71,6 +73,7 @@ public class Customer {
     @Override
     public String toString() {
         return String.format("""
+                Customer {
                 id = %s,
                 first_name = %s,
                 last_name = %s,
@@ -78,6 +81,7 @@ public class Customer {
                 email = %s,
                 creation_date = %s,
                 last_modified_date = %s
+                }
                 """, id.toString(), firstName.firstName(), lastName.lastName(),
                 password.password(), email.email(),
                 events.creation_date().toString(), events.last_update_date().toString());

@@ -46,14 +46,21 @@ public class OrderService {
                     .category(bookDTO.category())
                     .publisher(publisher)
                     .authors(new HashSet<>(authorList))
-                    .orders(new HashSet<>())
                     .build();
-            book.addOrder(order);
 
             bookList.add(book);
         }
 
-        return entityCollectorForOrder(order, customer, bookList);
+        Order resultOrder = Order.builder()
+                .id(order.getId())
+                .countOfBooks(order.getCountOfBooks())
+                .totalPrice(order.getTotalPrice())
+                .events(order.getEvents())
+                .customer(customer)
+                .books(new HashSet<>(bookList))
+                .build();
+
+        return entityCollectorForOrder(resultOrder, customer, bookList);
     }
 
     private static Optional<Order> entityCollectorForOrder(Order order, Customer customer, List<Book> bookList) {
@@ -62,11 +69,9 @@ public class OrderService {
                 .countOfBooks(order.getCountOfBooks())
                 .totalPrice(order.getTotalPrice())
                 .events(order.getEvents())
+                .customer(customer)
+                .books(new HashSet<>(bookList))
                 .build();
-
-        customer.addOrder(resultOrder);
-        Set<Book> books = new HashSet<>(bookList);
-        books.forEach(book -> book.addOrder(resultOrder));
 
         return Optional.ofNullable(resultOrder);
     }

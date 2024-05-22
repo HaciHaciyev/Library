@@ -25,6 +25,14 @@ public class Publisher {
     private final Events events;
     private final /**@OneToMany*/ Set<Book> books;
 
+    protected void addBook(Book book) {
+        this.books.add(book);
+    }
+
+    public Set<Book> getBooks() {
+        return new HashSet<>(books);
+    }
+
     public static Builder builder() {
         return new Builder();
     }

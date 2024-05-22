@@ -47,15 +47,8 @@ class DomainTest {
                 .category(Category.Adventure)
                 .publisher(publisher)
                 .authors(new HashSet<>(Collections.singleton(author)))
-                .orders(new HashSet<>())
                 .build();
 
-        Order order = Order.builder()
-                .id(UUID.randomUUID())
-                .countOfBooks(1)
-                .totalPrice(new TotalPrice(new BigDecimal("12.99")))
-                .events(new Events())
-                .build();
 
         Customer customer = Customer.builder()
                 .id(UUID.randomUUID())
@@ -67,8 +60,14 @@ class DomainTest {
                 .events(new Events())
                 .build();
 
-        book.addOrder(order);
-        customer.addOrder(order);
+        Order order = Order.builder()
+                .id(UUID.randomUUID())
+                .countOfBooks(1)
+                .totalPrice(new TotalPrice(new BigDecimal("12.99")))
+                .events(new Events())
+                .customer(customer)
+                .books(new HashSet<>(Collections.singleton(book)))
+                .build();
 
         System.out.println("Book: " + book);
         System.out.println(book.getPublisher());
