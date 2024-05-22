@@ -17,20 +17,26 @@ public record BookDTO(UUID id, UUID publisherId, Title title, Description descri
                       Events events) {
 
     public BookDTO {
-        validate(new Object[]{id, price, title, description,
-                isbn, price, quantityOnHand, category, events});
+        Objects.requireNonNull(id, "id must not be null");
+        Objects.requireNonNull(publisherId, " publisherId must not be null");
+        Objects.requireNonNull(title, "title must not be null");
+        Objects.requireNonNull(description, "description must not be null");
+        Objects.requireNonNull(isbn, "isbn must not be null");
+        Objects.requireNonNull(price, "price must not be null");
+        Objects.requireNonNull(quantityOnHand, "quantityOnHand must not be null");
+        Objects.requireNonNull(category, "category must not be null");
+        Objects.requireNonNull(events, "events must not be null");
+
+        validate(price, quantityOnHand);
     }
 
-    private void validate(Object[] o) {
-        for (Object object : o) {
-            Objects.requireNonNull(object);
-            if (object instanceof BigDecimal bigDecimal
-                    && bigDecimal.compareTo(BigDecimal.valueOf(0)) < 0) {
-                    throw new IllegalArgumentException("The price cannot be below zero.");
-            }
-            if (object instanceof Integer integer && integer < 0) {
-                    throw new IllegalArgumentException("The quantity on hand cannot be below zero.");
-            }
+    private void validate(BigDecimal p, Integer quantity) {
+
+        if (p.compareTo(BigDecimal.valueOf(0)) < 0) {
+            throw new IllegalArgumentException("The price cannot be below zero");
+        }
+        if (quantity < 0) {
+            throw new IllegalArgumentException("The quantity cannot be below zero");
         }
     }
 }
