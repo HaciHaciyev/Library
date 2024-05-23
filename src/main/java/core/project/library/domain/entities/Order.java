@@ -115,7 +115,7 @@ public class Order {
             return this;
         }
 
-        public Order build() {
+        public final Order build() {
             validateToNullAndBlank(new Object[]{id, countOfBooks,
                     totalPrice, events, customer, books});
             if (books.isEmpty()) {

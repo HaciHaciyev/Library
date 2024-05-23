@@ -118,7 +118,7 @@ public class Publisher {
             return this;
         }
 
-        public Publisher build() {
+        public final Publisher build() {
             validateToNullAndBlank(new Object[]{id, publisherName, address,
                     phone, email, events});
 

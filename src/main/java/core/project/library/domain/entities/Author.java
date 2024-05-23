@@ -119,7 +119,7 @@ public class Author {
             return this;
         }
 
-        public Author build() {
+        public final Author build() {
             validateToNullAndBlank(new Object[]{id, firstName, lastName,
                     email, address, events});
 

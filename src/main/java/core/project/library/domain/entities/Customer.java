@@ -133,7 +133,7 @@ public class Customer {
             return this;
         }
 
-        public Customer build() {
+        public final Customer build() {
             validateToNullAndBlank(new Object[]{id, firstName, lastName,
                     password, email, address, events});
 

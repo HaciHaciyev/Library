@@ -58,6 +58,7 @@ public class OrderRepository {
     private OrderDTO rowToOrderDTO(Map<String, Object> rs) {
         return new OrderDTO(
                 UUID.fromString(rs.get("id").toString()),
+                UUID.fromString(rs.get("customer_id").toString()),
                 Integer.valueOf(rs.get("count_of_book").toString()),
                 new TotalPrice(new BigDecimal(rs.get("total_price").toString())),
                 new Events(Timestamp.valueOf(rs.get("creation_date").toString()).toLocalDateTime(),

@@ -6,7 +6,8 @@ import core.project.library.domain.value_objects.TotalPrice;
 import java.util.Objects;
 import java.util.UUID;
 
-public record OrderDTO(UUID id, Integer countOfBooks, TotalPrice totalPrice, Events events) {
+public record OrderDTO(UUID id, UUID customerId, Integer countOfBooks,
+                       TotalPrice totalPrice, Events events) {
 
     public OrderDTO {
         Objects.requireNonNull(id, "id cannot be null");

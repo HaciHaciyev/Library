@@ -19,7 +19,8 @@ public class RowToOrder implements RowMapper<OrderDTO> {
     public OrderDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
         try {
             return new OrderDTO(
-                    UUID.fromString(rs.getString("is")),
+                    UUID.fromString(rs.getString("id")),
+                    UUID.fromString(rs.getString("customer_id")),
                     Integer.valueOf(rs.getString("count_of_book")),
                     new TotalPrice(new BigDecimal(rs.getString("total_price"))),
                     new Events(rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),

@@ -127,15 +127,12 @@ public class CustomerService {
                 .description(bookDTO.description())
                 .isbn(bookDTO.isbn())
                 .price(bookDTO.price())
+                .quantityOnHand(bookDTO.quantityOnHand())
                 .category(bookDTO.category())
                 .events(bookDTO.events())
                 .publisher(publisher)
                 .authors(new HashSet<>(authors))
                 .build();
-    }
-
-    private Optional<Customer> assemble(Customer customer, List<OrderDTO> orders) {
-        return Optional.empty();
     }
 
     private Book entityCollectorForBook(
