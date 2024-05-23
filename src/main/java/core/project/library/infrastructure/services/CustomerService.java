@@ -4,6 +4,7 @@ import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.TotalPrice;
 import core.project.library.infrastructure.data_transfer.BookDTO;
+import core.project.library.infrastructure.data_transfer.OrderDTO;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repositories.*;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +88,7 @@ public class CustomerService {
         return customerRepository.updateCustomer(customer);
     }
 
-    private Optional<Customer> entityCollectorForCustomer(Customer customer, List<Order> orders) {
+    private Optional<Customer> entityCollectorForCustomer(Customer customer, List<OrderDTO> dtos) {
         Customer resultCustomer = Customer.builder()
                 .id(customer.getId())
                 .firstName(customer.getFirstName())
@@ -97,16 +99,43 @@ public class CustomerService {
                 .events(customer.getEvents())
                 .build();
 
-        orders.forEach(order -> Order.builder()
-                .id(order.getId())
-                .countOfBooks(order.getCountOfBooks())
-                .totalPrice(order.getTotalPrice())
-                .events(order.getEvents())
-                .customer(resultCustomer)
-                .books(order.getBooks())
-                .build());
+        dtos.stream().map(orderDTO -> {
+            Set<Book> books = bookRepository.getBooksByOrderId(orderDTO.id()).stream()
+                    .map(this::mapDtoToBook).collect(Collectors.toSet());
+
+            return Order.builder()
+                    .id(orderDTO.id())
+                    .countOfBooks(orderDTO.countOfBooks())
+                    .totalPrice(orderDTO.totalPrice())
+                    .events(orderDTO.events())
+                    .customer(resultCustomer)
+                    .books(books)
+                    .build();
+        }).toList();
 
         return Optional.of(resultCustomer);
+
+    }
+
+    private Book mapDtoToBook(BookDTO bookDTO) {
+        Publisher publisher = publisherRepository.getPublisherById(bookDTO.publisherId()).orElseThrow();
+        List<Author> authors = authorRepository.getAuthorsByBookId(bookDTO.id());
+
+        return Book.builder()
+                .id(bookDTO.id())
+                .title(bookDTO.title())
+                .description(bookDTO.description())
+                .isbn(bookDTO.isbn())
+                .price(bookDTO.price())
+                .category(bookDTO.category())
+                .events(bookDTO.events())
+                .publisher(publisher)
+                .authors(new HashSet<>(authors))
+                .build();
+    }
+
+    private Optional<Customer> assemble(Customer customer, List<OrderDTO> orders) {
+        return Optional.empty();
     }
 
     private Book entityCollectorForBook(

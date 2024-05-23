@@ -3,6 +3,7 @@ package core.project.library.infrastructure.repositories;
 import core.project.library.domain.entities.Order;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.TotalPrice;
+import core.project.library.infrastructure.data_transfer.OrderDTO;
 import core.project.library.infrastructure.repositories.sql_mappers.RowToOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -29,7 +30,7 @@ public class OrderRepository {
         this.rowToOrder = rowToOrder;
     }
 
-    public Optional<Order> getOrderById(UUID orderId) {
+    public Optional<OrderDTO> getOrderById(UUID orderId) {
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(SELECT_BY_ID,
                     rowToOrder, orderId.toString()
@@ -45,35 +46,30 @@ public class OrderRepository {
         )));
     }
 
-    public List<Order> getOrdersByCustomerId(UUID customerId) {
-        List<Order> orders = new ArrayList<>();
-        List<Map<String, Object>> query = jdbcTemplate.queryForList(
-                "Select * from Order_Line where customer_id=?", customerId.toString()
-        );
-        query.forEach(rs -> orders.add(Order.builder()
-                .id(UUID.fromString(rs.get("id").toString()))
-                .countOfBooks(Integer.valueOf(rs.get("count_of_book").toString()))
-                .totalPrice(new TotalPrice(new BigDecimal(rs.get("total_price").toString())))
-                .events(new Events(
-                        Timestamp.valueOf(rs.get("creation_date").toString()).toLocalDateTime(),
-                        Timestamp.valueOf(rs.get("last_modified_date").toString()).toLocalDateTime()
-                        )
-                )
-                .build()
-        ));
 
-        return orders;
+    public List<OrderDTO> getOrdersByCustomerId(UUID customerId) {
+        return jdbcTemplate.queryForList(
+                "Select * from Order_Line where customer_id=?", customerId.toString())
+                .stream()
+                .map(this::rowToOrderDTO)
+                .toList();
     }
 
-    public List<Optional<Order>> getOrdersByBookId(UUID bookId) {
-        List<String> uuids = jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
-                String.class, bookId.toString());
+    private OrderDTO rowToOrderDTO(Map<String, Object> rs) {
+        return new OrderDTO(
+                UUID.fromString(rs.get("id").toString()),
+                Integer.valueOf(rs.get("count_of_book").toString()),
+                new TotalPrice(new BigDecimal(rs.get("total_price").toString())),
+                new Events(Timestamp.valueOf(rs.get("creation_date").toString()).toLocalDateTime(),
+                        Timestamp.valueOf(rs.get("last_modified_date").toString()).toLocalDateTime()));
+    }
 
-        List<Optional<Order>> orders = new ArrayList<>();
-        uuids.forEach(uuid -> orders.add(Optional.ofNullable(
-                jdbcTemplate.queryForObject(SELECT_BY_ID, rowToOrder, uuid)
-        )));
-        return orders;
+    public List<OrderDTO> getOrdersByBookId(UUID bookId) {
+        return jdbcTemplate.queryForList("Select order_id from Book_Order where book_id=?",
+                String.class, bookId.toString())
+                .stream()
+                .map(uuid -> jdbcTemplate.queryForObject(SELECT_BY_ID, rowToOrder, uuid))
+                .toList();
     }
 
     public Optional<Order> saveOrder(Order order) {
