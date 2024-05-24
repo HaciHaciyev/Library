@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -46,9 +47,16 @@ public class Order {
         if (o == null || getClass() != o.getClass()) return false;
 
         Order order = (Order) o;
-        return Objects.equals(id, order.id) && Objects.equals(countOfBooks, order.countOfBooks) &&
-                Objects.equals(totalPrice, order.totalPrice) && Objects.equals(events, order.events) &&
-                Objects.equals(customer, order.customer);
+
+        Set<UUID> ourBooks = books.stream().map(Book::getId).collect(Collectors.toSet());
+        Set<UUID> theirBooks = order.books.stream().map(Book::getId).collect(Collectors.toSet());
+
+        return Objects.equals(id, order.id) &&
+                Objects.equals(countOfBooks, order.countOfBooks) &&
+                Objects.equals(totalPrice, order.totalPrice) &&
+                Objects.equals(events, order.events) &&
+                Objects.equals(customer, order.customer) &&
+                Objects.equals(ourBooks, theirBooks);
     }
 
     @Override

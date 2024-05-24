@@ -86,10 +86,24 @@ public class Book {
         if (o == null || getClass() != o.getClass()) return false;
 
         Book book = (Book) o;
-        return Objects.equals(id, book.id) && Objects.equals(title, book.title) &&
-                Objects.equals(description, book.description) && Objects.equals(isbn, book.isbn) &&
-                Objects.equals(price, book.price) && Objects.equals(quantityOnHand, book.quantityOnHand) &&
-                Objects.equals(events, book.events) && category == book.category;
+
+        Set<UUID> ourAuthors = authors.stream().map(Author::getId).collect(Collectors.toSet());
+        Set<UUID> theirAuthors = book.authors.stream().map(Author::getId).collect(Collectors.toSet());
+
+        Set<UUID> ourOrders = orders.stream().map(Order::getId).collect(Collectors.toSet());
+        Set<UUID> theirOrders = book.orders.stream().map(Order::getId).collect(Collectors.toSet());
+
+        return Objects.equals(id, book.id) &&
+                Objects.equals(title, book.title) &&
+                Objects.equals(description, book.description) &&
+                Objects.equals(isbn, book.isbn) &&
+                Objects.equals(price, book.price) &&
+                Objects.equals(quantityOnHand, book.quantityOnHand) &&
+                Objects.equals(events, book.events) &&
+                category == book.category &&
+                Objects.equals(publisher.getId(), book.publisher.getId()) &&
+                Objects.equals(ourAuthors, theirAuthors) &&
+                Objects.equals(ourOrders, theirOrders);
     }
 
     @Override

@@ -9,10 +9,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -43,9 +41,17 @@ public class Publisher {
         if (o == null || getClass() != o.getClass()) return false;
 
         Publisher publisher = (Publisher) o;
-        return Objects.equals(id, publisher.id) && Objects.equals(publisherName, publisher.publisherName)
-                && Objects.equals(address, publisher.address) && Objects.equals(phone, publisher.phone)
-                && Objects.equals(email, publisher.email) && Objects.equals(events, publisher.events);
+
+        Set<UUID> ourBooks = books.stream().map(Book::getId).collect(Collectors.toSet());
+        Set<UUID> theirBooks = publisher.books.stream().map(Book::getId).collect(Collectors.toSet()));
+
+        return Objects.equals(id, publisher.id) &&
+                Objects.equals(publisherName, publisher.publisherName) &&
+                Objects.equals(address, publisher.address) &&
+                Objects.equals(phone, publisher.phone) &&
+                Objects.equals(email, publisher.email) &&
+                Objects.equals(events, publisher.events) &&
+                Objects.equals(ourBooks, theirBooks);
     }
 
     @Override

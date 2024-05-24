@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -54,9 +55,17 @@ public class Customer {
         if (o == null || getClass() != o.getClass()) return false;
 
         Customer customer = (Customer) o;
-        return Objects.equals(id, customer.id) && Objects.equals(firstName, customer.firstName) &&
-                Objects.equals(lastName, customer.lastName) && Objects.equals(password, customer.password) &&
-                Objects.equals(email, customer.email) && Objects.equals(events, customer.events);
+
+        Set<UUID> ourOrders = orders.stream().map(Order::getId).collect(Collectors.toSet());
+        Set<UUID> theirOrders = customer.orders.stream().map(Order::getId).collect(Collectors.toSet());
+
+        return Objects.equals(id, customer.id) &&
+                Objects.equals(firstName, customer.firstName) &&
+                Objects.equals(lastName, customer.lastName) &&
+                Objects.equals(password, customer.password) &&
+                Objects.equals(email, customer.email) &&
+                Objects.equals(events, customer.events) &&
+                Objects.equals(ourOrders, theirOrders);
     }
 
     @Override
