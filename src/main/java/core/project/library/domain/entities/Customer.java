@@ -25,7 +25,7 @@ public class Customer {
     private final Events events;
     private final /**@OneToMany*/ Set<Order> orders;
 
-    protected void addOrder(Order order) {
+    void addOrder(Order order) {
         this.orders.add(order);
     }
 

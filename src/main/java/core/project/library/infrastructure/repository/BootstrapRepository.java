@@ -1,4 +1,4 @@
-package core.project.library.infrastructure.repositories;
+package core.project.library.infrastructure.repository;
 
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;

@@ -2,19 +2,16 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.BookModel;
-import core.project.library.domain.entities.Book;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.services.BookService;
+import core.project.library.infrastructure.service.BookService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -71,124 +68,12 @@ public class BookController {
      * @return a {@code ResponseEntity} containing the {@code BookModel} of the found book
      * @throws NotFoundException if the book is not found
      */
-    @GetMapping("/getBookById/{bookId}")
+    @GetMapping("/findById/{bookId}")
     public ResponseEntity<BookModel> getBookById(@PathVariable("bookId") UUID bookId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toModel(
-                        bookService.getBookById(bookId).orElseThrow(NotFoundException::new))
+                        bookService.findById(bookId).orElseThrow(NotFoundException::new))
                 );
-    }
-
-    /**
-     * Finds a book by its title.
-     *
-     * @param title the title of the book
-     * @return a {@code ResponseEntity} containing the {@code BookModel} of the found book
-     * @throws NotFoundException if the book is not found
-     */
-    @GetMapping("/findByName/{title}")
-    public ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(entityMapper.toModel(
-                        bookService.findByName(title).orElseThrow(NotFoundException::new)
-                ));
-    }
-
-    /**
-     * Retrieves a paginated list of books.
-     *
-     * @param pageNumber the page number (optional)
-     * @param pageSize the page size (optional)
-     * @return a {@code Page} of {@code BookModel} objects
-     */
-    @GetMapping("/page")
-    public Page<BookModel> listOfBooks(@RequestParam(required = false) Integer pageNumber,
-                                       @RequestParam(required = false) Integer pageSize) {
-        return bookService.listOfBooks(pageNumber, pageSize)
-                .map(entityMapper::toModel);
-    }
-
-    /**
-     * Saves a new book.
-     *
-     * @param bookModel the book model to save
-     * @return a {@code ResponseEntity} with the location and the {@code BookModel} of the saved book
-     * @throws NotFoundException if the book could not be saved
-     */
-    @PostMapping("/saveBook")
-    public ResponseEntity<BookModel> saveBook(@RequestBody @Validated BookModel bookModel) {
-        Book bookEntity = Book.from(bookModel);
-        Optional<Book> book = bookService
-                .saveBookAndPublisherWithAuthors(bookEntity);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .headers(locationHeader(book))
-                .body(entityMapper.toModel(
-                        book.orElseThrow(NotFoundException::new)
-                ));
-    }
-
-    /**
-     * Updates an existing book.
-     *
-     * @param bookId the ID of the book to update
-     * @param bookModel the updated book model
-     * @return a {@code ResponseEntity} with the location and the {@code BookModel} of the updated book
-     * @throws NotFoundException if the book could not be updated
-     */
-    @PutMapping("/updateBook/{bookId}")
-    public ResponseEntity<BookModel> updateBook(@PathVariable("bookId") UUID bookId,
-                                                @RequestBody @Validated BookModel bookModel) {
-        Book bookEntity = Book.from(bookModel);
-        Optional<Book> book = bookService
-                .updateBook(bookId, bookEntity);
-
-        return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
-                .headers(locationHeader(book))
-                .body(entityMapper.toModel(
-                        book.orElseThrow(NotFoundException::new)
-                ));
-    }
-
-    /**
-     * Patches an existing book with the given values.
-     *
-     * @param bookId the ID of the book to patch
-     * @param values the map of values to patch
-     * @return a {@code ResponseEntity} with the location and the {@code BookModel} of the patched book
-     * @throws NotFoundException if the book could not be patched
-     */
-    @PatchMapping("/patchBook/{bookId}")
-    public ResponseEntity<BookModel> patchBook(@PathVariable("bookId") UUID bookId,
-                                               @RequestBody Map<String, String> values) {
-        Optional<Book> book = bookService
-                .patchBook(bookId, values);
-
-        return ResponseEntity
-                .status(HttpStatus.ACCEPTED)
-                .headers(locationHeader(book))
-                .body(entityMapper.toModel(
-                        book.orElseThrow(NotFoundException::new)
-                ));
-    }
-
-    /**
-     * Creates HTTP headers containing the location of the given book.
-     *
-     * @param book the book for which to create the location header
-     * @return the HTTP headers with the location of the book
-     * @throws NotFoundException if the book is not present
-     */
-    private HttpHeaders locationHeader(Optional<Book> book) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", String.format(
-                "/library/book/getBookById/%s",
-                book.orElseThrow(NotFoundException::new)
-                .getId().toString()));
-        return headers;
     }
 }

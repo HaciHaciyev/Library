@@ -9,7 +9,10 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
@@ -23,7 +26,7 @@ public class Publisher {
     private final Events events;
     private final /**@OneToMany*/ Set<Book> books;
 
-    protected void addBook(Book book) {
+    void addBook(Book book) {
         this.books.add(book);
     }
 
@@ -43,7 +46,7 @@ public class Publisher {
         Publisher publisher = (Publisher) o;
 
         Set<UUID> ourBooks = books.stream().map(Book::getId).collect(Collectors.toSet());
-        Set<UUID> theirBooks = publisher.books.stream().map(Book::getId).collect(Collectors.toSet()));
+        Set<UUID> theirBooks = publisher.books.stream().map(Book::getId).collect(Collectors.toSet());
 
         return Objects.equals(id, publisher.id) &&
                 Objects.equals(publisherName, publisher.publisherName) &&

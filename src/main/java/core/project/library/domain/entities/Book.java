@@ -30,7 +30,7 @@ public class Book {
     private final /**@ManyToMany*/ Set<Author> authors;
     private final /**@ManyToMany*/ Set<Order> orders;
 
-    protected void addOrder(Order order) {
+    void addOrder(Order order) {
         this.orders.add(order);
     }
 

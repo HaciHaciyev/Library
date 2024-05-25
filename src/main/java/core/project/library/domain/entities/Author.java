@@ -9,7 +9,10 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
@@ -23,7 +26,7 @@ public class Author {
     private final Events events;
     private final /**@ManyToMany*/ Set<Book> books;
 
-    protected void addBook(Book book) {
+    void addBook(Book book) {
         this.books.add(book);
     }
 
