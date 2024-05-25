@@ -36,8 +36,6 @@ class BookControllerTest {
     @Autowired
     BookRepository bookRepository;
     @Autowired
-    BookRepository.RowToBook rowToBook;
-    @Autowired
     ObjectMapper objectMapper;
     @Autowired
     WebApplicationContext wac;

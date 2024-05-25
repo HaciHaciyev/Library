@@ -8,7 +8,6 @@ import core.project.library.domain.value_objects.*;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -25,24 +24,21 @@ public class BookRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final RowToBook rowToBook;
-
-    public BookRepository(JdbcTemplate jdbcTemplate, RowToBook rowToBook) {
+    public BookRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.rowToBook = rowToBook;
     }
 
     public Optional<Book> findById(UUID bookId) {
         try {
             return Optional.ofNullable(
-                    jdbcTemplate.queryForObject(sqlForGet, rowToBook, bookId.toString())
+                    jdbcTemplate.queryForObject(sqlForGetBook, new RowToBook(), bookId.toString())
             );
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
     }
 
-    private static final String sqlForGet = """
+    private static final String sqlForGetBook = """
                 SELECT
                     b.id AS book_id,
                     b.title AS book_title,
@@ -82,8 +78,7 @@ public class BookRepository {
                 WHERE b.id = ?
                 """;
 
-    @Component
-    public static final class RowToBook implements RowMapper<Book> {
+    private static final class RowToBook implements RowMapper<Book> {
         @Override
         public Book mapRow(ResultSet rs, int rowNum) throws SQLException {
             try {
