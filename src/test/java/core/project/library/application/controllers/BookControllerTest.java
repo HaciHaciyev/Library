@@ -72,7 +72,37 @@ class BookControllerTest {
     @Test
     @Order(2)
     void getNotFoundExceptionInBookIdEndpoint() throws Exception {
-        mockMvc.perform(get("/library/book/getBookById/" + UUID.randomUUID())
+        mockMvc.perform(get("/library/book/findById/" + UUID.randomUUID())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(3)
+    void getByTitle() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/library/book/findByTitle/Title")
+                                .accept(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.title.title", is("Title")))
+                .andExpect(jsonPath("$.description.description", is("Description")))
+                .andExpect(jsonPath("$.isbn.isbn", is("9781861972712")))
+                .andExpect(jsonPath("$.price", is(12.99)))
+                .andExpect(jsonPath("$.quantityOnHand", is(43)))
+                .andExpect(jsonPath("$.publisher.publisherName.publisherName", is("Publisher")))
+                .andExpect(jsonPath("$.authors[0].firstName.firstName", is("Author")))
+                .andExpect(jsonPath("$.authors[0].email.email", is("author@gmail.com")))
+                .andReturn();
+
+        log.info(mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    @Order(4)
+    void getNotFoundExceptionInBookTitleEndpoint() throws Exception {
+        mockMvc.perform(get("/library/book/findByTitle/Doesn`t_Exists")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }

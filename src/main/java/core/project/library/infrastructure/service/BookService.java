@@ -19,4 +19,8 @@ public class BookService {
     public Optional<Book> findById(UUID bookId) {
         return bookRepository.findById(bookId);
     }
+
+    public Optional<Book> findByTitle(String title) {
+        return bookRepository.findByTitle(title);
+    }
 }

@@ -76,4 +76,21 @@ public class BookController {
                         bookService.findById(bookId).orElseThrow(NotFoundException::new))
                 );
     }
+
+
+    /**
+     * Finds a book by its title.
+     *
+     * @param title the title of the book
+     * @return a {@code ResponseEntity} containing the {@code BookModel} of the found book
+     * @throws NotFoundException if the book is not found
+     */
+    @GetMapping("/findByTitle/{title}")
+    public ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(entityMapper.toModel(
+                        bookService.findByTitle(title).orElseThrow(NotFoundException::new)
+                ));
+    }
 }

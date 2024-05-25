@@ -38,6 +38,16 @@ public class BookRepository {
         }
     }
 
+    public Optional<Book> findByTitle(String title) {
+        try {
+            return Optional.ofNullable(
+                    jdbcTemplate.queryForObject(sqlForGetBookByTitle, new RowToBook(), title)
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
     private static final String sqlForGetBook = """
                 SELECT
                     b.id AS book_id,
@@ -77,6 +87,10 @@ public class BookRepository {
                 INNER JOIN Author a ON ba.author_id = a.id
                 WHERE b.id = ?
                 """;
+
+    private static final String sqlForGetBookByTitle = sqlForGetBook.replace(
+            "WHERE b.id = ?", "WHERE b.title = ?"
+    );
 
     private static final class RowToBook implements RowMapper<Book> {
         @Override
