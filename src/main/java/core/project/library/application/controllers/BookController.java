@@ -7,11 +7,9 @@ import core.project.library.infrastructure.service.BookService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -77,7 +75,6 @@ public class BookController {
                 );
     }
 
-
     /**
      * Finds a book by its title.
      *
@@ -92,5 +89,17 @@ public class BookController {
                 .body(entityMapper.toModel(
                         bookService.findByTitle(title).orElseThrow(NotFoundException::new)
                 ));
+    }
+
+    @GetMapping("/pageOfBook/")
+    public ResponseEntity<List<BookModel>> listOfBooks(@RequestParam Integer pageNumber,
+                                                       @RequestParam Integer pageSize,
+                                                       @RequestParam(required = false) String category) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(bookService
+                        .listOfBooks(pageNumber, pageSize, category)
+                        .orElseThrow(NotFoundException::new)
+                        .stream().map(entityMapper::toModel).toList());
     }
 }

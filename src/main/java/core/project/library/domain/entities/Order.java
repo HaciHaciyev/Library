@@ -7,7 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -20,22 +23,6 @@ public class Order {
     private final Events events;
     private final /**@ManyToOne*/ Customer customer;
     private final /**@ManyToMany*/ Set<Book> books;
-
-    public Customer getCustomer() {
-        return Customer.builder()
-                .id(customer.getId())
-                .firstName(customer.getFirstName())
-                .lastName(customer.getLastName())
-                .password(customer.getPassword())
-                .email(customer.getEmail())
-                .address(customer.getAddress())
-                .events(customer.getEvents())
-                .build();
-    }
-
-    public Set<Book> getBooks() {
-        return new HashSet<>(books);
-    }
 
     public static Builder builder() {
         return new Builder();

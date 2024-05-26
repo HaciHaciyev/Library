@@ -14,10 +14,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Repository
 public class BookRepository {
@@ -48,7 +45,43 @@ public class BookRepository {
         }
     }
 
-    private static final String sqlForGetBook = """
+    public Optional<List<Book>> listOfBooks(Integer pageNumber,
+                                  Integer pageSize) {
+        try {
+            int offSet;
+            if (pageNumber != 0) {
+                offSet = (pageNumber - 1) * pageSize;
+            } else {
+                offSet = 0;
+            }
+
+            return Optional.of(jdbcTemplate.query(sqlForListOfBooks,
+                    new RowToBook(), pageSize, offSet));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<List<Book>> listByCategory(Integer pageNumber,
+                                     Integer pageSize, String category) {
+        try {
+            int offSet;
+            if (pageNumber != 0) {
+                offSet = (pageNumber - 1) * pageSize;
+            } else {
+                offSet = 0;
+            }
+
+            return Optional.of(jdbcTemplate.query(sqlForBooksByCategory, new RowToBook(),
+                    category, pageSize, offSet));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static final String byId = "WHERE b.id = ?";
+
+    private static final String sqlForGetBook = String.format("""
                 SELECT
                     b.id AS book_id,
                     b.title AS book_title,
@@ -85,11 +118,19 @@ public class BookRepository {
                 INNER JOIN Publisher p ON b.publisher_id = p.id
                 INNER JOIN Book_Author ba ON b.id = ba.book_id
                 INNER JOIN Author a ON ba.author_id = a.id
-                WHERE b.id = ?
-                """;
+                %s
+                """, byId);
 
     private static final String sqlForGetBookByTitle = sqlForGetBook.replace(
-            "WHERE b.id = ?", "WHERE b.title = ?"
+            byId, "WHERE b.title = ?"
+    );
+
+    private static final String sqlForListOfBooks = sqlForGetBook.replace(
+            byId, "LIMIT ? OFFSET ?"
+    );
+
+    private static final String sqlForBooksByCategory = sqlForGetBook.replace(
+            byId, "WHERE b.category = ? LIMIT ? OFFSET ?"
     );
 
     private static final class RowToBook implements RowMapper<Book> {
