@@ -25,10 +25,15 @@ public class BookService {
         return bookRepository.findByTitle(title);
     }
 
-    public final Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize, String category) {
-        if (category != null) {
+    public final Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize,
+                                                  String category, String authorLastName) {
+        if (category != null && authorLastName == null) {
             return bookRepository.listByCategory(pageNumber, pageSize, category);
-        } else {
+        } else if (category == null && authorLastName != null) {
+            return bookRepository.listByAuthorLastName(pageNumber, pageSize, authorLastName);
+        } else if (category != null) {
+            return bookRepository.listByCategoryAndLastName(pageNumber, pageSize, category, authorLastName);
+        }else {
             return bookRepository.listOfBooks(pageNumber, pageSize);
         }
     }

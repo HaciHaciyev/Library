@@ -79,6 +79,39 @@ public class BookRepository {
         }
     }
 
+    public Optional<List<Book>> listByAuthorLastName(Integer pageNumber, Integer pageSize, String authorLastName) {
+        try {
+            int offSet;
+            if (pageNumber != 0) {
+                offSet = (pageNumber - 1) * pageSize;
+            } else {
+                offSet = 0;
+            }
+
+            return Optional.of(jdbcTemplate.query(sqlForBooksByAuthorLastName, new RowToBook(),
+                    authorLastName, pageSize, offSet));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<List<Book>> listByCategoryAndLastName(Integer pageNumber, Integer pageSize,
+                                                          String category, String authorLastName) {
+        try {
+            int offSet;
+            if (pageNumber != 0) {
+                offSet = (pageNumber - 1) * pageSize;
+            } else {
+                offSet = 0;
+            }
+
+            return Optional.of(jdbcTemplate.query(sqlForBooksByCategoryAndAuthorLastName, new RowToBook(),
+                    category, authorLastName, pageSize, offSet));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
     private static final String byId = "WHERE b.id = ?";
 
     private static final String sqlForGetBook = String.format("""
@@ -131,6 +164,14 @@ public class BookRepository {
 
     private static final String sqlForBooksByCategory = sqlForGetBook.replace(
             byId, "WHERE b.category = ? LIMIT ? OFFSET ?"
+    );
+
+    private static final String sqlForBooksByAuthorLastName = sqlForGetBook.replace(
+            byId, "WHERE a.last_name = ? LIMIT ? OFFSET ?"
+    );
+
+    private static final String sqlForBooksByCategoryAndAuthorLastName = sqlForGetBook.replace(
+            byId, "WHERE b.category = ? AND a.last_name = ? LIMIT ? OFFSET ?"
     );
 
     private static final class RowToBook implements RowMapper<Book> {

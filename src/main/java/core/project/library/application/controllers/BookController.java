@@ -102,12 +102,13 @@ public class BookController {
      */
     @GetMapping("/pageOfBook/")
     public final ResponseEntity<List<BookModel>> listOfBooks(@RequestParam Integer pageNumber,
-                                                       @RequestParam Integer pageSize,
-                                                       @RequestParam(required = false) String category) {
+                                                             @RequestParam Integer pageSize,
+                                                             @RequestParam(required = false) String category,
+                                                             @RequestParam(required = false) String authorLastName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(bookService
-                        .listOfBooks(pageNumber, pageSize, category)
+                        .listOfBooks(pageNumber, pageSize, category, authorLastName)
                         .orElseThrow(NotFoundException::new)
                         .stream().map(entityMapper::toModel).toList());
     }
