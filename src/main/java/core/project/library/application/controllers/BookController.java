@@ -67,7 +67,7 @@ public class BookController {
      * @throws NotFoundException if the book is not found
      */
     @GetMapping("/findById/{bookId}")
-    public ResponseEntity<BookModel> getBookById(@PathVariable("bookId") UUID bookId) {
+    public final ResponseEntity<BookModel> getBookById(@PathVariable("bookId") UUID bookId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toModel(
@@ -83,7 +83,7 @@ public class BookController {
      * @throws NotFoundException if the book is not found
      */
     @GetMapping("/findByTitle/{title}")
-    public ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
+    public final ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toModel(
@@ -101,7 +101,7 @@ public class BookController {
      * @throws NotFoundException if no books are found for the specified criteria
      */
     @GetMapping("/pageOfBook/")
-    public ResponseEntity<List<BookModel>> listOfBooks(@RequestParam Integer pageNumber,
+    public final ResponseEntity<List<BookModel>> listOfBooks(@RequestParam Integer pageNumber,
                                                        @RequestParam Integer pageSize,
                                                        @RequestParam(required = false) String category) {
         return ResponseEntity

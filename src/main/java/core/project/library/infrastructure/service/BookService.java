@@ -17,15 +17,15 @@ public class BookService {
         this.bookRepository = bookRepository;
     }
 
-    public Optional<Book> findById(UUID bookId) {
+    public final Optional<Book> findById(UUID bookId) {
         return bookRepository.findById(bookId);
     }
 
-    public Optional<Book> findByTitle(String title) {
+    public final Optional<Book> findByTitle(String title) {
         return bookRepository.findByTitle(title);
     }
 
-    public Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize, String category) {
+    public final Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize, String category) {
         if (category != null) {
             return bookRepository.listByCategory(pageNumber, pageSize, category);
         } else {
