@@ -91,6 +91,15 @@ public class BookController {
                 ));
     }
 
+    /**
+     * Retrieves a paginated list of books.
+     *
+     * @param pageNumber the page number of the book list to retrieve
+     * @param pageSize the number of books per page
+     * @param category (optional) the category of books to filter
+     * @return a {@code ResponseEntity} containing the paginated list of {@code BookModel}s
+     * @throws NotFoundException if no books are found for the specified criteria
+     */
     @GetMapping("/pageOfBook/")
     public ResponseEntity<List<BookModel>> listOfBooks(@RequestParam Integer pageNumber,
                                                        @RequestParam Integer pageSize,
