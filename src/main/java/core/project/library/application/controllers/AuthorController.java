@@ -28,7 +28,7 @@ public class AuthorController {
     }
 
     @GetMapping("/findById/{authorId}")
-    public final ResponseEntity<AuthorDTO> findById(@PathVariable("authorId") UUID authorId) {
+    final ResponseEntity<AuthorDTO> findById(@PathVariable("authorId") UUID authorId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toDTO(
@@ -37,7 +37,7 @@ public class AuthorController {
     }
 
     @GetMapping("/findByLastName/{lastName}")
-    public final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("lastName") String lastName) {
+    final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("lastName") String lastName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(authorService
