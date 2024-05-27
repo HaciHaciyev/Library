@@ -5,10 +5,10 @@ import jakarta.validation.constraints.Size;
 
 import java.util.Objects;
 
-public record Address(@NotBlank @Size(max = 25) String state,
-                      @NotBlank @Size(max = 25) String city,
-                      @NotBlank @Size(max = 25) String street,
-                      @NotBlank @Size(max = 25) String home) {
+public record Address(@NotBlank @Size(max = 51) String state,
+                      @NotBlank @Size(max = 51) String city,
+                      @NotBlank @Size(max = 51) String street,
+                      @NotBlank @Size(max = 51) String home) {
 
     public Address {
         validateToNullBlankAndSize(new Object[] {state, city, street, home});
@@ -21,8 +21,8 @@ public record Address(@NotBlank @Size(max = 25) String state,
                 if (string.isBlank()) {
                     throw new IllegalArgumentException("String should`t be blank.");
                 }
-                if (string.length() > 25) {
-                    throw new IllegalArgumentException("String should be shorter than 25 characters.");
+                if (string.length() > 51) {
+                    throw new IllegalArgumentException("String should be shorter than 51 characters.");
                 }
             }
         }
