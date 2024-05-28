@@ -5,6 +5,7 @@ import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -16,6 +17,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 
+@Slf4j
 @Repository
 public class BookRepository {
 
@@ -198,6 +200,7 @@ public class BookRepository {
                         )
                         .build();
 
+                Set<Author> authors = new HashSet<>();
                 Author author = Author.builder()
                         .id(UUID.fromString(rs.getString("author_id")))
                         .firstName(new FirstName(rs.getString("author_first_name")))
@@ -214,6 +217,7 @@ public class BookRepository {
                                 rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
                         ))
                         .build();
+                authors.add(author);
 
                 return Book.builder()
                         .id(UUID.fromString(rs.getString("book_id")))
@@ -229,7 +233,7 @@ public class BookRepository {
                                 )
                         )
                         .publisher(publisher)
-                        .authors(new HashSet<>(Collections.singleton(author)))
+                        .authors(authors)
                         .build();
             } catch (EmptyResultDataAccessException e) {
                 return null;

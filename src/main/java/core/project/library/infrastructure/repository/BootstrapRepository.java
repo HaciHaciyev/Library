@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @org.springframework.stereotype.Repository
@@ -154,6 +155,79 @@ public class BootstrapRepository {
 
         saveBookOrder(book, order);
         saveBookOrder(book2, order2);
+
+        //-----------------------------------------------------------------------------------------------------------
+
+        Publisher publisher3 = Publisher.builder()
+                .id(UUID.randomUUID())
+                .publisherName(new PublisherName("PublisherForRow"))
+                .address(DEFAULT_ADDRESS)
+                .phone(new Phone("+994 50 1112233"))
+                .email(new Email("email@gmail.com"))
+                .events(new Events())
+                .build();
+
+        Author author3 = Author.builder()
+                .id(UUID.randomUUID())
+                .firstName(new FirstName("AuthorForRow"))
+                .lastName(new LastName("Authorovich"))
+                .email(new Email("author@gmail.com"))
+                .address(DEFAULT_ADDRESS)
+                .events(new Events())
+                .build();
+
+        Author author4 = Author.builder()
+                .id(UUID.randomUUID())
+                .firstName(new FirstName("SecondAuthorForRow"))
+                .lastName(new LastName("Authorovich"))
+                .email(new Email("author@gmail.com"))
+                .address(DEFAULT_ADDRESS)
+                .events(new Events())
+                .build();
+
+        Book book3 = Book.builder()
+                .id(UUID.fromString("b77380fb-ecde-41b3-ab6b-9cc935ca2d1c"))
+                .title(new Title("BookForRow"))
+                .description(new Description("Description"))
+                .isbn(new ISBN("9781861972712"))
+                .price(DEFAULT_PRICE)
+                .quantityOnHand(43)
+                .events(new Events())
+                .category(Category.Adventure)
+                .publisher(publisher3)
+                .authors(new HashSet<>(Set.of(author3, author4)))
+                .build();
+
+        Customer customer3 = Customer.builder()
+                .id(UUID.randomUUID())
+                .firstName(new FirstName("CustomerForRow"))
+                .lastName(new LastName("Customerovich"))
+                .password(new Password("password"))
+                .email(new Email("customer@gmail.com"))
+                .address(DEFAULT_ADDRESS)
+                .events(new Events())
+                .build();
+
+        Order order3 = Order.builder()
+                .id(UUID.randomUUID())
+                .countOfBooks(1)
+                .totalPrice(new TotalPrice(DEFAULT_PRICE))
+                .events(new Events())
+                .customer(customer3)
+                .books(new HashSet<>(Collections.singleton(book3)))
+                .build();
+
+        //-----------------------------------------------------------------------------------------------------------
+
+        savePublisher(publisher3);
+        saveAuthor(author3);
+        saveAuthor(author4);
+        saveBook(book3);
+        saveBookAuthor(book3, author3);
+        saveBookAuthor(book3, author4);
+        saveCustomer(customer3);
+        saveOrder(order3);
+        saveBookOrder(book3, order3);
     }
 
     private void savePublisher(Publisher publisher) {

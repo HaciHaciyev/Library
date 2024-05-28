@@ -17,7 +17,10 @@ public class Bootstrap implements CommandLineRunner {
 
     @Override
     public final void run(String... args) throws Exception {
-        if (repository.count() < 1) repository.bootstrap();
+        if (repository.count() < 1) {
+            repository.bootstrap();
+        }
+
         log.info("Bootstrap is completed. Basic values in database.");
     }
 }
