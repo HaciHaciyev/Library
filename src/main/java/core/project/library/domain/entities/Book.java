@@ -203,26 +203,51 @@ public class Book {
         }
 
         public final Book build() {
-            validateToNullAndBlank(new Object[]{id, title, description, isbn,
-                    price, quantityOnHand, category, events, publisher, authors});
-            if (authors.isEmpty()) {
-                throw new IllegalArgumentException("Authors can`t be empty.");
-            }
+            validateFields();
 
             Book book = new Book(id, title, description, isbn, price, quantityOnHand,
                     category, events, publisher, Collections.unmodifiableSet(authors), new HashSet<>());
+
             publisher.addBook(book);
             authors.forEach(author -> author.addBook(book));
             return book;
         }
-    }
 
-    private static void validateToNullAndBlank(Object[] o) {
-        for (Object object : o) {
-            Objects.requireNonNull(object);
-            if (object instanceof String string && string.isBlank()) {
-                throw new IllegalArgumentException("String should`t be blank.");
+        private void validateFields() {
+            validateNonNull(title, "Title can't be null");
+            validateNonNull(description, "Description can't be null");
+            validateNonNull(isbn, "ISBN can't be null");
+            validatePrice(price);
+            validateQuantity(quantityOnHand);
+            validateNonNull(category, "Category can't be null");
+            validateNonNull(events, "Events can't be null");
+            validateNonNull(publisher, "Publisher can't be null");
+            validateAuthors(authors);
+        }
+
+        private void validateNonNull(Object field, String message) {
+            if (field == null) {
+                throw new IllegalArgumentException(message);
             }
         }
+
+        private void validatePrice(BigDecimal price) {
+            if (price == null || price.doubleValue() < 0) {
+                throw new IllegalArgumentException("Price can't be null or negative");
+            }
+        }
+
+        private void validateQuantity(Integer quantityOnHand) {
+            if (quantityOnHand == null || quantityOnHand < 0) {
+                throw new IllegalArgumentException("Quantity can't be null or negative");
+            }
+        }
+
+        private void validateAuthors(Set<Author> authors) {
+            if (authors == null || authors.isEmpty()) {
+                throw new IllegalArgumentException("Authors can't be null or empty");
+            }
+        }
+
     }
 }

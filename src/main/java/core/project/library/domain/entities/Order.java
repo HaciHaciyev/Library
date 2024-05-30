@@ -111,11 +111,7 @@ public class Order {
         }
 
         public final Order build() {
-            validateToNullAndBlank(new Object[]{id, countOfBooks,
-                    totalPrice, events, customer, books});
-            if (books.isEmpty()) {
-                throw new IllegalArgumentException("Books in order can`t be empty.");
-            }
+            validateFields();
 
             Order order = new Order(id, countOfBooks, totalPrice,
                     events, customer, Collections.unmodifiableSet(books));
@@ -124,13 +120,22 @@ public class Order {
             books.forEach(book -> book.addOrder(order));
             return order;
         }
-    }
 
-    private static void validateToNullAndBlank(Object[] o) {
-        for (Object object : o) {
-            Objects.requireNonNull(object);
-            if (object instanceof String string && string.isBlank()) {
-                throw new IllegalArgumentException("String should`t be blank.");
+        private void validateFields() {
+            if (countOfBooks == null || countOfBooks < 0) {
+                throw new IllegalArgumentException("Count of books can't be null or negative");
+            }
+            if (totalPrice == null || totalPrice.totalPrice().doubleValue() < 0) {
+                throw new IllegalArgumentException("Total price can't be null or negative");
+            }
+            if (events == null) {
+                throw new IllegalArgumentException("Events can't be null");
+            }
+            if (customer == null) {
+                throw new IllegalArgumentException("Customer can't be null");
+            }
+            if (books == null || books.isEmpty()) {
+                throw new IllegalArgumentException("Books can't be null or empty");
             }
         }
     }
