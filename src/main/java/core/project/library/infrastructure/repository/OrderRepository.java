@@ -12,10 +12,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Repository
 public class OrderRepository {
@@ -29,14 +26,20 @@ public class OrderRepository {
     public Optional<Order> findById(UUID orderId) {
         try {
             return Optional.ofNullable(
-                    jdbcTemplate.queryForObject(sqlForOrder, new RowToOrder(), orderId.toString())
+                    jdbcTemplate.query(
+                            connection -> connection.prepareStatement(
+                                    String.format(sqlForGetOrder, orderId.toString()),
+                                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                            ),
+                            new RowToOrder()
+                    ).getFirst()
             );
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
     }
 
-    private static final String sqlForOrder = """
+    private static final String sqlForGetOrder = """
             Select
               o.id AS order_id,
               o.count_of_book AS order_count_of_book,
@@ -94,66 +97,91 @@ public class OrderRepository {
               INNER JOIN Publisher p ON b.publisher_id = p.id
               INNER JOIN Book_Author ba ON b.id = ba.book_id
               INNER JOIN Author a ON ba.author_id = a.id
-            WHERE o.id = ?
+            WHERE o.id = '%s'
             """;
 
     private static final class RowToOrder implements RowMapper<Order> {
         @Override
         public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
             try {
-                Publisher publisher = Publisher.builder()
-                        .id(UUID.fromString(rs.getString("publisher_id")))
-                        .publisherName(new PublisherName(rs.getString("publisher_name")))
-                        .address(new Address(
-                                rs.getString("publisher_state"),
-                                rs.getString("publisher_city"),
-                                rs.getString("publisher_street"),
-                                rs.getString("publisher_home")
-                        ))
-                        .phone(new Phone(rs.getString("publisher_phone")))
-                        .email(new Email(rs.getString("publisher_email")))
-                        .events(new Events(
-                                        rs.getObject("publisher_creation_date",
-                                                Timestamp.class).toLocalDateTime(),
-                                        rs.getObject("publisher_last_modified_date",
-                                                Timestamp.class).toLocalDateTime()
-                                )
-                        )
-                        .build();
+                var listOfBooks = new HashSet<Book>();
+                int countOfRowsScrollForBooksOfOrder = 0;
+                do {
+                    Publisher publisher = Publisher.builder()
+                            .id(UUID.fromString(rs.getString("publisher_id")))
+                            .publisherName(new PublisherName(rs.getString("publisher_name")))
+                            .address(new Address(
+                                            rs.getString("publisher_state"),
+                                            rs.getString("publisher_city"),
+                                            rs.getString("publisher_street"),
+                                            rs.getString("publisher_home")
+                                    )
+                            )
+                            .phone(new Phone(rs.getString("publisher_phone")))
+                            .email(new Email(rs.getString("publisher_email")))
+                            .events(new Events(
+                                            rs.getObject("publisher_creation_date",
+                                                    Timestamp.class).toLocalDateTime(),
+                                            rs.getObject("publisher_last_modified_date",
+                                                    Timestamp.class).toLocalDateTime()
+                                    )
+                            )
+                            .build();
 
-                Author author = Author.builder()
-                        .id(UUID.fromString(rs.getString("author_id")))
-                        .firstName(new FirstName(rs.getString("author_first_name")))
-                        .lastName(new LastName(rs.getString("author_last_name")))
-                        .email(new Email(rs.getString("author_email")))
-                        .address(new Address(
-                                rs.getString("author_state"),
-                                rs.getString("author_city"),
-                                rs.getString("author_street"),
-                                rs.getString("author_home")
-                        ))
-                        .events(new Events(
-                                rs.getObject("author_created_date", Timestamp.class).toLocalDateTime(),
-                                rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
-                        ))
-                        .build();
-
-                Book book = Book.builder()
-                        .id(UUID.fromString(rs.getString("book_id")))
-                        .title(new Title(rs.getString("book_title")))
-                        .description(new Description(rs.getString("book_description")))
-                        .isbn(new ISBN(rs.getString("book_isbn")))
-                        .price(new BigDecimal(rs.getString("book_price")))
-                        .quantityOnHand(rs.getInt("book_quantity"))
-                        .category(Category.valueOf(rs.getString("book_category")))
-                        .events(new Events(
-                                        rs.getObject("book_created_date", Timestamp.class).toLocalDateTime(),
-                                        rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
+                    int countOfRowsScrollForBookAuthors = 0;
+                    Set<Author> authors = new LinkedHashSet<>();
+                    do {
+                        Author author = Author.builder()
+                                .id(UUID.fromString(rs.getString("author_id")))
+                                .firstName(new FirstName(rs.getString("author_first_name")))
+                                .lastName(new LastName(rs.getString("author_last_name")))
+                                .email(new Email(rs.getString("author_email")))
+                                .address(new Address(
+                                                rs.getString("author_state"),
+                                                rs.getString("author_city"),
+                                                rs.getString("author_street"),
+                                                rs.getString("author_home")
+                                        )
                                 )
-                        )
-                        .publisher(publisher)
-                        .authors(new HashSet<>(Collections.singleton(author)))
-                        .build();
+                                .events(new Events(
+                                                rs.getObject("author_created_date", Timestamp.class).toLocalDateTime(),
+                                                rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
+                                        )
+                                )
+                                .build();
+                        authors.add(author);
+                        countOfRowsScrollForBookAuthors++;
+                    } while (rs.next());
+
+                    while (countOfRowsScrollForBookAuthors != 0) {
+                        rs.previous();
+                        countOfRowsScrollForBookAuthors--;
+                    }
+
+                    Book book = Book.builder()
+                            .id(UUID.fromString(rs.getString("book_id")))
+                            .title(new Title(rs.getString("book_title")))
+                            .description(new Description(rs.getString("book_description")))
+                            .isbn(new ISBN(rs.getString("book_isbn")))
+                            .price(new BigDecimal(rs.getString("book_price")))
+                            .quantityOnHand(rs.getInt("book_quantity"))
+                            .category(Category.valueOf(rs.getString("book_category")))
+                            .events(new Events(
+                                            rs.getObject("book_created_date", Timestamp.class).toLocalDateTime(),
+                                            rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
+                                    )
+                            )
+                            .publisher(publisher)
+                            .authors(authors)
+                            .build();
+                    listOfBooks.add(book);
+                    countOfRowsScrollForBooksOfOrder++;
+                } while (rs.next());
+
+                while (countOfRowsScrollForBooksOfOrder != 0) {
+                    rs.previous();
+                    countOfRowsScrollForBooksOfOrder--;
+                }
 
                 Customer customer = Customer.builder()
                         .id(UUID.fromString(rs.getString("customer_id")))
@@ -171,7 +199,8 @@ public class OrderRepository {
                         .events(new Events(
                                 rs.getObject("customer_creation_date", Timestamp.class).toLocalDateTime(),
                                 rs.getObject("customer_last_modified_date", Timestamp.class).toLocalDateTime()
-                        ))
+                                )
+                        )
                         .build();
 
                 return Order.builder()
@@ -181,9 +210,10 @@ public class OrderRepository {
                         .events(new Events(
                                 rs.getObject("order_creation_date", Timestamp.class).toLocalDateTime(),
                                 rs.getObject("order_last_modified_date", Timestamp.class).toLocalDateTime()
-                        ))
+                                )
+                        )
                         .customer(customer)
-                        .books(new HashSet<>(Collections.singleton(book)))
+                        .books(new HashSet<>(listOfBooks))
                         .build();
             } catch (EmptyResultDataAccessException e) {
                 return null;

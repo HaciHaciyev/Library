@@ -1,7 +1,5 @@
 package core.project.library.domain.entities;
 
-import core.project.library.application.model.BookModel;
-import core.project.library.application.model.PublisherDTO;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.Category;
 import core.project.library.domain.value_objects.Description;
@@ -40,44 +38,6 @@ public class Book {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public static Book from(BookModel bookModel) {
-        Objects.requireNonNull(bookModel);
-
-        PublisherDTO publisherDTO = bookModel.publisher();
-        Publisher publisher = Publisher.builder()
-                .id(UUID.randomUUID())
-                .publisherName(publisherDTO.publisherName())
-                .address(publisherDTO.address())
-                .phone(publisherDTO.phone())
-                .email(publisherDTO.email())
-                .events(new Events())
-                .build();
-
-        Set<Author> authors = bookModel.authors()
-                .stream()
-                .map(authorDTO -> Author.builder()
-                        .id(UUID.randomUUID())
-                        .firstName(authorDTO.firstName())
-                        .lastName(authorDTO.lastName())
-                        .email(authorDTO.email())
-                        .address(authorDTO.address())
-                        .events(new Events())
-                        .build()).collect(Collectors.toSet());
-
-        return Book.builder()
-                .id(UUID.randomUUID())
-                .title(bookModel.title())
-                .description(bookModel.description())
-                .isbn(bookModel.isbn())
-                .price(bookModel.price())
-                .quantityOnHand(bookModel.quantityOnHand())
-                .category(bookModel.category())
-                .events(new Events())
-                .publisher(publisher)
-                .authors(authors)
-                .build();
     }
 
     @Override

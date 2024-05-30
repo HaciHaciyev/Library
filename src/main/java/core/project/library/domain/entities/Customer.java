@@ -1,6 +1,5 @@
 package core.project.library.domain.entities;
 
-import core.project.library.application.model.CustomerModel;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import lombok.AccessLevel;
@@ -35,18 +34,6 @@ public class Customer {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public static Customer from(CustomerModel model) {
-        return Customer.builder()
-                .id(UUID.randomUUID())
-                .firstName(model.firstName())
-                .lastName(model.lastName())
-                .password(model.password())
-                .email(model.email())
-                .address(model.address())
-                .events(new Events())
-                .build();
     }
 
     @Override
