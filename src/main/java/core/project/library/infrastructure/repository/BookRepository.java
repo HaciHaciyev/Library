@@ -30,9 +30,15 @@ public class BookRepository {
     public Optional<Book> findById(UUID bookId) {
         try {
             return Optional.ofNullable(
-                    jdbcTemplate.queryForObject(sqlForGetBook, new RowToBook(), bookId.toString())
+                    jdbcTemplate.query(
+                            connection -> connection.prepareStatement(
+                            String.format(sqlForGetBook, bookId.toString()),
+                            ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                            ),
+                            new RowToBook()
+                    ).getFirst()
             );
-        } catch (EmptyResultDataAccessException e) {
+        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
             return Optional.empty();
         }
     }
@@ -40,81 +46,150 @@ public class BookRepository {
     public Optional<Book> findByTitle(String title) {
         try {
             return Optional.ofNullable(
-                    jdbcTemplate.queryForObject(sqlForGetBookByTitle, new RowToBook(), title)
+                    jdbcTemplate.query(
+                            connection -> connection.prepareStatement(
+                            String.format(sqlForGetBookByTitle, title),
+                            ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                            ),
+                            new RowToBook()
+                    ).getFirst()
             );
-        } catch (EmptyResultDataAccessException e) {
+        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
             return Optional.empty();
         }
     }
 
-    public Optional<List<Book>> listOfBooks(Integer pageNumber,
-                                  Integer pageSize) {
+    public Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize) {
         try {
-            int offSet;
-            if (pageNumber != 0) {
-                offSet = (pageNumber - 1) * pageSize;
-            } else {
-                offSet = 0;
-            }
+            var listOfBooks = new ArrayList<Book>();
+            final int limit = buildLimit(pageSize);
+            final int offSet = buildOffSet(limit, pageNumber);
 
-            return Optional.of(jdbcTemplate.query(sqlForListOfBooks,
-                    new RowToBook(), pageSize, offSet));
-        } catch (EmptyResultDataAccessException e) {
+            Set<UUID> booksId = new HashSet<>(
+                    jdbcTemplate.query(
+                            buildQuery(sqlForBooksId, limit, offSet),
+                            (rs, rowNum) -> UUID.fromString(rs.getString("id"))
+                    )
+            );
+
+            booksId.forEach(id ->
+                    listOfBooks.add(
+                            jdbcTemplate.query(
+                                    connection -> connection.prepareStatement(
+                                    buildQuery(sqlForGetBook, id),
+                                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                    ResultSet.CONCUR_READ_ONLY
+                                    ),
+                                    new RowToBook()
+                            ).getFirst()
+                    )
+            );
+            return Optional.of(listOfBooks);
+        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
             return Optional.empty();
         }
     }
 
-    public Optional<List<Book>> listByCategory(Integer pageNumber,
-                                     Integer pageSize, String category) {
+    public Optional<List<Book>> listByCategory(Integer pageNumber, Integer pageSize, String category) {
         try {
-            int offSet;
-            if (pageNumber != 0) {
-                offSet = (pageNumber - 1) * pageSize;
-            } else {
-                offSet = 0;
-            }
+            var listOfBooks = new ArrayList<Book>();
+            final int limit = buildLimit(pageSize);
+            final int offSet = buildOffSet(limit, pageNumber);
 
-            return Optional.of(jdbcTemplate.query(sqlForBooksByCategory, new RowToBook(),
-                    category, pageSize, offSet));
-        } catch (EmptyResultDataAccessException e) {
+            Set<UUID> booksId = new HashSet<>(
+                    jdbcTemplate.query(
+                            buildQuery(sqlForBooksIdByCategory, category, limit, offSet),
+                            (rs, rowNum) -> UUID.fromString(rs.getString("id"))
+                    )
+            );
+
+            booksId.forEach(id ->
+                    listOfBooks.add(
+                            jdbcTemplate.query(
+                                    connection -> connection.prepareStatement(
+                                    buildQuery(sqlForBooksByCategory, category, limit, offSet),
+                                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                                    ),
+                                    new RowToBook()
+                            ).getFirst()
+                    )
+            );
+            return Optional.of(listOfBooks);
+        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
             return Optional.empty();
         }
     }
 
-    public Optional<List<Book>> listByAuthorLastName(Integer pageNumber, Integer pageSize, String authorLastName) {
+    public Optional<List<Book>> listByAuthor(Integer pageNumber, Integer pageSize, String author) {
         try {
-            int offSet;
-            if (pageNumber != 0) {
-                offSet = (pageNumber - 1) * pageSize;
-            } else {
-                offSet = 0;
-            }
+            var listOfBooks = new ArrayList<Book>();
+            final int limit = buildLimit(pageSize);
+            final int offSet = buildOffSet(limit, pageNumber);
 
-            return Optional.of(jdbcTemplate.query(sqlForBooksByAuthorLastName, new RowToBook(),
-                    authorLastName, pageSize, offSet));
-        } catch (EmptyResultDataAccessException e) {
+            Set<UUID> booksId = new HashSet<>(
+                    jdbcTemplate.query(
+                            buildQuery(sqlForBooksIdByAuthor, author, limit, offSet),
+                            (rs, rowNum) -> UUID.fromString(rs.getString("id"))
+                    )
+            );
+
+            booksId.forEach(id ->
+                    listOfBooks.add(
+                            jdbcTemplate.query(
+                                    connection -> connection.prepareStatement(
+                                            buildQuery(sqlForBooksByAuthor, author, limit, offSet),
+                                            ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                                    ),
+                                    new RowToBook()
+                            ).getFirst()
+                    )
+            );
+            return Optional.of(listOfBooks);
+        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
             return Optional.empty();
         }
     }
 
-    public Optional<List<Book>> listByCategoryAndLastName(Integer pageNumber, Integer pageSize,
-                                                          String category, String authorLastName) {
-        try {
-            int offSet;
-            if (pageNumber != 0) {
-                offSet = (pageNumber - 1) * pageSize;
-            } else {
-                offSet = 0;
-            }
-
-            return Optional.of(jdbcTemplate.query(sqlForBooksByCategoryAndAuthorLastName, new RowToBook(),
-                    category, authorLastName, pageSize, offSet));
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
+    public static int buildLimit(Integer pageSize) {
+        int limit;
+        if (pageSize > 0 && pageSize < 25) {
+            limit = pageSize;
+        } else {
+            limit = 10;
         }
+        return limit;
     }
 
-    private static final String byId = "WHERE b.id = ?";
+    public static int buildOffSet(Integer limit, Integer pageNumber) {
+        int offSet;
+        if (limit > 0 && pageNumber > 0) {
+            offSet = (pageNumber - 1) * limit;
+        } else {
+            offSet = 0;
+        }
+        return offSet;
+    }
+
+    public static String buildQuery(String sql, Object... values) {
+        return String.format(sql, values);
+    }
+
+    private static final String byId = "WHERE b.id = '%s'";
+
+    private static final String sqlForBooksId = """
+    Select id from Book LIMIT %s OFFSET %s
+    """;
+
+    private static final String sqlForBooksIdByCategory = """
+    Select id from Book Where category='%s' LIMIT %s OFFSET %s
+    """;
+
+    private static final String sqlForBooksIdByAuthor = """
+            SELECT Book.id FROM Book
+            JOIN Book_Author ON Book.id = Book_Author.book_id
+            JOIN Author ON Book_Author.author_id = Author.id
+            WHERE Author.last_name = '%s' LIMIT '%s' OFFSET '%s';
+            """;
 
     private static final String sqlForGetBook = String.format("""
                 SELECT
@@ -157,23 +232,15 @@ public class BookRepository {
                 """, byId);
 
     private static final String sqlForGetBookByTitle = sqlForGetBook.replace(
-            byId, "WHERE b.title = ?"
-    );
-
-    private static final String sqlForListOfBooks = sqlForGetBook.replace(
-            byId, "LIMIT ? OFFSET ?"
+            byId, "WHERE b.title = '%s'"
     );
 
     private static final String sqlForBooksByCategory = sqlForGetBook.replace(
-            byId, "WHERE b.category = ? LIMIT ? OFFSET ?"
+            byId, "WHERE b.category = '%s' LIMIT '%s' OFFSET '%s'"
     );
 
-    private static final String sqlForBooksByAuthorLastName = sqlForGetBook.replace(
-            byId, "WHERE a.last_name = ? LIMIT ? OFFSET ?"
-    );
-
-    private static final String sqlForBooksByCategoryAndAuthorLastName = sqlForGetBook.replace(
-            byId, "WHERE b.category = ? AND a.last_name = ? LIMIT ? OFFSET ?"
+    private static final String sqlForBooksByAuthor = sqlForGetBook.replace(
+            byId, "WHERE a.last_name = '%s' LIMIT '%s' OFFSET '%s'"
     );
 
     private static final class RowToBook implements RowMapper<Book> {
@@ -188,7 +255,8 @@ public class BookRepository {
                                 rs.getString("publisher_city"),
                                 rs.getString("publisher_street"),
                                 rs.getString("publisher_home")
-                        ))
+                                )
+                        )
                         .phone(new Phone(rs.getString("publisher_phone")))
                         .email(new Email(rs.getString("publisher_email")))
                         .events(new Events(
@@ -200,24 +268,35 @@ public class BookRepository {
                         )
                         .build();
 
-                Set<Author> authors = new HashSet<>();
-                Author author = Author.builder()
-                        .id(UUID.fromString(rs.getString("author_id")))
-                        .firstName(new FirstName(rs.getString("author_first_name")))
-                        .lastName(new LastName(rs.getString("author_last_name")))
-                        .email(new Email(rs.getString("author_email")))
-                        .address(new Address(
-                                rs.getString("author_state"),
-                                rs.getString("author_city"),
-                                rs.getString("author_street"),
-                                rs.getString("author_home")
-                        ))
-                        .events(new Events(
-                                rs.getObject("author_created_date", Timestamp.class).toLocalDateTime(),
-                                rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
-                        ))
-                        .build();
-                authors.add(author);
+                int countOfRowsScroll = 0;
+                Set<Author> authors = new LinkedHashSet<>();
+                do {
+                    Author author = Author.builder()
+                            .id(UUID.fromString(rs.getString("author_id")))
+                            .firstName(new FirstName(rs.getString("author_first_name")))
+                            .lastName(new LastName(rs.getString("author_last_name")))
+                            .email(new Email(rs.getString("author_email")))
+                            .address(new Address(
+                                    rs.getString("author_state"),
+                                    rs.getString("author_city"),
+                                    rs.getString("author_street"),
+                                    rs.getString("author_home")
+                                    )
+                            )
+                            .events(new Events(
+                                    rs.getObject("author_created_date", Timestamp.class).toLocalDateTime(),
+                                    rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
+                                    )
+                            )
+                            .build();
+                    authors.add(author);
+                    countOfRowsScroll++;
+                } while (rs.next());
+
+                while (countOfRowsScroll != 0) {
+                    rs.previous();
+                    countOfRowsScroll--;
+                }
 
                 return Book.builder()
                         .id(UUID.fromString(rs.getString("book_id")))

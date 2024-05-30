@@ -26,14 +26,12 @@ public class BookService {
     }
 
     public final Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize,
-                                                  String category, String authorLastName) {
-        if (category != null && authorLastName == null) {
+                                                  String category, String author) {
+        if (category != null && author == null) {
             return bookRepository.listByCategory(pageNumber, pageSize, category);
-        } else if (category == null && authorLastName != null) {
-            return bookRepository.listByAuthorLastName(pageNumber, pageSize, authorLastName);
-        } else if (category != null) {
-            return bookRepository.listByCategoryAndLastName(pageNumber, pageSize, category, authorLastName);
-        }else {
+        } else if (category == null && author != null) {
+            return bookRepository.listByAuthor(pageNumber, pageSize, author);
+        } else {
             return bookRepository.listOfBooks(pageNumber, pageSize);
         }
     }

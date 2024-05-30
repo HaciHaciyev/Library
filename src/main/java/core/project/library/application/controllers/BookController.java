@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -100,15 +101,17 @@ public class BookController {
      * @return a {@code ResponseEntity} containing the paginated list of {@code BookModel}s
      * @throws NotFoundException if no books are found for the specified criteria
      */
-    @GetMapping("/pageOfBook/")
+    @GetMapping("/pageOfBook")
     final ResponseEntity<List<BookModel>> listOfBooks(@RequestParam Integer pageNumber,
-                                                             @RequestParam Integer pageSize,
-                                                             @RequestParam(required = false) String category,
-                                                             @RequestParam(required = false) String authorLastName) {
+                                                      @RequestParam Integer pageSize,
+                                                      @RequestParam(required = false) String category,
+                                                      @RequestParam(required = false) String author) {
+        Objects.requireNonNull(pageNumber);
+        Objects.requireNonNull(pageSize);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(bookService
-                        .listOfBooks(pageNumber, pageSize, category, authorLastName)
+                        .listOfBooks(pageNumber, pageSize, category, author)
                         .orElseThrow(NotFoundException::new)
                         .stream().map(entityMapper::toModel).toList());
     }
