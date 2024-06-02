@@ -17,8 +17,8 @@ import java.util.UUID;
 @Repository
 public class CustomerRepository {
 
-    private static final String GET_BY_LAST_NAME = "Select * from Customer where last_name = ?";
-    private static final String GET_BY_ID = "Select * from Customer where id = ?";
+    private static final String GET_BY_LAST_NAME = "Select * from Customer where last_name=?";
+    private static final String GET_BY_ID = "Select * from Customer where id=?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -58,7 +58,7 @@ public class CustomerRepository {
                         rs.getString("street"),
                         rs.getString("home")))
                 .events(new Events(
-                        rs.getObject("created_date", Timestamp.class).toLocalDateTime(),
+                        rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                         rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                 )).build();
     }
