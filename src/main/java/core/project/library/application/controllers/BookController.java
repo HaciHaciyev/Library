@@ -2,8 +2,9 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.BookModel;
+import core.project.library.application.service.BookService;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.service.BookService;
+import core.project.library.infrastructure.repository.BookRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,8 @@ public class BookController {
 
     private final EntityMapper entityMapper;
 
+    private final BookRepository bookRepository;
+
     private final BookService bookService;
 
     /**
@@ -55,8 +58,9 @@ public class BookController {
      * @param entityMapper the entity mapper
      * @param bookService the book service
      */
-    public BookController(EntityMapper entityMapper, BookService bookService) {
+    public BookController(EntityMapper entityMapper, BookRepository bookRepository, BookService bookService) {
         this.entityMapper = entityMapper;
+        this.bookRepository = bookRepository;
         this.bookService = bookService;
     }
 
@@ -72,7 +76,7 @@ public class BookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toModel(
-                        bookService.findById(bookId).orElseThrow(NotFoundException::new))
+                        bookRepository.findById(bookId).orElseThrow(NotFoundException::new))
                 );
     }
 
@@ -88,7 +92,7 @@ public class BookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toModel(
-                        bookService.findByTitle(title).orElseThrow(NotFoundException::new)
+                        bookRepository.findByTitle(title).orElseThrow(NotFoundException::new)
                 ));
     }
 

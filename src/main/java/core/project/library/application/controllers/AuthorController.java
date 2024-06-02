@@ -3,7 +3,7 @@ package core.project.library.application.controllers;
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.AuthorDTO;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.service.AuthorService;
+import core.project.library.infrastructure.repository.AuthorRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,11 +20,11 @@ public class AuthorController {
 
     private final EntityMapper entityMapper;
 
-    private final AuthorService authorService;
+    private final AuthorRepository authorRepository;
 
-    public AuthorController(EntityMapper entityMapper, AuthorService authorService) {
+    public AuthorController(EntityMapper entityMapper, AuthorRepository authorRepository) {
         this.entityMapper = entityMapper;
-        this.authorService = authorService;
+        this.authorRepository = authorRepository;
     }
 
     @GetMapping("/findById/{authorId}")
@@ -32,7 +32,7 @@ public class AuthorController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toDTO(
-                        authorService.findById(authorId).orElseThrow(NotFoundException::new)
+                        authorRepository.findById(authorId).orElseThrow(NotFoundException::new)
                 ));
     }
 
@@ -40,7 +40,7 @@ public class AuthorController {
     final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("lastName") String lastName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(authorService
+                .body(authorRepository
                         .findByLastName(lastName)
                         .orElseThrow(NotFoundException::new)
                         .stream().map(entityMapper::toDTO).toList()

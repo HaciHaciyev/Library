@@ -3,7 +3,7 @@ package core.project.library.application.controllers;
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.CustomerDTO;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.service.CustomerService;
+import core.project.library.infrastructure.repository.CustomerRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,18 +19,19 @@ import java.util.UUID;
 public class CustomerController {
 
     private final EntityMapper mapper;
-    private final CustomerService service;
 
-    public CustomerController(EntityMapper entityMapper, CustomerService service) {
+    private final CustomerRepository customerRepository;
+
+    public CustomerController(EntityMapper entityMapper, CustomerRepository customerRepository) {
         this.mapper = entityMapper;
-        this.service = service;
+        this.customerRepository = customerRepository;
     }
 
     @GetMapping("/findById/{id}")
     ResponseEntity<CustomerDTO> findById(@PathVariable("id") UUID id) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.toDTO(service
+                .body(mapper.toDTO(customerRepository
                         .findById(id).orElseThrow(NotFoundException::new)));
     }
 
@@ -38,7 +39,7 @@ public class CustomerController {
     ResponseEntity<List<CustomerDTO>> findByLastName(@PathVariable("lastName") String lastName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(service
+                .body(customerRepository
                         .findByLastName(lastName)
                         .orElseThrow(NotFoundException::new)
                         .stream().map(mapper::toDTO).toList());

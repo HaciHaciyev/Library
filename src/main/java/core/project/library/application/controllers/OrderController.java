@@ -3,7 +3,7 @@ package core.project.library.application.controllers;
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.OrderModel;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.service.OrderService;
+import core.project.library.infrastructure.repository.OrderRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,11 +19,11 @@ public class OrderController {
 
     private final EntityMapper entityMapper;
 
-    private final OrderService orderService;
+    private final OrderRepository orderRepository;
 
-    public OrderController(EntityMapper entityMapper, OrderService orderService) {
+    public OrderController(EntityMapper entityMapper, OrderRepository orderRepository) {
         this.entityMapper = entityMapper;
-        this.orderService = orderService;
+        this.orderRepository = orderRepository;
     }
 
     @GetMapping("/findById/{orderId}")
@@ -31,7 +31,7 @@ public class OrderController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toModel(
-                        orderService.findById(orderId).orElseThrow(NotFoundException::new)
+                        orderRepository.findById(orderId).orElseThrow(NotFoundException::new)
                 ));
     }
 }

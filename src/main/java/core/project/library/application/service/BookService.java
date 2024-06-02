@@ -1,4 +1,4 @@
-package core.project.library.infrastructure.service;
+package core.project.library.application.service;
 
 import core.project.library.domain.entities.Book;
 import core.project.library.infrastructure.repository.BookRepository;
@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class BookService {
@@ -15,14 +14,6 @@ public class BookService {
 
     public BookService(BookRepository bookRepository) {
         this.bookRepository = bookRepository;
-    }
-
-    public final Optional<Book> findById(UUID bookId) {
-        return bookRepository.findById(bookId);
-    }
-
-    public final Optional<Book> findByTitle(String title) {
-        return bookRepository.findByTitle(title);
     }
 
     public final Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize,

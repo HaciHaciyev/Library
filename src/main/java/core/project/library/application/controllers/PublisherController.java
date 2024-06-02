@@ -3,7 +3,7 @@ package core.project.library.application.controllers;
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.PublisherDTO;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.service.PublisherService;
+import core.project.library.infrastructure.repository.PublisherRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,18 +19,19 @@ import java.util.UUID;
 public class PublisherController {
 
     private final EntityMapper mapper;
-    private final PublisherService service;
 
-    public PublisherController(EntityMapper mapper, PublisherService service) {
+    private final PublisherRepository publisherRepository;
+
+    public PublisherController(EntityMapper mapper, PublisherRepository publisherRepository) {
         this.mapper = mapper;
-        this.service = service;
+        this.publisherRepository = publisherRepository;
     }
 
     @GetMapping("/findById/{id}")
     ResponseEntity<PublisherDTO> findById(@PathVariable("id") UUID id) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.toDto(service
+                .body(mapper.toDto(publisherRepository
                         .findById(id).orElseThrow(NotFoundException::new)));
     }
 
@@ -38,7 +39,7 @@ public class PublisherController {
     ResponseEntity<List<PublisherDTO>> findByName(@PathVariable("name") String name) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(service
+                .body(publisherRepository
                         .findByName(name)
                         .orElseThrow(NotFoundException::new)
                         .stream().map(mapper::toDto).toList());
