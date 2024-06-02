@@ -5,6 +5,7 @@ import core.project.library.application.model.BookModel;
 import core.project.library.application.service.BookService;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.BookRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/library/book")
 public class BookController {
 
@@ -51,18 +53,6 @@ public class BookController {
     private final BookRepository bookRepository;
 
     private final BookService bookService;
-
-    /**
-     * Constructs a new {@code BookController} with the given {@code EntityMapper} and {@code BookService}.
-     *
-     * @param entityMapper the entity mapper
-     * @param bookService the book service
-     */
-    public BookController(EntityMapper entityMapper, BookRepository bookRepository, BookService bookService) {
-        this.entityMapper = entityMapper;
-        this.bookRepository = bookRepository;
-        this.bookService = bookService;
-    }
 
     /**
      * Retrieves a book by its ID.

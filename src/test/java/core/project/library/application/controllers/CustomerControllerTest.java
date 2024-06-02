@@ -5,7 +5,7 @@ import core.project.library.application.mappers.EntityMapperImpl;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
-import core.project.library.infrastructure.service.CustomerService;
+import core.project.library.infrastructure.repository.CustomerRepository;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,7 +40,7 @@ class CustomerControllerTest {
     MockMvc mockMvc;
 
     @MockBean
-    CustomerService service;
+    CustomerRepository customerRepository;
 
     static Faker faker = new Faker();
 
@@ -54,7 +54,7 @@ class CustomerControllerTest {
         @MethodSource("predefinedCustomer")
         @DisplayName("Accept predefined valid customer")
         void testFindById(Customer customer) throws Exception {
-            when(service.findById(customer.getId())).thenReturn(Optional.of(customer));
+            when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
 
             mockMvc.perform(get(FIND_BY_ID + customer.getId().toString())
                             .accept(MediaType.APPLICATION_JSON))
@@ -66,12 +66,13 @@ class CustomerControllerTest {
         @MethodSource("randomCustomers")
         @DisplayName("Accept random customers")
         void testRandomCustomers(Customer randomCustomer) throws Exception {
-            when(service.findById(randomCustomer.getId())).thenReturn(Optional.of(randomCustomer));
+            when(customerRepository.findById(randomCustomer.getId())).thenReturn(Optional.of(randomCustomer));
             mockMvc.perform(get(FIND_BY_ID + randomCustomer.getId().toString())
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         }
+
 // эта штука временно не работает НЕ ТРОГАТЬ!!!
 //        @ParameterizedTest
 //        @MethodSource("invalidCustomer")
@@ -143,7 +144,7 @@ class CustomerControllerTest {
     @MethodSource("listOfCustomersWithMatchingLastName")
     @DisplayName("Accept random customers with matching last name")
     void testFindByLastName(List<Customer> customerList) throws Exception {
-        when(service.findByLastName("Customerovich")).thenReturn(Optional.of(customerList));
+        when(customerRepository.findByLastName("Customerovich")).thenReturn(Optional.of(customerList));
         mockMvc.perform(get("/library/customer/findByLastName/Customerovich")
                         .accept(MediaType.APPLICATION_JSON)
                 )

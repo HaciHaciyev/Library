@@ -1,20 +1,16 @@
 package core.project.library.application.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import core.project.library.application.mappers.EntityMapper;
-import core.project.library.application.service.BookService;
-import core.project.library.infrastructure.repository.BookRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.core.Is.is;
@@ -22,30 +18,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
-@SpringBootTest
+@WebMvcTest(BookController.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BookControllerTest {
 
+    @Autowired
     MockMvc mockMvc;
-    @Autowired
-    BookController bookController;
-    @Autowired
-    Optional<EntityMapper> entityMapper;
-    @Autowired
-    BookService bookService;
-    @Autowired
-    BookRepository bookRepository;
-    @Autowired
-    ObjectMapper objectMapper;
-    @Autowired
-    WebApplicationContext wac;
-
-    @BeforeEach
-    void setUp() {
-        this.mockMvc = MockMvcBuilders
-                .webAppContextSetup(this.wac)
-                .build();
-    }
 
     @Test
     @Order(1)
