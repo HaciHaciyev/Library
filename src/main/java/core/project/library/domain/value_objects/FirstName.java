@@ -12,7 +12,7 @@ public record FirstName(@NotBlank @Size(min = 3, max = 25) String firstName) {
         if (firstName.isBlank()) {
             throw new IllegalArgumentException("First Name should`t be blank.");
         }
-        if (firstName.length() < 3 || firstName.length() > 25) {
+        if (firstName.length() < 2 || firstName.length() > 25) {
             throw new IllegalArgumentException("Fist Name should`t be smaller than 3 characters and greater than 25.");
         }
     }
