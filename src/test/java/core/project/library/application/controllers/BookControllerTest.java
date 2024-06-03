@@ -1,19 +1,27 @@
 package core.project.library.application.controllers;
 
+import core.project.library.application.service.BookService;
+import core.project.library.domain.entities.Book;
+import core.project.library.infrastructure.repository.BookRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import net.datafaker.Faker;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -24,6 +32,38 @@ class BookControllerTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    @MockBean
+    BookService service;
+
+    @MockBean
+    BookRepository repository;
+
+    private static final Faker faker = new Faker();
+// не трогать
+//
+//    @Nested
+//    @DisplayName("GetBookById endpoint")
+//    class GetBookByIdTests {
+//
+//        private static final String FIND_BY_ID = "/library/book/findById/";
+//
+//        @ParameterizedTest
+//        @MethodSource("randomBook")
+//        @DisplayName("Accept valid UUID")
+//        void acceptValidId(Book book) throws Exception{
+//            when(repository.findById(book.getId())).thenReturn(Optional.of(book));
+//
+//            mockMvc.perform(get(FIND_BY_ID + book.getId().toString())
+//                            .accept(MediaType.APPLICATION_JSON))
+//                    .andExpect(status().isOk());
+//        }
+//
+//        private static Stream<Arguments> randomBook() {
+//            //TODO
+//            return null;
+//        }
+//    }
 
     @Test
     @Order(1)
