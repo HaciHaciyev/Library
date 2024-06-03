@@ -2,7 +2,10 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.mappers.EntityMapperImpl;
+import core.project.library.application.service.BookService;
+import core.project.library.infrastructure.repository.BookRepository;
 import lombok.extern.slf4j.Slf4j;
+import net.datafaker.Faker;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -10,6 +13,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,12 +33,44 @@ class BookControllerTest {
     @Autowired
     MockMvc mockMvc;
 
+    @MockBean
+    BookService service;
+
+    @MockBean
+    BookRepository repository;
+
+    private static final Faker faker = new Faker();
+// не трогать
+//
+//    @Nested
+//    @DisplayName("GetBookById endpoint")
+//    class GetBookByIdTests {
+//
+//        private static final String FIND_BY_ID = "/library/book/findById/";
+//
+//        @ParameterizedTest
+//        @MethodSource("randomBook")
+//        @DisplayName("Accept valid UUID")
+//        void acceptValidId(Book book) throws Exception{
+//            when(repository.findById(book.getId())).thenReturn(Optional.of(book));
+//
+//            mockMvc.perform(get(FIND_BY_ID + book.getId().toString())
+//                            .accept(MediaType.APPLICATION_JSON))
+//                    .andExpect(status().isOk());
+//        }
+//
+//        private static Stream<Arguments> randomBook() {
+//            //TODO
+//            return null;
+//        }
+//    }
+
     @Test
     @Order(1)
     void getBookByIdTest() throws Exception {
         MvcResult mvcResult = mockMvc.perform(
                         get("/library/book/findById/d4f0aa27-317b-4e00-9462-9a7f0faa7a5e")
-                        .accept(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -128,7 +164,7 @@ class BookControllerTest {
     void listByCategory() throws Exception {
         MvcResult mvcResult = mockMvc.perform(
                         get("/library/book/pageOfBook?pageNumber=0&pageSize=10&category=Adventure")
-                        .accept(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
                 .andReturn();
@@ -141,7 +177,7 @@ class BookControllerTest {
     void listByAuthor() throws Exception {
         MvcResult mvcResult = mockMvc.perform(
                         get("/library/book/pageOfBook?pageNumber=0&pageSize=10&author=Authorovich")
-                        .accept(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
                 .andReturn();
