@@ -1,11 +1,12 @@
-package core.project.library;
+package core.project.library.infrastructure.configuration;
 
 import net.datafaker.Faker;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-@SpringBootApplication
+@SpringBootApplication(
+        scanBasePackages = "com.project.library")
 public class LibraryApplication {
 
     public static void main(String[] args) {

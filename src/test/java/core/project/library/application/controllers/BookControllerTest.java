@@ -1,12 +1,16 @@
 package core.project.library.application.controllers;
 
+import core.project.library.application.mappers.EntityMapper;
+import core.project.library.application.mappers.EntityMapperImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -143,5 +147,13 @@ class BookControllerTest {
                 .andReturn();
 
         log.info("Page by Author: {}", mvcResult.getResponse().getContentAsString());
+    }
+
+    @SpringBootApplication(scanBasePackages = "com.project.library")
+    static class ControllerConfig {
+        @Bean
+        EntityMapper entityMapper() {
+            return new EntityMapperImpl();
+        }
     }
 }

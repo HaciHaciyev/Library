@@ -3,6 +3,7 @@ package core.project.library.domain;
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
+import core.project.library.infrastructure.configuration.LibraryApplication;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,7 +14,8 @@ import java.util.HashSet;
 import java.util.UUID;
 
 @Slf4j
-@SpringBootTest
+@SpringBootTest(
+        classes = LibraryApplication.class)
 class DomainTest {
 
     @Test

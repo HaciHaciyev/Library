@@ -8,7 +8,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @org.springframework.stereotype.Repository
@@ -158,7 +157,7 @@ public class BootstrapRepository {
 
         //-----------------------------------------------------------------------------------------------------------
 
-        Publisher publisher3 = Publisher.builder()
+        /**Publisher publisher3 = Publisher.builder()
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("PublisherForRow"))
                 .address(DEFAULT_ADDRESS)
@@ -227,7 +226,7 @@ public class BootstrapRepository {
         saveBookAuthor(book3, author4);
         saveCustomer(customer3);
         saveOrder(order3);
-        saveBookOrder(book3, order3);
+        saveBookOrder(book3, order3);*/
     }
 
     private void savePublisher(Publisher publisher) {
