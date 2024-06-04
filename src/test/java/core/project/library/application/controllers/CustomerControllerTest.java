@@ -1,7 +1,5 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.EntityMapper;
-import core.project.library.application.mappers.EntityMapperImpl;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
@@ -15,11 +13,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -47,7 +42,7 @@ class CustomerControllerTest {
     @MockBean
     CustomerRepository customerRepository;
 
-    static Faker faker = new Faker();
+    private static final Faker faker = new Faker();
 
     @Nested
     @DisplayName("FindById endpoint")
@@ -83,9 +78,9 @@ class CustomerControllerTest {
                             .id(UUID.randomUUID())
                             .firstName(new FirstName(faker.name().firstName()))
                             .lastName(new LastName(faker.name().lastName()))
-                            .password(new Password(faker.examplify("????????")))
+                            .password(new Password(faker.internet().password(5, 48)))
                             .email(new Email("customer@gmail.com"))
-                            .address(new Address("State", "City", "Street", "Home"))
+                            .address(Address.randomInstance())
                             .events(new Events())
                             .build())).limit(1);
         }
@@ -96,7 +91,8 @@ class CustomerControllerTest {
             UUID nonExistent = UUID.randomUUID();
             when(customerRepository.findById(nonExistent)).thenReturn(Optional.empty());
 
-            MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + nonExistent))
+            MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + nonExistent)
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
                     .andReturn();
 
@@ -130,11 +126,10 @@ class CustomerControllerTest {
                     );
         }
 
-        @ParameterizedTest
-        @MethodSource("customersWithSameLastName")
+        @Test
         @DisplayName("Throw exception in case of no match")
-        void testNoMatch(List<Customer> customerList) throws Exception {
-            String lastName = customerList.getFirst().getLastName().lastName();
+        void testNoMatch() throws Exception {
+            String lastName = "lastName";
             when(customerRepository.findByLastName(lastName)).thenReturn(Optional.empty());
 
 
@@ -153,14 +148,9 @@ class CustomerControllerTest {
                             .id(UUID.randomUUID())
                             .firstName(new FirstName(faker.name().firstName()))
                             .lastName(new LastName(lastName))
-                            .password(new Password(faker.bothify("???????###")))
+                            .password(new Password(faker.internet().password(5, 48)))
                             .email(new Email(faker.examplify("example") + "@gmail.com"))
-                            .address(new Address(
-                                    faker.address().state(),
-                                    faker.address().city(),
-                                    faker.address().streetAddress(),
-                                    faker.address().secondaryAddress()
-                            ))
+                            .address(Address.randomInstance())
                             .events(new Events())
                             .build();
 
@@ -170,20 +160,5 @@ class CustomerControllerTest {
                                     .toList(), lastName))
                     .limit(5);
         }
-
-    }
-
-    @SpringBootApplication
-    static class ControllerConfig {
-
-        @Bean
-        @Primary
-        EntityMapper entityMapper() {
-            return new EntityMapperImpl();
-        }
     }
 }
-
-
-
-

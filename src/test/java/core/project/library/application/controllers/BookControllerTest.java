@@ -1,33 +1,41 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.EntityMapper;
-import core.project.library.application.mappers.EntityMapperImpl;
 import core.project.library.application.service.BookService;
+import core.project.library.domain.entities.Author;
+import core.project.library.domain.entities.Book;
+import core.project.library.domain.entities.Publisher;
+import core.project.library.domain.events.Events;
+import core.project.library.domain.value_objects.*;
+import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.BookRepository;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Slf4j
 @WebMvcTest(BookController.class)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BookControllerTest {
 
     @Autowired
@@ -40,156 +48,277 @@ class BookControllerTest {
     BookRepository repository;
 
     private static final Faker faker = new Faker();
-// не трогать
-//
-//    @Nested
-//    @DisplayName("GetBookById endpoint")
-//    class GetBookByIdTests {
-//
-//        private static final String FIND_BY_ID = "/library/book/findById/";
-//
-//        @ParameterizedTest
-//        @MethodSource("randomBook")
-//        @DisplayName("Accept valid UUID")
-//        void acceptValidId(Book book) throws Exception{
-//            when(repository.findById(book.getId())).thenReturn(Optional.of(book));
-//
-//            mockMvc.perform(get(FIND_BY_ID + book.getId().toString())
-//                            .accept(MediaType.APPLICATION_JSON))
-//                    .andExpect(status().isOk());
-//        }
-//
-//        private static Stream<Arguments> randomBook() {
-//            //TODO
-//            return null;
-//        }
-//    }
 
-    @Test
-    @Order(1)
-    void getBookByIdTest() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/library/book/findById/d4f0aa27-317b-4e00-9462-9a7f0faa7a5e")
-                                .accept(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.title.title", is("Title")))
-                .andExpect(jsonPath("$.description.description", is("Description")))
-                .andExpect(jsonPath("$.isbn.isbn", is("9781861972712")))
-                .andExpect(jsonPath("$.price", is(12.99)))
-                .andExpect(jsonPath("$.quantityOnHand", is(43)))
-                .andExpect(jsonPath("$.publisher.publisherName.publisherName", is("Publisher")))
-                .andExpect(jsonPath("$.authors[0].firstName.firstName", is("Author")))
-                .andExpect(jsonPath("$.authors[0].email.email", is("author@gmail.com")))
-                .andReturn();
+    @Nested
+    @DisplayName("GetBookById endpoint")
+    class GetBookByIdTests {
 
-        log.info(mvcResult.getResponse().getContentAsString());
-    }
+        private static final String FIND_BY_ID = "/library/book/findById/";
 
-    @Test
-    @Order(2)
-    void getBookByIdTestWithMultiplyAuthors() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/library/book/findById/b77380fb-ecde-41b3-ab6b-9cc935ca2d1c")
-                                .accept(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.title.title", is("BookForRow")))
-                .andExpect(jsonPath("$.description.description", is("Description")))
-                .andExpect(jsonPath("$.isbn.isbn", is("9781861972712")))
-                .andExpect(jsonPath("$.price", is(12.99)))
-                .andExpect(jsonPath("$.quantityOnHand", is(43)))
-                .andExpect(jsonPath("$.publisher.publisherName.publisherName", is("PublisherForRow")))
-                .andExpect(jsonPath("$.authors[0].firstName.firstName", is("AuthorForRow")))
-                .andExpect(jsonPath("$.authors[0].email.email", is("author@gmail.com")))
-                .andExpect(jsonPath("$.authors[1].firstName.firstName", is("SecondAuthorForRow")))
-                .andReturn();
+        @ParameterizedTest
+        @MethodSource("randomBook")
+        @DisplayName("Accept valid UUID")
+        void acceptValidId(Book book) throws Exception {
+            when(repository.findById(book.getId())).thenReturn(Optional.of(book));
 
-        log.info(mvcResult.getResponse().getContentAsString());
-    }
-
-    @Test
-    @Order(3)
-    void getNotFoundExceptionInBookIdEndpoint() throws Exception {
-        mockMvc.perform(get("/library/book/findById/" + UUID.randomUUID())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @Order(4)
-    void getByTitle() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/library/book/findByTitle/Title")
-                                .accept(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.title.title", is("Title")))
-                .andExpect(jsonPath("$.description.description", is("Description")))
-                .andExpect(jsonPath("$.isbn.isbn", is("9781861972712")))
-                .andExpect(jsonPath("$.price", is(12.99)))
-                .andExpect(jsonPath("$.quantityOnHand", is(43)))
-                .andExpect(jsonPath("$.publisher.publisherName.publisherName", is("Publisher")))
-                .andExpect(jsonPath("$.authors[0].firstName.firstName", is("Author")))
-                .andExpect(jsonPath("$.authors[0].email.email", is("author@gmail.com")))
-                .andReturn();
-
-        log.info(mvcResult.getResponse().getContentAsString());
-    }
-
-    @Test
-    @Order(5)
-    void getNotFoundExceptionInBookTitleEndpoint() throws Exception {
-        mockMvc.perform(get("/library/book/findByTitle/Doesn`t_Exists")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @Order(6)
-    void listOfBooks() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=10")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        log.info("Page: {}", mvcResult.getResponse().getContentAsString());
-    }
-
-    @Test
-    @Order(7)
-    void listByCategory() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/library/book/pageOfBook?pageNumber=0&pageSize=10&category=Adventure")
-                                .accept(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        log.info("Page by Category: {}", mvcResult.getResponse().getContentAsString());
-    }
-
-    @Test
-    @Order(8)
-    void listByAuthor() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(
-                        get("/library/book/pageOfBook?pageNumber=0&pageSize=10&author=Authorovich")
-                                .accept(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andReturn();
-
-        log.info("Page by Author: {}", mvcResult.getResponse().getContentAsString());
-    }
-
-    @SpringBootApplication(scanBasePackages = "com.project.library")
-    static class ControllerConfig {
-        @Bean
-        EntityMapper entityMapper() {
-            return new EntityMapperImpl();
+            mockMvc.perform(get(FIND_BY_ID + book.getId().toString())
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         }
+
+        @Test
+        @DisplayName("Reject UUID of non existent book")
+        void rejectInvalidId() throws Exception {
+            UUID nonExistent = UUID.randomUUID();
+            when(repository.findById(nonExistent)).thenReturn(Optional.empty());
+
+            MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + nonExistent)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+        }
+
+        private static Stream<Arguments> randomBook() {
+            Supplier<Book> bookSupplier = getBookSupplier();
+            return Stream.generate(() -> arguments(bookSupplier.get()))
+                    .limit(1);
+        }
+    }
+
+
+    @Nested
+    @DisplayName("FindByName endpoint")
+    class FindByNameTests {
+
+        private static final String FIND_BY_NAME = "/library/book/findByTitle/";
+
+        @ParameterizedTest
+        @MethodSource("randomBook")
+        @DisplayName("Accept existing name")
+        void acceptExistingName(Book book) throws Exception {
+            String title = book.getTitle().title();
+            when(repository.findByTitle(title)).thenReturn(Optional.of(book));
+
+            mockMvc.perform(get(FIND_BY_NAME + title)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.title.title", is(book.getTitle().title())));
+        }
+
+        @Test
+        @DisplayName("Throw exception in case of no match")
+        void testNoMatch() throws Exception {
+            String title = "title";
+            when(repository.findByTitle(title)).thenReturn(Optional.empty());
+
+            MvcResult mvcResult = mockMvc.perform(get(FIND_BY_NAME + title)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+        }
+
+        private static Stream<Arguments> randomBook() {
+            Supplier<Book> bookSupplier = getBookSupplier();
+            return Stream.generate(() -> arguments(bookSupplier.get()))
+                    .limit(1);
+        }
+
+    }
+    @Nested
+    @DisplayName("ListOfBooks endpoint")
+    class ListOfBooksTests {
+
+        @ParameterizedTest
+        @MethodSource("bookList")
+        @DisplayName("Get list of books")
+        void getListOfBooks(List<Book> books, int pageSize) throws Exception {
+            when(service.listOfBooks(0, pageSize, null, null))
+                    .thenReturn(Optional.of(books));
+
+            mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=%s"
+                            .formatted(pageSize))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn();
+
+        }
+
+        private static Stream<Arguments> bookList() {
+            Supplier<Book> bookSupplier = getBookSupplier();
+            int pageSize = ThreadLocalRandom.current().nextInt(1,11);
+            return Stream.generate(() -> arguments(
+                    Stream.generate(bookSupplier).limit(pageSize).toList(),
+                    pageSize
+            )).limit(1);
+        }
+
+        @ParameterizedTest
+        @MethodSource("bookListByCategory")
+        @DisplayName("Get list of books sorted by category")
+        void getListOfBookSortedByCategory(List<Book> books, String category, int pageSize) throws Exception {
+            when(service.listOfBooks(0, pageSize, category, null))
+                    .thenReturn(Optional.of(books));
+
+            mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=%s&category=%s"
+                            .formatted(pageSize, category))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn();
+        }
+
+        private static Stream<Arguments> bookListByCategory() {
+            Supplier<Publisher> publisherSupplier = getPublisherSupplier();
+            Supplier<Set<Author>> authorSupplier = getAuthorSupplier();
+            int random = ThreadLocalRandom.current().nextInt(Category.values().length);
+            Category randomCategory = Category.values()[random];
+
+            Supplier<Book> bookSupplier = () ->
+                    Book.builder()
+                            .id(UUID.randomUUID())
+                            .title(new Title(faker.book().title()))
+                            .description(new Description(faker.text().text(50)))
+                            .isbn(new ISBN("9781861972712"))
+                            .price(BigDecimal.ONE)
+                            .quantityOnHand(1)
+                            .events(new Events())
+                            .category(randomCategory)
+                            .publisher(publisherSupplier.get())
+                            .authors(authorSupplier.get())
+                            .build();
+
+            int pageSize = ThreadLocalRandom.current().nextInt(1,11);
+            return Stream.generate(() -> arguments(
+                    Stream.generate(bookSupplier).limit(10).toList(),
+                    randomCategory.name(),
+                    pageSize
+            )).limit(1);
+        }
+
+        @Test
+        @DisplayName("Reject invalid category")
+        void rejectInvalidCategory() throws Exception {
+            when(service.listOfBooks(0, 10, "invalid", null))
+                    .thenReturn(Optional.empty());
+
+            MvcResult mvcResult = mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=10&category=invalid")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+        }
+
+        @ParameterizedTest
+        @MethodSource("bookListByAuthor")
+        @DisplayName("Get list of books sorted by author")
+        void getListOfBooksSortedByAuthor(List<Book> books, String author, int pageSize) throws Exception {
+            when(service.listOfBooks(0, pageSize, null, author)).thenReturn(Optional.of(books));
+            mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=%s&author=%s"
+                            .formatted(pageSize, author))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn();
+        }
+
+        private static Stream<Arguments> bookListByAuthor() {
+            Supplier<Publisher> publisherSupplier = getPublisherSupplier();
+
+            String name = faker.name().firstName();
+            Supplier<Set<Author>> authorSupplier = () -> {
+                int numberOfAuthors = ThreadLocalRandom.current().nextInt(1, 4);
+                return Stream.generate(() -> Author.builder()
+                        .id(UUID.randomUUID())
+                        .firstName(new FirstName(name))
+                        .lastName(new LastName(faker.name().lastName()))
+                        .email(new Email(faker.internet().emailAddress()))
+                        .address(Address.randomInstance())
+                        .events(new Events())
+                        .build()).limit(numberOfAuthors).collect(Collectors.toSet());
+            };
+
+            Supplier<Book> bookSupplier = () -> {
+                int randomCategory = ThreadLocalRandom.current().nextInt(Category.values().length);
+                return Book.builder()
+                        .id(UUID.randomUUID())
+                        .title(new Title(faker.book().title()))
+                        .description(new Description(faker.text().text(50)))
+                        .isbn(new ISBN("9781861972712"))
+                        .price(BigDecimal.ONE)
+                        .quantityOnHand(1)
+                        .events(new Events())
+                        .category(Category.values()[randomCategory])
+                        .publisher(publisherSupplier.get())
+                        .authors(authorSupplier.get())
+                        .build();
+            };
+
+            int pageSize = ThreadLocalRandom.current().nextInt(1,11);
+            return Stream.generate(() -> arguments(
+                    Stream.generate(bookSupplier).limit(10).toList(),
+                    name,
+                    pageSize
+            )).limit(1);
+        }
+
+        @Test
+        @DisplayName("Reject invalid author")
+        void rejectInvalidAuthor() throws Exception {
+            String category = "Adventure";
+            when(service.listOfBooks(0, 10, category, "invalid"))
+                    .thenReturn(Optional.empty());
+
+            MvcResult mvcResult = mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=10&author=invalid")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+        }
+    }
+
+    private static Supplier<Book> getBookSupplier() {
+        Supplier<Publisher> publisherSupplier = getPublisherSupplier();
+        Supplier<Set<Author>> authorSupplier = getAuthorSupplier();
+        int random = ThreadLocalRandom.current().nextInt(Category.values().length);
+
+        return () -> Book.builder()
+                .id(UUID.randomUUID())
+                .title(new Title(faker.book().title()))
+                .description(new Description(faker.text().text(50)))
+                .isbn(new ISBN("9781861972712"))
+                .price(BigDecimal.ONE)
+                .quantityOnHand(1)
+                .events(new Events())
+                .category(Category.values()[random])
+                .publisher(publisherSupplier.get())
+                .authors(authorSupplier.get())
+                .build();
+    }
+
+    private static Supplier<Set<Author>> getAuthorSupplier() {
+        int random = ThreadLocalRandom.current().nextInt(1,4);
+        return () -> Stream.generate(() -> Author.builder()
+                .id(UUID.randomUUID())
+                .firstName(new FirstName(faker.name().firstName()))
+                .lastName(new LastName(faker.name().lastName()))
+                .email(new Email(faker.internet().emailAddress()))
+                .address(Address.randomInstance())
+                .events(new Events())
+                .build()).limit(random).collect(Collectors.toSet());
+    }
+
+    private static Supplier<Publisher> getPublisherSupplier() {
+        return () -> Publisher.builder()
+                .id(UUID.randomUUID())
+                .publisherName(new PublisherName(faker.book().publisher()))
+                .address(Address.randomInstance())
+                .phone(new Phone(faker.phoneNumber().phoneNumberInternational()))
+                .email(new Email(faker.internet().emailAddress()))
+                .events(new Events())
+                .build();
     }
 }
