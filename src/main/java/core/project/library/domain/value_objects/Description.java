@@ -12,8 +12,9 @@ public record Description(@NotBlank @Size(min = 10, max = 255) String descriptio
         if (description.isBlank()) {
             throw new IllegalArgumentException("Description should`t be blank.");
         }
-        if (description.length() < 5 || description.length() > 25) {
-            throw new IllegalArgumentException("Description should be greater than 5 and shorter than 255 characters.");
+        if (description.length() < 5 || description.length() > 255) {
+            throw new IllegalArgumentException("Description should be greater than 5 and shorter than 255 characters." +
+                    "\n Description: " + description);
         }
     }
 }
