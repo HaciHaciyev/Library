@@ -4,6 +4,7 @@ import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
+import core.project.library.domain.value_objects.Phone;
 import core.project.library.domain.value_objects.PublisherName;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -57,6 +58,7 @@ public class PublisherRepository {
                         rs.getString("city"),
                         rs.getString("street"),
                         rs.getString("home")))
+                .phone(new Phone(rs.getString("phone")))
                 .email(new Email(rs.getString("email")))
                 .events(new Events(
                         rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),

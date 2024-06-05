@@ -3,6 +3,7 @@ package core.project.library.infrastructure.repository;
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
+import net.datafaker.Faker;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
@@ -12,6 +13,8 @@ import java.util.UUID;
 
 @org.springframework.stereotype.Repository
 public class BootstrapRepository {
+
+    private static final Faker faker = new Faker();
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -34,7 +37,7 @@ public class BootstrapRepository {
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher"))
                 .address(DEFAULT_ADDRESS)
-                .phone(new Phone("+994 50 1112233"))
+                .phone(new Phone(faker.phoneNumber().phoneNumber()))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
                 .build();
@@ -86,7 +89,7 @@ public class BootstrapRepository {
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher2"))
                 .address(DEFAULT_ADDRESS)
-                .phone(new Phone("+994 50 1112233"))
+                .phone(new Phone(faker.phoneNumber().phoneNumber()))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
                 .build();

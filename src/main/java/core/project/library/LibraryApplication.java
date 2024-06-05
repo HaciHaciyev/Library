@@ -1,11 +1,9 @@
-package core.project.library.infrastructure.configuration;
+package core.project.library;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(
-        scanBasePackages = "com.project.library"
-)
+@SpringBootApplication
 public class LibraryApplication {
 
     public static void main(String[] args) {

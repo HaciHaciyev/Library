@@ -59,7 +59,7 @@ public class BookController {
      * @throws NotFoundException if the book is not found
      */
     @GetMapping("/findById/{bookId}")
-    final ResponseEntity<BookModel> getBookById(@PathVariable("bookId") UUID bookId) {
+    final ResponseEntity<BookModel> findById(@PathVariable("bookId") UUID bookId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(entityMapper.toModel(

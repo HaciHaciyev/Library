@@ -36,12 +36,13 @@ public class AuthorController {
                 ));
     }
 
-    @GetMapping("/findByLastName/{lastName}")
-    final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("lastName") String lastName) {
+    @GetMapping("/findByLastName/{authorLastName}")
+    final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("authorLastName")
+                                                             String authorLastName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(authorRepository
-                        .findByLastName(lastName)
+                        .findByLastName(authorLastName)
                         .orElseThrow(NotFoundException::new)
                         .stream().map(entityMapper::toDTO).toList()
                 );

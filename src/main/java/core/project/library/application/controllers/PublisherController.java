@@ -27,20 +27,21 @@ public class PublisherController {
         this.publisherRepository = publisherRepository;
     }
 
-    @GetMapping("/findById/{id}")
-    ResponseEntity<PublisherDTO> findById(@PathVariable("id") UUID id) {
+    @GetMapping("/findById/{publisherId}")
+    ResponseEntity<PublisherDTO> findById(@PathVariable("publisherId") UUID publisherId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.toDto(publisherRepository
-                        .findById(id).orElseThrow(NotFoundException::new)));
+                .body(mapper.toDto(
+                        publisherRepository.findById(publisherId).orElseThrow(NotFoundException::new))
+                );
     }
 
-    @GetMapping("/findByName/{name}")
-    ResponseEntity<List<PublisherDTO>> findByName(@PathVariable("name") String name) {
+    @GetMapping("/findByName/{publisherName}")
+    ResponseEntity<List<PublisherDTO>> findByName(@PathVariable("publisherName") String publisherName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(publisherRepository
-                        .findByName(name)
+                        .findByName(publisherName)
                         .orElseThrow(NotFoundException::new)
                         .stream().map(mapper::toDto).toList());
     }

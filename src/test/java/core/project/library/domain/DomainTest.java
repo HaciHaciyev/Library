@@ -3,11 +3,9 @@ package core.project.library.domain;
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
-import core.project.library.infrastructure.configuration.LibraryApplication;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -15,8 +13,6 @@ import java.util.HashSet;
 import java.util.UUID;
 
 @Slf4j
-@SpringBootTest(
-        classes = LibraryApplication.class)
 class DomainTest {
 
     private static final Faker faker = new Faker();
