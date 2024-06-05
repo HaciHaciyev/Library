@@ -11,13 +11,16 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatException;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 class AddressTests {
 
     private static final String VALID_STRING = "valid";
-    public static final String INVALID_STRING = "qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnm";
+
+    public static final String INVALID_STRING =
+            "qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnm";
 
     @Nested
     @DisplayName("Validation")

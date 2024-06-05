@@ -29,6 +29,7 @@ public class BookRepository {
 
     public Optional<Book> findById(UUID bookId) {
         try {
+            log.info("In repository...");
             return Optional.ofNullable(
                     jdbcTemplate.query(
                             connection -> connection.prepareStatement(

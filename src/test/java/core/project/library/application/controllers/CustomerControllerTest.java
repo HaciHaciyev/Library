@@ -25,13 +25,12 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.core.Is.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 
 @WebMvcTest(CustomerController.class)
 class CustomerControllerTest {
@@ -72,19 +71,6 @@ class CustomerControllerTest {
                     );
         }
 
-        private static Stream<Arguments> randomCustomer() {
-            return Stream.generate(() -> arguments(
-                    Customer.builder()
-                            .id(UUID.randomUUID())
-                            .firstName(new FirstName(faker.name().firstName()))
-                            .lastName(new LastName(faker.name().lastName()))
-                            .password(new Password(faker.internet().password(5, 48)))
-                            .email(new Email("customer@gmail.com"))
-                            .address(Address.randomInstance())
-                            .events(new Events())
-                            .build())).limit(1);
-        }
-
         @Test
         @DisplayName("Reject UUID of non existent customer")
         void testNonExistent() throws Exception{
@@ -97,6 +83,19 @@ class CustomerControllerTest {
                     .andReturn();
 
             assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+        }
+
+        private static Stream<Arguments> randomCustomer() {
+            return Stream.generate(() -> arguments(
+                    Customer.builder()
+                            .id(UUID.randomUUID())
+                            .firstName(new FirstName(faker.name().firstName()))
+                            .lastName(new LastName(faker.name().lastName()))
+                            .password(new Password(faker.internet().password(5, 48)))
+                            .email(new Email("customer@gmail.com"))
+                            .address(Address.randomInstance())
+                            .events(new Events())
+                            .build())).limit(1);
         }
     }
 

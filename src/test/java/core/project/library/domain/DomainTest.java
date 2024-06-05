@@ -5,6 +5,7 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.configuration.LibraryApplication;
 import lombok.extern.slf4j.Slf4j;
+import net.datafaker.Faker;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -18,13 +19,15 @@ import java.util.UUID;
         classes = LibraryApplication.class)
 class DomainTest {
 
+    private static final Faker faker = new Faker();
+
     @Test
     void testDomain() {
         Publisher publisher = Publisher.builder()
                 .id(UUID.randomUUID())
                 .publisherName(new PublisherName("Publisher"))
                 .address(new Address("State", "City", "Street", "Home"))
-                .phone(new Phone("+994 50 1112233"))
+                .phone(new Phone(faker.phoneNumber().phoneNumber()))
                 .email(new Email("email@gmail.com"))
                 .events(new Events())
                 .build();
