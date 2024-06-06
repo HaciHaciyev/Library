@@ -66,7 +66,7 @@ public class OrderRepository {
               b.price AS book_price,
               b.quantity_on_hand AS book_quantity,
               b.category AS book_category,
-              b.created_date AS book_created_date,
+              b.creation_date AS book_created_date,
               b.last_modified_date AS book_last_modified_date,
             
               p.id AS publisher_id,
@@ -88,15 +88,15 @@ public class OrderRepository {
               a.city AS author_city,
               a.street AS author_street,
               a.home AS author_home,
-              a.created_date AS author_created_date,
+              a.creation_date AS author_created_date,
               a.last_modified_date AS author_last_modified_date
-            FROM Order_Line o
-              INNER JOIN Customer c ON o.customer_id = c.id
+            FROM Orders o
+              INNER JOIN Customers c ON o.customer_id = c.id
               INNER JOIN Book_Order bo ON o.id = bo.order_id
-              INNER JOIN Book b ON bo.book_id = b.id
-              INNER JOIN Publisher p ON b.publisher_id = p.id
+              INNER JOIN Books b ON bo.book_id = b.id
+              INNER JOIN Publishers p ON b.publisher_id = p.id
               INNER JOIN Book_Author ba ON b.id = ba.book_id
-              INNER JOIN Author a ON ba.author_id = a.id
+              INNER JOIN Authors a ON ba.author_id = a.id
             WHERE o.id = '%s'
             """;
 
@@ -104,7 +104,7 @@ public class OrderRepository {
         @Override
         public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
             try {
-                var listOfBooks = new HashSet<Book>();
+                var listOfBooks = new ArrayList<Book>();
                 int countOfRowsScrollForBooksOfOrder = 0;
                 do {
                     Publisher publisher = Publisher.builder()
@@ -144,7 +144,7 @@ public class OrderRepository {
                                         )
                                 )
                                 .events(new Events(
-                                                rs.getObject("author_created_date", Timestamp.class).toLocalDateTime(),
+                                                rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
                                                 rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
                                         )
                                 )
@@ -167,7 +167,7 @@ public class OrderRepository {
                             .quantityOnHand(rs.getInt("book_quantity"))
                             .category(Category.valueOf(rs.getString("book_category")))
                             .events(new Events(
-                                            rs.getObject("book_created_date", Timestamp.class).toLocalDateTime(),
+                                            rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
                                             rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
                                     )
                             )
@@ -213,7 +213,7 @@ public class OrderRepository {
                                 )
                         )
                         .customer(customer)
-                        .books(new HashSet<>(listOfBooks))
+                        .books(listOfBooks)
                         .build();
             } catch (EmptyResultDataAccessException e) {
                 return null;

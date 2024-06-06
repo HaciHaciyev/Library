@@ -8,6 +8,7 @@ import net.datafaker.Faker;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
@@ -67,7 +68,7 @@ class DomainTest {
                 .totalPrice(new TotalPrice(new BigDecimal("12.99")))
                 .events(new Events())
                 .customer(customer)
-                .books(new HashSet<>(Collections.singleton(book)))
+                .books(new ArrayList<>(Collections.singleton(book)))
                 .build();
 
         System.out.println("Book: " + book);

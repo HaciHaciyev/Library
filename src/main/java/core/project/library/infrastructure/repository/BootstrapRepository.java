@@ -7,6 +7,7 @@ import net.datafaker.Faker;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
@@ -80,7 +81,7 @@ public class BootstrapRepository {
                 .totalPrice(new TotalPrice(DEFAULT_PRICE))
                 .events(new Events())
                 .customer(customer)
-                .books(new HashSet<>(Collections.singleton(book)))
+                .books(new ArrayList<>(Collections.singleton(book)))
                 .build();
 
         //-----------------------------------------------------------------------------------------------------------
@@ -132,7 +133,7 @@ public class BootstrapRepository {
                 .totalPrice(new TotalPrice(DEFAULT_PRICE))
                 .events(new Events())
                 .customer(customer)
-                .books(new HashSet<>(Collections.singleton(book)))
+                .books(new ArrayList<>(Collections.singleton(book)))
                 .build();
 
         //-----------------------------------------------------------------------------------------------------------
@@ -234,7 +235,7 @@ public class BootstrapRepository {
 
     private void savePublisher(Publisher publisher) {
         jdbcTemplate.update("""
-        Insert into Publisher (id, publisher_name, state, city, street, home,
+        Insert into Publishers (id, publisher_name, state, city, street, home,
                        phone, email, creation_date, last_modified_date)
                        values (?,?,?,?,?,?,?,?,?,?)
         """,
@@ -248,8 +249,8 @@ public class BootstrapRepository {
 
     private void saveAuthor(Author author) {
         jdbcTemplate.update("""
-        Insert into Author (id, first_name, last_name, email,
-                    state, city, street, home, created_date, last_modified_date)
+        Insert into Authors (id, first_name, last_name, email,
+                    state, city, street, home, creation_date, last_modified_date)
                     values (?,?,?,?,?,?,?,?,?,?)
         """,
                 author.getId().toString(), author.getFirstName().firstName(), author.getLastName().lastName(),
@@ -261,8 +262,8 @@ public class BootstrapRepository {
 
     private void saveBook(Book book) {
         jdbcTemplate.update("""
-        Insert into Book (id, publisher_id, title, description, isbn, price,
-                  quantity_on_hand, category, created_date, last_modified_date)
+        Insert into Books (id, publisher_id, title, description, isbn, price,
+                  quantity_on_hand, category, creation_date, last_modified_date)
                   values (?,?,?,?,?,?,?,?,?,?)
         """,
                 book.getId().toString(), book.getPublisher().getId().toString(),
@@ -275,10 +276,9 @@ public class BootstrapRepository {
 
     private void saveBookAuthor(Book book, Author author) {
         jdbcTemplate.update("""
-        Insert into Book_Author (id, book_id, author_id)
+        Insert into Book_Author (book_id, author_id)
                     values (?,?,?)
         """,
-                UUID.randomUUID().toString(),
                 book.getId().toString(),
                 author.getId().toString()
         );
@@ -286,7 +286,7 @@ public class BootstrapRepository {
 
     private void saveCustomer(Customer customer) {
         jdbcTemplate.update("""
-        Insert into Customer (id, first_name, last_name, email, password,
+        Insert into Customers (id, first_name, last_name, email, password,
                       state, city, street, home,
                       creation_date, last_modified_date)
                       values (?,?,?,?,?,?,?,?,?,?,?)
@@ -300,7 +300,7 @@ public class BootstrapRepository {
 
     private void saveOrder(Order order) {
         jdbcTemplate.update("""
-        Insert into Order_Line (id, customer_id,
+        Insert into Orders (id, customer_id,
                         count_of_book, total_price,
                         creation_date, last_modified_date)
                         values (?,?,?,?,?,?)
@@ -313,10 +313,9 @@ public class BootstrapRepository {
 
     private void saveBookOrder(Book book, Order order) {
         jdbcTemplate.update("""
-        Insert into Book_Order (id, book_id, order_id)
+        Insert into Book_Order (book_id, order_id)
                     values (?,?,?)
         """,
-                UUID.randomUUID().toString(),
                 book.getId().toString(),
                 order.getId().toString()
         );

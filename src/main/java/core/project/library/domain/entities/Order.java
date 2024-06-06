@@ -7,10 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,7 +19,7 @@ public class Order {
     private final TotalPrice totalPrice;
     private final Events events;
     private final /**@ManyToOne*/ Customer customer;
-    private final /**@ManyToMany*/ Set<Book> books;
+    private final /**@ManyToMany*/List<Book> books;
 
     public static Builder builder() {
         return new Builder();
@@ -76,7 +73,7 @@ public class Order {
         private TotalPrice totalPrice;
         private Events events;
         private /**@ManyToOne*/ Customer customer;
-        private /**@ManyToMany*/ Set<Book> books;
+        private /**@ManyToMany*/ List<Book> books;
 
         private Builder() {}
 
@@ -105,7 +102,7 @@ public class Order {
             return this;
         }
 
-        public Builder books(Set<Book> books) {
+        public Builder books(List<Book> books) {
             this.books = books;
             return this;
         }
@@ -114,7 +111,7 @@ public class Order {
             validateFields();
 
             Order order = new Order(id, countOfBooks, totalPrice,
-                    events, customer, Collections.unmodifiableSet(books));
+                    events, customer, Collections.unmodifiableList(books));
 
             customer.addOrder(order);
             books.forEach(book -> book.addOrder(order));

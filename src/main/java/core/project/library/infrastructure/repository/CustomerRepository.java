@@ -17,11 +17,13 @@ import java.util.UUID;
 @Repository
 public class CustomerRepository {
 
-    private static final String GET_BY_LAST_NAME = "Select * from Customer where last_name=?";
-    private static final String GET_BY_ID = "Select * from Customer where id=?";
+    private static final String GET_BY_LAST_NAME =
+            "Select * from Customers where last_name=?";
+
+    private static final String GET_BY_ID =
+            "Select * from Customers where id=?";
 
     private final JdbcTemplate jdbcTemplate;
-
 
     public CustomerRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;

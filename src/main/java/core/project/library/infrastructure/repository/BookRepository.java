@@ -177,18 +177,18 @@ public class BookRepository {
     private static final String byId = "WHERE b.id = '%s'";
 
     private static final String sqlForBooksId = """
-    Select id from Book LIMIT %s OFFSET %s
+    Select id from Books LIMIT %s OFFSET %s
     """;
 
     private static final String sqlForBooksIdByCategory = """
-    Select id from Book Where category='%s' LIMIT %s OFFSET %s
+    Select id from Books Where category='%s' LIMIT %s OFFSET %s
     """;
 
     private static final String sqlForBooksIdByAuthor = """
-            SELECT Book.id FROM Book
-            JOIN Book_Author ON Book.id = Book_Author.book_id
-            JOIN Author ON Book_Author.author_id = Author.id
-            WHERE Author.last_name = '%s' LIMIT '%s' OFFSET '%s';
+            SELECT Books.id FROM Books
+            JOIN Book_Author ON Books.id = Book_Author.book_id
+            JOIN Authors ON Book_Author.author_id = Authors.id
+            WHERE Authors.last_name = '%s' LIMIT '%s' OFFSET '%s';
             """;
 
     private static final String sqlForGetBook = String.format("""
@@ -200,7 +200,7 @@ public class BookRepository {
                     b.price AS book_price,
                     b.quantity_on_hand AS book_quantity,
                     b.category AS book_category,
-                    b.created_date AS book_created_date,
+                    b.creation_date AS book_created_date,
                     b.last_modified_date AS book_last_modified_date,
                 
                     p.id AS publisher_id,
@@ -222,12 +222,12 @@ public class BookRepository {
                     a.city AS author_city,
                     a.street AS author_street,
                     a.home AS author_home,
-                    a.created_date AS author_created_date,
+                    a.creation_date AS author_created_date,
                     a.last_modified_date AS author_last_modified_date
-                FROM Book b
-                INNER JOIN Publisher p ON b.publisher_id = p.id
+                FROM Books b
+                INNER JOIN Publishers p ON b.publisher_id = p.id
                 INNER JOIN Book_Author ba ON b.id = ba.book_id
-                INNER JOIN Author a ON ba.author_id = a.id
+                INNER JOIN Authors a ON ba.author_id = a.id
                 %s
                 """, byId);
 
@@ -284,7 +284,7 @@ public class BookRepository {
                                     )
                             )
                             .events(new Events(
-                                    rs.getObject("author_created_date", Timestamp.class).toLocalDateTime(),
+                                    rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
                                     rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
                                     )
                             )
@@ -307,7 +307,7 @@ public class BookRepository {
                         .quantityOnHand(rs.getInt("book_quantity"))
                         .category(Category.valueOf(rs.getString("book_category")))
                         .events(new Events(
-                                        rs.getObject("book_created_date", Timestamp.class).toLocalDateTime(),
+                                        rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
                                         rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
                                 )
                         )

@@ -8,6 +8,7 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.BookRepository;
+import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -41,6 +42,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Slf4j
 @WebMvcTest(BookController.class)
 class BookControllerTest {
 
@@ -75,6 +77,8 @@ class BookControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andReturn();
+
+            log.info(mvcResult.getResponse().getContentAsString());
         }
 
         @Test

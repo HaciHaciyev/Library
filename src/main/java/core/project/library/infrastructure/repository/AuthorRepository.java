@@ -48,11 +48,11 @@ public class AuthorRepository {
     }
 
     private static final String sqlForGetAuthor = """
-            Select * from Author Where id = ?
+            Select * from Authors Where id = ?
             """;
 
     private static final String sqlForAuthorByLastName = """
-            Select * from Author Where last_name = ?
+            Select * from Authors Where last_name = ?
             """;
 
     private static final class RowToAuthor implements RowMapper<Author> {
@@ -70,7 +70,7 @@ public class AuthorRepository {
                             rs.getString("home")
                     ))
                     .events(new Events(
-                            rs.getObject("created_date", Timestamp.class).toLocalDateTime(),
+                            rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                             rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                             )
                     )
