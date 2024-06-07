@@ -1,8 +1,10 @@
 package core.project.library.domain.value_objects;
 
+import core.project.library.infrastructure.utilities.ValueObjects;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -91,21 +93,12 @@ class AddressTests {
 
     static Faker faker = new Faker();
 
-    static Stream<Arguments> randomValues() {
-        return Stream.generate(() -> arguments(
-                faker.address().country(),
-                faker.address().city(),
-                faker.address().streetAddress(),
-                faker.address().secondaryAddress())
-        ).limit(10);
-    }
 
-    @ParameterizedTest
-    @MethodSource("randomValues")
+    @RepeatedTest(10)
     @DisplayName("Addresses with random values")
-    void shouldCreateAddressWithRandomValues(String state, String city, String street, String home) {
+    void shouldCreateAddressWithRandomValues() {
         assertThatNoException()
-                .isThrownBy(() -> new Address(state, city, street, home));
+                .isThrownBy(ValueObjects::randomAddress);
     }
 
     @Nested

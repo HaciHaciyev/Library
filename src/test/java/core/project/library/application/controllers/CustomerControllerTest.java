@@ -5,6 +5,7 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.CustomerRepository;
+import core.project.library.infrastructure.utilities.ValueObjects;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,6 +26,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static core.project.library.infrastructure.utilities.ValueObjects.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -89,11 +91,11 @@ class CustomerControllerTest {
             return Stream.generate(() -> arguments(
                     Customer.builder()
                             .id(UUID.randomUUID())
-                            .firstName(new FirstName(faker.name().firstName()))
-                            .lastName(new LastName(faker.name().lastName()))
-                            .password(new Password(faker.internet().password(5, 48)))
-                            .email(new Email("customer@gmail.com"))
-                            .address(Address.randomInstance())
+                            .firstName(randomFirstName())
+                            .lastName(randomLastName())
+                            .password(randomPassword())
+                            .email(randomEmail())
+                            .address(randomAddress())
                             .events(new Events())
                             .build())).limit(1);
         }
@@ -145,11 +147,11 @@ class CustomerControllerTest {
 
             Supplier<Customer> customerSupplier = () -> Customer.builder()
                             .id(UUID.randomUUID())
-                            .firstName(new FirstName(faker.name().firstName()))
+                            .firstName(randomFirstName())
                             .lastName(new LastName(lastName))
-                            .password(new Password(faker.internet().password(5, 48)))
-                            .email(new Email(faker.examplify("example") + "@gmail.com"))
-                            .address(Address.randomInstance())
+                            .password(randomPassword())
+                            .email(randomEmail())
+                            .address(randomAddress())
                             .events(new Events())
                             .build();
 

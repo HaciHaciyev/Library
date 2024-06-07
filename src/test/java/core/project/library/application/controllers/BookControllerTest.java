@@ -5,7 +5,7 @@ import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
-import core.project.library.domain.value_objects.*;
+import core.project.library.domain.value_objects.FirstName;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.BookRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +33,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static core.project.library.infrastructure.utilities.ValueObjects.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -46,22 +47,66 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(BookController.class)
 class BookControllerTest {
 
+    private static final Faker faker = new Faker();
     @Autowired
     MockMvc mockMvc;
-
     @MockBean
     BookService service;
-
     @MockBean
     BookRepository repository;
 
-    private static final Faker faker = new Faker();
+    private static Supplier<Book> getBookSupplier() {
+        Supplier<Publisher> publisherSupplier = getPublisherSupplier();
+        Supplier<Set<Author>> authorSupplier = getAuthorSupplier();
+
+        return () -> Book.builder()
+                .id(UUID.randomUUID())
+                .title(randomTitle())
+                .description(randomDescription())
+                .isbn(randomISBN13())
+                .price(BigDecimal.ONE)
+                .quantityOnHand(1)
+                .events(new Events())
+                .category(randomCategory())
+                .publisher(publisherSupplier.get())
+                .authors(authorSupplier.get())
+                .build();
+    }
+
+    private static Supplier<Set<Author>> getAuthorSupplier() {
+        int random = ThreadLocalRandom.current().nextInt(1, 4);
+        return () -> Stream.generate(() -> Author.builder()
+                .id(UUID.randomUUID())
+                .firstName(randomFirstName())
+                .lastName(randomLastName())
+                .email(randomEmail())
+                .address(randomAddress())
+                .events(new Events())
+                .build()).limit(random).collect(Collectors.toSet());
+    }
+
+    private static Supplier<Publisher> getPublisherSupplier() {
+        return () -> Publisher.builder()
+                .id(UUID.randomUUID())
+                .publisherName(randomPublisherName())
+                .address(randomAddress())
+                .phone(randomPhone())
+                .email(randomEmail())
+                .events(new Events())
+                .build();
+    }
 
     @Nested
     @DisplayName("GetBookById endpoint")
     class FindById {
 
         private static final String FIND_BY_ID = "/library/book/findById/";
+
+        private static Stream<Arguments> randomBook() {
+            Supplier<Book> bookSupplier = getBookSupplier();
+            return Stream.generate(() -> arguments(bookSupplier.get()))
+                    .limit(1);
+        }
 
         @ParameterizedTest
         @MethodSource("randomBook")
@@ -97,20 +142,19 @@ class BookControllerTest {
 
             assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
-
-        private static Stream<Arguments> randomBook() {
-            Supplier<Book> bookSupplier = getBookSupplier();
-            return Stream.generate(() -> arguments(bookSupplier.get()))
-                    .limit(1);
-        }
     }
-
 
     @Nested
     @DisplayName("FindByName endpoint")
     class FindByTitle {
 
         private static final String FIND_BY_NAME = "/library/book/findByTitle/";
+
+        private static Stream<Arguments> randomBook() {
+            Supplier<Book> bookSupplier = getBookSupplier();
+            return Stream.generate(() -> arguments(bookSupplier.get()))
+                    .limit(1);
+        }
 
         @ParameterizedTest
         @MethodSource("randomBook")
@@ -145,17 +189,85 @@ class BookControllerTest {
             assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
 
-        private static Stream<Arguments> randomBook() {
-            Supplier<Book> bookSupplier = getBookSupplier();
-            return Stream.generate(() -> arguments(bookSupplier.get()))
-                    .limit(1);
-        }
-
     }
 
     @Nested
     @DisplayName("ListOfBooks endpoint")
     class Page {
+
+        private static Stream<Arguments> bookList() {
+            Supplier<Book> bookSupplier = getBookSupplier();
+            int pageSize = ThreadLocalRandom.current().nextInt(1, 11);
+            return Stream.generate(() -> arguments(
+                    Stream.generate(bookSupplier).limit(pageSize).toList(),
+                    pageSize
+            )).limit(1);
+        }
+
+        private static Stream<Arguments> bookListByCategory() {
+            Supplier<Publisher> publisherSupplier = getPublisherSupplier();
+            Supplier<Set<Author>> authorSupplier = getAuthorSupplier();
+
+            Supplier<Book> bookSupplier = () ->
+                    Book.builder()
+                            .id(UUID.randomUUID())
+                            .title(randomTitle())
+                            .description(randomDescription())
+                            .isbn(randomISBN13())
+                            .price(BigDecimal.ONE)
+                            .quantityOnHand(1)
+                            .events(new Events())
+                            .category(randomCategory())
+                            .publisher(publisherSupplier.get())
+                            .authors(authorSupplier.get())
+                            .build();
+
+            int pageSize = ThreadLocalRandom.current().nextInt(1, 11);
+            return Stream.generate(() -> arguments(
+                    Stream.generate(bookSupplier).limit(10).toList(),
+                    randomCategory().name(),
+                    pageSize
+            )).limit(1);
+        }
+
+        private static Stream<Arguments> bookListByAuthor() {
+            Supplier<Publisher> publisherSupplier = getPublisherSupplier();
+
+            String name = faker.name().firstName();
+            Supplier<Set<Author>> authorSupplier = () -> {
+                int numberOfAuthors = ThreadLocalRandom.current().nextInt(1, 4);
+                return Stream.generate(() -> Author.builder()
+                        .id(UUID.randomUUID())
+                        .firstName(new FirstName(name))
+                        .lastName(randomLastName())
+                        .email(randomEmail())
+                        .address(randomAddress())
+                        .events(new Events())
+                        .build()).limit(numberOfAuthors).collect(Collectors.toSet());
+            };
+
+            Supplier<Book> bookSupplier = () -> {
+                return Book.builder()
+                        .id(UUID.randomUUID())
+                        .title(randomTitle())
+                        .description(randomDescription())
+                        .isbn(randomISBN13())
+                        .price(BigDecimal.ONE)
+                        .quantityOnHand(1)
+                        .events(new Events())
+                        .category(randomCategory())
+                        .publisher(publisherSupplier.get())
+                        .authors(authorSupplier.get())
+                        .build();
+            };
+
+            int pageSize = ThreadLocalRandom.current().nextInt(1, 11);
+            return Stream.generate(() -> arguments(
+                    Stream.generate(bookSupplier).limit(10).toList(),
+                    name,
+                    pageSize
+            )).limit(1);
+        }
 
         @ParameterizedTest
         @MethodSource("bookList")
@@ -204,7 +316,7 @@ class BookControllerTest {
 
             MvcResult mvcResult = mockMvc.perform(
                             get("/library/book/pageOfBook?pageNumber=0&pageSize=10&category=invalid")
-                            .accept(MediaType.APPLICATION_JSON)
+                                    .accept(MediaType.APPLICATION_JSON)
                     )
                     .andExpect(status().isNotFound())
                     .andReturn();
@@ -226,8 +338,8 @@ class BookControllerTest {
 
             mockMvc.perform(
                             get("/library/book/pageOfBook?pageNumber=0&pageSize=%s&author=%s"
-                            .formatted(pageSize, author))
-                            .accept(MediaType.APPLICATION_JSON)
+                                    .formatted(pageSize, author))
+                                    .accept(MediaType.APPLICATION_JSON)
                     )
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").isNotEmpty())
@@ -247,131 +359,12 @@ class BookControllerTest {
 
             MvcResult mvcResult = mockMvc.perform(
                             get("/library/book/pageOfBook?pageNumber=0&pageSize=10&author=invalid")
-                            .accept(MediaType.APPLICATION_JSON)
+                                    .accept(MediaType.APPLICATION_JSON)
                     )
                     .andExpect(status().isNotFound())
                     .andReturn();
 
             assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
-
-        private static Stream<Arguments> bookList() {
-            Supplier<Book> bookSupplier = getBookSupplier();
-            int pageSize = ThreadLocalRandom.current().nextInt(1,11);
-            return Stream.generate(() -> arguments(
-                    Stream.generate(bookSupplier).limit(pageSize).toList(),
-                    pageSize
-            )).limit(1);
-        }
-
-        private static Stream<Arguments> bookListByCategory() {
-            Supplier<Publisher> publisherSupplier = getPublisherSupplier();
-            Supplier<Set<Author>> authorSupplier = getAuthorSupplier();
-            int random = ThreadLocalRandom.current().nextInt(Category.values().length);
-            Category randomCategory = Category.values()[random];
-
-            Supplier<Book> bookSupplier = () ->
-                    Book.builder()
-                            .id(UUID.randomUUID())
-                            .title(new Title(faker.book().title()))
-                            .description(new Description(faker.text().text(50)))
-                            .isbn(new ISBN("9781861972712"))
-                            .price(BigDecimal.ONE)
-                            .quantityOnHand(1)
-                            .events(new Events())
-                            .category(randomCategory)
-                            .publisher(publisherSupplier.get())
-                            .authors(authorSupplier.get())
-                            .build();
-
-            int pageSize = ThreadLocalRandom.current().nextInt(1,11);
-            return Stream.generate(() -> arguments(
-                    Stream.generate(bookSupplier).limit(10).toList(),
-                    randomCategory.name(),
-                    pageSize
-            )).limit(1);
-        }
-
-        private static Stream<Arguments> bookListByAuthor() {
-            Supplier<Publisher> publisherSupplier = getPublisherSupplier();
-
-            String name = faker.name().firstName();
-            Supplier<Set<Author>> authorSupplier = () -> {
-                int numberOfAuthors = ThreadLocalRandom.current().nextInt(1, 4);
-                return Stream.generate(() -> Author.builder()
-                        .id(UUID.randomUUID())
-                        .firstName(new FirstName(name))
-                        .lastName(new LastName(faker.name().lastName()))
-                        .email(new Email(faker.internet().emailAddress()))
-                        .address(Address.randomInstance())
-                        .events(new Events())
-                        .build()).limit(numberOfAuthors).collect(Collectors.toSet());
-            };
-
-            Supplier<Book> bookSupplier = () -> {
-                int randomCategory = ThreadLocalRandom.current().nextInt(Category.values().length);
-                return Book.builder()
-                        .id(UUID.randomUUID())
-                        .title(new Title(faker.book().title()))
-                        .description(new Description(faker.text().text(50)))
-                        .isbn(new ISBN("9781861972712"))
-                        .price(BigDecimal.ONE)
-                        .quantityOnHand(1)
-                        .events(new Events())
-                        .category(Category.values()[randomCategory])
-                        .publisher(publisherSupplier.get())
-                        .authors(authorSupplier.get())
-                        .build();
-            };
-
-            int pageSize = ThreadLocalRandom.current().nextInt(1,11);
-            return Stream.generate(() -> arguments(
-                    Stream.generate(bookSupplier).limit(10).toList(),
-                    name,
-                    pageSize
-            )).limit(1);
-        }
-    }
-
-    private static Supplier<Book> getBookSupplier() {
-        Supplier<Publisher> publisherSupplier = getPublisherSupplier();
-        Supplier<Set<Author>> authorSupplier = getAuthorSupplier();
-        int random = ThreadLocalRandom.current().nextInt(Category.values().length);
-
-        return () -> Book.builder()
-                .id(UUID.randomUUID())
-                .title(new Title(faker.book().title()))
-                .description(new Description(faker.text().text(50)))
-                .isbn(new ISBN("9781861972712"))
-                .price(BigDecimal.ONE)
-                .quantityOnHand(1)
-                .events(new Events())
-                .category(Category.values()[random])
-                .publisher(publisherSupplier.get())
-                .authors(authorSupplier.get())
-                .build();
-    }
-
-    private static Supplier<Set<Author>> getAuthorSupplier() {
-        int random = ThreadLocalRandom.current().nextInt(1,4);
-        return () -> Stream.generate(() -> Author.builder()
-                .id(UUID.randomUUID())
-                .firstName(new FirstName(faker.name().firstName()))
-                .lastName(new LastName(faker.name().lastName()))
-                .email(new Email(faker.internet().emailAddress()))
-                .address(Address.randomInstance())
-                .events(new Events())
-                .build()).limit(random).collect(Collectors.toSet());
-    }
-
-    private static Supplier<Publisher> getPublisherSupplier() {
-        return () -> Publisher.builder()
-                .id(UUID.randomUUID())
-                .publisherName(new PublisherName(faker.book().publisher()))
-                .address(Address.randomInstance())
-                .phone(new Phone(faker.phoneNumber().phoneNumberInternational()))
-                .email(new Email(faker.internet().emailAddress()))
-                .events(new Events())
-                .build();
     }
 }
