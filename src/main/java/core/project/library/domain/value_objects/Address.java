@@ -15,16 +15,6 @@ public record Address(@NotBlank @Size(max = 51) String state,
         validateToNullBlankAndSize(new Object[] {state, city, street, home});
     }
 
-    public static Address randomInstance() {
-        Faker faker = new Faker();
-        return new Address(
-                faker.address().state(),
-                faker.address().city(),
-                faker.address().streetAddress(),
-                faker.address().secondaryAddress()
-        );
-    }
-
     private static void validateToNullBlankAndSize(Object[] o) {
         for (Object object : o) {
             Objects.requireNonNull(object);
