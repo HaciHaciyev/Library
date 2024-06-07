@@ -32,9 +32,9 @@ public class BookRepository {
             return Optional.ofNullable(
                     jdbcTemplate.query(
                             connection -> connection.prepareStatement(
-                            String.format(sqlForGetBook, bookId.toString()),
-                            ResultSet.TYPE_SCROLL_INSENSITIVE,
-                            ResultSet.CONCUR_READ_ONLY
+                                String.format(sqlForGetBook, bookId.toString()),
+                                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                ResultSet.CONCUR_READ_ONLY
                             ),
                             new RowToBook()
                     ).getFirst()
