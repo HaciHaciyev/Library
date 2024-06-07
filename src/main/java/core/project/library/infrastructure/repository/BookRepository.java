@@ -33,7 +33,8 @@ public class BookRepository {
                     jdbcTemplate.query(
                             connection -> connection.prepareStatement(
                             String.format(sqlForGetBook, bookId.toString()),
-                            ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                            ResultSet.TYPE_SCROLL_INSENSITIVE,
+                            ResultSet.CONCUR_READ_ONLY
                             ),
                             new RowToBook()
                     ).getFirst()
@@ -48,8 +49,9 @@ public class BookRepository {
             return Optional.ofNullable(
                     jdbcTemplate.query(
                             connection -> connection.prepareStatement(
-                            String.format(sqlForGetBookByTitle, title),
-                            ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                                String.format(sqlForGetBookByTitle, title),
+                                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                ResultSet.CONCUR_READ_ONLY
                             ),
                             new RowToBook()
                     ).getFirst()
@@ -76,9 +78,9 @@ public class BookRepository {
                     listOfBooks.add(
                             jdbcTemplate.query(
                                     connection -> connection.prepareStatement(
-                                    buildQuery(sqlForGetBook, id),
-                                    ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                    ResultSet.CONCUR_READ_ONLY
+                                        buildQuery(sqlForGetBook, id),
+                                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                        ResultSet.CONCUR_READ_ONLY
                                     ),
                                     new RowToBook()
                             ).getFirst()
@@ -107,8 +109,9 @@ public class BookRepository {
                     listOfBooks.add(
                             jdbcTemplate.query(
                                     connection -> connection.prepareStatement(
-                                    buildQuery(sqlForBooksByCategory, category, limit, offSet),
-                                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                                        buildQuery(sqlForBooksByCategory, category, limit, offSet),
+                                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                        ResultSet.CONCUR_READ_ONLY
                                     ),
                                     new RowToBook()
                             ).getFirst()
@@ -137,8 +140,9 @@ public class BookRepository {
                     listOfBooks.add(
                             jdbcTemplate.query(
                                     connection -> connection.prepareStatement(
-                                            buildQuery(sqlForBooksByAuthor, author, limit, offSet),
-                                            ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+                                        buildQuery(sqlForBooksByAuthor, author, limit, offSet),
+                                        ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                        ResultSet.CONCUR_READ_ONLY
                                     ),
                                     new RowToBook()
                             ).getFirst()
