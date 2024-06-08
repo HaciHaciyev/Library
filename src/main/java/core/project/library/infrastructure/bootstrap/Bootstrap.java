@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static core.project.library.infrastructure.utilities.Domain.*;
 import static core.project.library.infrastructure.utilities.ValueObjects.*;
 
 @Slf4j
@@ -67,28 +68,6 @@ public class Bootstrap implements CommandLineRunner {
         }
     }
 
-    private Supplier<Publisher> publisherSupplier() {
-        return () -> Publisher.builder()
-                .id(UUID.randomUUID())
-                .publisherName(randomPublisherName())
-                .address(randomAddress())
-                .phone(randomPhone())
-                .email(randomEmail())
-                .events(new Events())
-                .build();
-    }
-
-    private Supplier<Author> authorSupplier() {
-        return () -> Author.builder()
-                .id(UUID.randomUUID())
-                .firstName(randomFirstName())
-                .lastName(randomLastName())
-                .email(randomEmail())
-                .address(randomAddress())
-                .events(new Events())
-                .build();
-    }
-
     private Supplier<Book> bookSupplier() {
         return () -> {
             double randomPrice = faker.number().randomDouble(2, 1, 100);
@@ -109,18 +88,6 @@ public class Bootstrap implements CommandLineRunner {
                     .authors(authorsForBook)
                     .build();
         };
-    }
-
-    private Supplier<Customer> customerSupplier() {
-        return () -> Customer.builder()
-                .id(UUID.randomUUID())
-                .firstName(randomFirstName())
-                .lastName(randomLastName())
-                .password(randomPassword())
-                .email(randomEmail())
-                .address(randomAddress())
-                .events(new Events())
-                .build();
     }
 
     private Supplier<Order> orderSupplier() {
@@ -144,14 +111,21 @@ public class Bootstrap implements CommandLineRunner {
     }
 
     private void populatePublishers() {
-        var publisherSupplier = publisherSupplier();
+        var publisherSupplier = publisher();
         publishers = Stream.generate(publisherSupplier)
                 .limit(maxNumberOfPublishers)
                 .toList();
     }
 
     private void populateAuthors() {
-        var authorSupplier = authorSupplier();
+        var authorSupplier = (Supplier<Author>) () -> Author.builder()
+                .id(UUID.randomUUID())
+                .firstName(randomFirstName())
+                .lastName(randomLastName())
+                .email(randomEmail())
+                .address(randomAddress())
+                .events(new Events())
+                .build();
         authors = Stream.generate(authorSupplier)
                 .limit(maxNumberOfAuthors)
                 .toList();
@@ -165,7 +139,7 @@ public class Bootstrap implements CommandLineRunner {
     }
 
     private void populateCustomers() {
-        var customerSupplier = customerSupplier();
+        var customerSupplier = customer();
         customers = Stream.generate(customerSupplier)
                 .limit(maxNumberOfCustomers)
                 .toList();
