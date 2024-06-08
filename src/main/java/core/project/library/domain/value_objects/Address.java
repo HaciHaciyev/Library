@@ -2,7 +2,6 @@ package core.project.library.domain.value_objects;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import net.datafaker.Faker;
 
 import java.util.Objects;
 

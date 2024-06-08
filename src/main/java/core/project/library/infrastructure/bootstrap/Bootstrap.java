@@ -51,7 +51,20 @@ public class Bootstrap implements CommandLineRunner {
 
     @Override
     public final void run(String... args) throws Exception {
-
+        if (repository.count() < 1) {
+            publishers.forEach(repository::savePublisher);
+            authors.forEach(repository::saveAuthor);
+            books.forEach(book -> {
+                repository.saveBook(book);
+                book.getAuthors().forEach(author -> repository.saveBookAuthor(book, author));
+            });
+            customers.forEach(repository::saveCustomer);
+            orders.forEach(order -> {
+                repository.saveOrder(order);
+                order.getBooks().forEach(book -> repository.saveBookOrder(book, order));
+            });
+            log.info("Bootstrap is completed basic values in database.");
+        }
     }
 
     private Supplier<Publisher> publisherSupplier() {
@@ -165,11 +178,11 @@ public class Bootstrap implements CommandLineRunner {
                 .toList();
     }
 
-    private List<Book> getBooksForOrder(int countOfBooks) {
+    private Set<Book> getBooksForOrder(int countOfBooks) {
         return Stream.generate(() -> {
             int randomBook = faker.number().numberBetween(0, MAX_NUMBER_OF_BOOKS);
             return books.get(randomBook);
-        }).limit(countOfBooks).toList();
+        }).limit(countOfBooks).collect(Collectors.toSet());
     }
 
     private Set<Author> getAuthorsForBook() {

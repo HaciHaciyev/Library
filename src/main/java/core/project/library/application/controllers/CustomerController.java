@@ -32,7 +32,6 @@ public class CustomerController {
 
     @GetMapping("/findById/{customerId}")
     ResponseEntity<CustomerDTO> findById(@PathVariable("customerId") UUID customerId) {
-        log.info("Controller was`t found");
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(mapper.toDTO(customerRepository

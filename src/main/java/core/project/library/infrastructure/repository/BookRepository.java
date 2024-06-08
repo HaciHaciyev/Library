@@ -204,7 +204,7 @@ public class BookRepository {
                     b.price AS book_price,
                     b.quantity_on_hand AS book_quantity,
                     b.category AS book_category,
-                    b.creation_date AS book_created_date,
+                    b.creation_date AS book_creation_date,
                     b.last_modified_date AS book_last_modified_date,
                 
                     p.id AS publisher_id,
@@ -226,7 +226,7 @@ public class BookRepository {
                     a.city AS author_city,
                     a.street AS author_street,
                     a.home AS author_home,
-                    a.creation_date AS author_created_date,
+                    a.creation_date AS author_creation_date,
                     a.last_modified_date AS author_last_modified_date
                 FROM Books b
                 INNER JOIN Publishers p ON b.publisher_id = p.id

@@ -21,10 +21,10 @@ import java.util.UUID;
 public class PublisherRepository {
 
     private static final String GET_BY_ID =
-            "Select * from Publisher where id = ?";
+            "Select * from Publishers where id = ?";
 
     private static final String GET_BY_NAME =
-            "Select * from Publisher where publisher_name = ?";
+            "Select * from Publishers where publisher_name = ?";
 
     private final JdbcTemplate template;
 

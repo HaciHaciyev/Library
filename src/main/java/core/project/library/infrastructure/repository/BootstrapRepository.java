@@ -13,10 +13,10 @@ public class BootstrapRepository {
     }
 
     public Integer count() {
-        return jdbcTemplate.queryForObject("Select count(*) from Book", Integer.class);
+        return jdbcTemplate.queryForObject("Select count(*) from Books", Integer.class);
     }
 
-    private void savePublisher(Publisher publisher) {
+    public void savePublisher(Publisher publisher) {
         jdbcTemplate.update("""
                         Insert into Publishers (id, publisher_name, state, city, street, home,
                                        phone, email, creation_date, last_modified_date)
@@ -30,7 +30,7 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveAuthor(Author author) {
+    public void saveAuthor(Author author) {
         jdbcTemplate.update("""
                         Insert into Authors (id, first_name, last_name, email,
                                     state, city, street, home, creation_date, last_modified_date)
@@ -43,7 +43,7 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveBook(Book book) {
+    public void saveBook(Book book) {
         jdbcTemplate.update("""
                         Insert into Books (id, publisher_id, title, description, isbn, price,
                                   quantity_on_hand, category, creation_date, last_modified_date)
@@ -57,17 +57,17 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveBookAuthor(Book book, Author author) {
+    public void saveBookAuthor(Book book, Author author) {
         jdbcTemplate.update("""
                         Insert into Book_Author (book_id, author_id)
-                                    values (?,?,?)
+                                    values (?,?)
                         """,
                 book.getId().toString(),
                 author.getId().toString()
         );
     }
 
-    private void saveCustomer(Customer customer) {
+    public void saveCustomer(Customer customer) {
         jdbcTemplate.update("""
                         Insert into Customers (id, first_name, last_name, email, password,
                                       state, city, street, home,
@@ -81,7 +81,7 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveOrder(Order order) {
+    public void saveOrder(Order order) {
         jdbcTemplate.update("""
                         Insert into Orders (id, customer_id,
                                         count_of_book, total_price,
@@ -94,10 +94,10 @@ public class BootstrapRepository {
         );
     }
 
-    private void saveBookOrder(Book book, Order order) {
+    public void saveBookOrder(Book book, Order order) {
         jdbcTemplate.update("""
                         Insert into Book_Order (book_id, order_id)
-                                    values (?,?,?)
+                                    values (?,?)
                         """,
                 book.getId().toString(),
                 order.getId().toString()

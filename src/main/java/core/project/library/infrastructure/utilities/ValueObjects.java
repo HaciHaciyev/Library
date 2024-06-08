@@ -4,6 +4,7 @@ import core.project.library.domain.value_objects.*;
 import net.datafaker.Faker;
 
 import java.math.BigDecimal;
+import java.util.Random;
 
 public class ValueObjects {
 
@@ -42,7 +43,63 @@ public class ValueObjects {
     }
 
     public static ISBN randomISBN13() {
-        return new ISBN("9781861972712");
+        Random random = new Random();
+        StringBuilder isbn = new StringBuilder();
+        isbn.append(random.nextBoolean() ? "978" : "979");
+
+        for (int i = 0; i < 9; i++) {
+            isbn.append(random.nextInt(10));
+        }
+
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            int digit = isbn.charAt(i) - '0';
+            sum += (i % 2 == 0) ? digit : digit * 3;
+        }
+        int checkDigit = (10 - (sum % 10)) % 10;
+        isbn.append(checkDigit);
+
+        if (isIsbn13Valid(isbn.toString())) {
+            return new ISBN(isbn.toString());
+        } else {
+            return randomISBN13();
+        }
+    }
+
+    private static boolean isIsbn13Valid(String isbn) {
+        if (isbn.length() != 13) return false;
+
+        int lastDigit;
+        char lastCharacter = isbn.charAt(
+                isbn.length() - 1
+        );
+
+        if (Character.isDigit(lastCharacter)) {
+            lastDigit = Character.getNumericValue(
+                    isbn.charAt(isbn.length() - 1)
+            );
+        } else {
+            return false;
+        }
+
+        int keyValue;
+        int someOfTwelve = 0;
+        for (int i = 0; i < isbn.length() - 1; i++) {
+            char c = isbn.charAt(i);
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+
+            int current = Character.getNumericValue(c);
+            if (i % 2 != 0) {
+                current = current * 3;
+            }
+
+            someOfTwelve += current;
+        }
+
+        keyValue = 10 - someOfTwelve % 10;
+        return keyValue == lastDigit;
     }
 
     public static LastName randomLastName() {

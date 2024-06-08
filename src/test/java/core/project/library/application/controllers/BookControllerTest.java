@@ -246,20 +246,18 @@ class BookControllerTest {
                         .build()).limit(numberOfAuthors).collect(Collectors.toSet());
             };
 
-            Supplier<Book> bookSupplier = () -> {
-                return Book.builder()
-                        .id(UUID.randomUUID())
-                        .title(randomTitle())
-                        .description(randomDescription())
-                        .isbn(randomISBN13())
-                        .price(BigDecimal.ONE)
-                        .quantityOnHand(1)
-                        .events(new Events())
-                        .category(randomCategory())
-                        .publisher(publisherSupplier.get())
-                        .authors(authorSupplier.get())
-                        .build();
-            };
+            Supplier<Book> bookSupplier = () -> Book.builder()
+                    .id(UUID.randomUUID())
+                    .title(randomTitle())
+                    .description(randomDescription())
+                    .isbn(randomISBN13())
+                    .price(BigDecimal.ONE)
+                    .quantityOnHand(1)
+                    .events(new Events())
+                    .category(randomCategory())
+                    .publisher(publisherSupplier.get())
+                    .authors(authorSupplier.get())
+                    .build();
 
             int pageSize = ThreadLocalRandom.current().nextInt(1, 11);
             return Stream.generate(() -> arguments(
