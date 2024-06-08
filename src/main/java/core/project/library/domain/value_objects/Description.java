@@ -8,7 +8,9 @@ import java.util.Objects;
 public record Description(@NotBlank @Size(min = 10, max = 255) String description) {
 
     public Description {
-        Objects.requireNonNull(description);
+        if (description == null) {
+            throw new IllegalArgumentException("Description cannot be null");
+        }
         if (description.isBlank()) {
             throw new IllegalArgumentException("Description should`t be blank.");
         }

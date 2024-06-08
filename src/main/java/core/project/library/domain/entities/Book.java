@@ -163,7 +163,7 @@ public class Book {
         }
 
         public final Book build() {
-            validateFields();
+            validate();
 
             Book book = new Book(id, title, description, isbn, price, quantityOnHand,
                     category, events, publisher, Collections.unmodifiableSet(authors), new HashSet<>());
@@ -173,41 +173,34 @@ public class Book {
             return book;
         }
 
-        private void validateFields() {
-            validateNonNull(title, "Title can't be null");
-            validateNonNull(description, "Description can't be null");
-            validateNonNull(isbn, "ISBN can't be null");
-            validatePrice(price);
-            validateQuantity(quantityOnHand);
-            validateNonNull(category, "Category can't be null");
-            validateNonNull(events, "Events can't be null");
-            validateNonNull(publisher, "Publisher can't be null");
-            validateAuthors(authors);
-        }
-
-        private void validateNonNull(Object field, String message) {
-            if (field == null) {
-                throw new IllegalArgumentException(message);
+        private void validate() {
+            if (title == null) {
+                throw new IllegalArgumentException("Title can't be null");
             }
-        }
-
-        private void validatePrice(BigDecimal price) {
+            if (description == null) {
+                throw new IllegalArgumentException("Description can't be null");
+            }
+            if (isbn == null) {
+                throw new IllegalArgumentException("ISBN can't be null");
+            }
             if (price == null || price.doubleValue() < 0) {
                 throw new IllegalArgumentException("Price can't be null or negative");
             }
-        }
-
-        private void validateQuantity(Integer quantityOnHand) {
             if (quantityOnHand == null || quantityOnHand < 0) {
                 throw new IllegalArgumentException("Quantity can't be null or negative");
             }
-        }
-
-        private void validateAuthors(Set<Author> authors) {
+            if (category == null) {
+                throw new IllegalArgumentException("Category can't be null");
+            }
+            if (events == null) {
+                throw new IllegalArgumentException("Events can't be null");
+            }
+            if (publisher == null) {
+                throw new IllegalArgumentException("Publisher can't be null");
+            }
             if (authors == null || authors.isEmpty()) {
                 throw new IllegalArgumentException("Authors can't be null or empty");
             }
         }
-
     }
 }

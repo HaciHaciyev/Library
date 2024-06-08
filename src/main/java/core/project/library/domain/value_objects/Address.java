@@ -3,7 +3,6 @@ package core.project.library.domain.value_objects;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.Objects;
 
 public record Address(@NotBlank @Size(max = 51) String state,
                       @NotBlank @Size(max = 51) String city,
@@ -11,20 +10,17 @@ public record Address(@NotBlank @Size(max = 51) String state,
                       @NotBlank @Size(max = 51) String home) {
 
     public Address {
-        validateToNullBlankAndSize(new Object[] {state, city, street, home});
-    }
-
-    private static void validateToNullBlankAndSize(Object[] o) {
-        for (Object object : o) {
-            Objects.requireNonNull(object);
-            if (object instanceof String string) {
-                if (string.isBlank()) {
-                    throw new IllegalArgumentException("String should`t be blank.");
-                }
-                if (string.length() > 51) {
-                    throw new IllegalArgumentException("String should be shorter than 51 characters.");
-                }
-            }
+        if (state == null || state.isBlank() || state.length() > 51) {
+            throw new IllegalArgumentException("State is either null, blank or invalid");
+        }
+        if (city == null || city.isBlank() || city.length() > 51) {
+            throw new IllegalArgumentException("City is either null, blank or invalid");
+        }
+        if (street == null || street.isBlank() || street.length() > 51) {
+            throw new IllegalArgumentException("Street is either null, blank or invalid");
+        }
+        if (home == null || home.isBlank() || home.length() > 51) {
+            throw new IllegalArgumentException("Home is either null, blank or invalid");
         }
     }
 }

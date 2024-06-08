@@ -7,7 +7,9 @@ import java.util.Objects;
 public record Phone(@NotBlank String phoneNumber) {
 
     public Phone {
-        Objects.requireNonNull(phoneNumber);
+        if (phoneNumber == null) {
+            throw new IllegalArgumentException("Phone number cannot be null");
+        }
         if (phoneNumber.isBlank()) {
             throw new IllegalArgumentException("Phone number should`t be blank.");
         }

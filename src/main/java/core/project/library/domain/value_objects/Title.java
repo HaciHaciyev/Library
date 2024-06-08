@@ -8,7 +8,9 @@ import java.util.Objects;
 public record Title(@NotBlank @Size(min = 3, max = 50) String title) {
 
     public Title {
-        Objects.requireNonNull(title);
+        if (title == null) {
+            throw new IllegalArgumentException("Title cannot be null");
+        }
         if (title.isBlank()) {
             throw new IllegalArgumentException("Title should`t be blank.");
         }

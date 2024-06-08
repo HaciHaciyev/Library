@@ -129,19 +129,29 @@ public class Author {
         }
 
         public final Author build() {
-            validateToNullAndBlank(new Object[]{id, firstName, lastName,
-                    email, address, events});
+            validate();
 
             return new Author(id, firstName, lastName,
                     email, address, events, new HashSet<>());
         }
-    }
-
-    private static void validateToNullAndBlank(Object[] o) {
-        for (Object object : o) {
-            Objects.requireNonNull(object);
-            if (object instanceof String string && string.isBlank()) {
-                throw new IllegalArgumentException("String should`t be blank.");
+        private void validate() {
+            if (id == null) {
+                throw new IllegalArgumentException("Id can't be null");
+            }
+            if (firstName == null) {
+                throw new IllegalArgumentException("FirstName can't be null");
+            }
+            if (lastName == null) {
+                throw new IllegalArgumentException("LastName can't be null");
+            }
+            if (email == null) {
+                throw new IllegalArgumentException("Email can't be null");
+            }
+            if (address == null) {
+                throw new IllegalArgumentException("Address can't be null");
+            }
+            if (events == null) {
+                throw new IllegalArgumentException("Events can't be null");
             }
         }
     }

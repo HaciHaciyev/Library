@@ -8,7 +8,9 @@ import java.util.Objects;
 public record PublisherName(@NotBlank @Size(min = 4, max = 50) String publisherName) {
 
      public PublisherName {
-         Objects.requireNonNull(publisherName);
+         if (publisherName == null) {
+             throw new IllegalArgumentException("Publisher name cannot be null");
+         }
          if (publisherName.isBlank()) {
              throw new IllegalArgumentException("Publisher name should`t be blank.");
          }
