@@ -95,7 +95,7 @@ public class Domain {
 
     public static Supplier<Order> order() {
         int countOfBooks = faker.number().numberBetween(1, 100);
-        List<Book> books = Stream.generate(book()).limit(countOfBooks).toList();
+        Set<Book> books = Stream.generate(book()).limit(countOfBooks).collect(Collectors.toSet());
 
         return () -> Order.builder()
                 .id(UUID.randomUUID())
@@ -107,7 +107,7 @@ public class Domain {
                 .build();
     }
 
-    public static Supplier<Order> order(List<Book> books, Customer customer) {
+    public static Supplier<Order> order(Set<Book> books, Customer customer) {
         int countOfBooks = faker.number().numberBetween(1, 100);
 
         return () -> Order.builder()
