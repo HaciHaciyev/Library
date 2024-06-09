@@ -2,10 +2,9 @@ package core.project.library.application.controllers;
 
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
-import core.project.library.domain.value_objects.*;
+import core.project.library.domain.value_objects.LastName;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.CustomerRepository;
-import core.project.library.infrastructure.utilities.ValueObjects;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

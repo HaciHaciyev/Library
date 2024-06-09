@@ -4,8 +4,6 @@ import core.project.library.application.mappers.EntityMapper;
 import core.project.library.application.model.CustomerDTO;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.CustomerRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +18,6 @@ import java.util.UUID;
 @RequestMapping("/library/customer")
 public class CustomerController {
 
-    private static final Logger log = LoggerFactory.getLogger(CustomerController.class);
     private final EntityMapper mapper;
 
     private final CustomerRepository customerRepository;

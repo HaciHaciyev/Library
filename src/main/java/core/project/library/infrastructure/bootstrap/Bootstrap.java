@@ -24,13 +24,13 @@ public class Bootstrap implements CommandLineRunner {
 
     private static final Faker faker = new Faker();
 
-    private final int MAX_NUMBER_OF_AUTHORS = faker.number().numberBetween(1, 15);
-    private final int MAX_NUMBER_OF_AUTHORS_PER_BOOK = faker.number().numberBetween(1, 4);
-    private final int MAX_NUMBER_OF_PUBLISHERS = faker.number().numberBetween(1, 5);
-    private final int MAX_NUMBER_OF_CUSTOMERS = faker.number().numberBetween(1, 10);
-    private final int MAX_NUMBER_OF_BOOKS = faker.number().numberBetween(1, 30);
-    private final int MAX_NUMBER_OF_ORDERS = faker.number().numberBetween(1, 15);
-    private final int MAX_COUNT_OF_BOOKS_FOR_ORDER = faker.number().numberBetween(1, 10);
+    private final int maxNumberOfAuthors = faker.number().numberBetween(1, 15);
+    private final int maxNumberOfAuthorsPerBook = faker.number().numberBetween(1, 4);
+    private final int maxNumberOfPublishers = faker.number().numberBetween(1, 5);
+    private final int maxNumberOfCustomers = faker.number().numberBetween(1, 10);
+    private final int maxNumberOfBooks = faker.number().numberBetween(1, 30);
+    private final int maxNumberOfOrders = faker.number().numberBetween(1, 15);
+    private final int maxCountOfBooksForOrder = faker.number().numberBetween(1, 10);
 
     private List<Publisher> publishers;
     private List<Author> authors;
@@ -93,7 +93,7 @@ public class Bootstrap implements CommandLineRunner {
         return () -> {
             double randomPrice = faker.number().randomDouble(2, 1, 100);
             int randomQuantity = faker.number().numberBetween(1, 15);
-            int randomPublisher = faker.number().numberBetween(0, MAX_NUMBER_OF_PUBLISHERS);
+            int randomPublisher = faker.number().numberBetween(0, maxNumberOfPublishers);
             Set<Author> authorsForBook = getAuthorsForBook();
 
             return Book.builder()
@@ -128,8 +128,8 @@ public class Bootstrap implements CommandLineRunner {
             int randomCustomer = faker.number().numberBetween(0, customers.size());
             int countOfBooks = 1;
 
-            if (MAX_COUNT_OF_BOOKS_FOR_ORDER > 1) {
-                countOfBooks = faker.number().numberBetween(1, MAX_COUNT_OF_BOOKS_FOR_ORDER);
+            if (maxCountOfBooksForOrder > 1) {
+                countOfBooks = faker.number().numberBetween(1, maxCountOfBooksForOrder);
             }
 
             return Order.builder()
@@ -146,41 +146,41 @@ public class Bootstrap implements CommandLineRunner {
     private void populatePublishers() {
         var publisherSupplier = publisherSupplier();
         publishers = Stream.generate(publisherSupplier)
-                .limit(MAX_NUMBER_OF_PUBLISHERS)
+                .limit(maxNumberOfPublishers)
                 .toList();
     }
 
     private void populateAuthors() {
         var authorSupplier = authorSupplier();
         authors = Stream.generate(authorSupplier)
-                .limit(MAX_NUMBER_OF_AUTHORS)
+                .limit(maxNumberOfAuthors)
                 .toList();
     }
 
     private void populateBooks() {
         var bookSupplier = bookSupplier();
         books = Stream.generate(bookSupplier)
-                .limit(MAX_NUMBER_OF_BOOKS)
+                .limit(maxNumberOfBooks)
                 .toList();
     }
 
     private void populateCustomers() {
         var customerSupplier = customerSupplier();
         customers = Stream.generate(customerSupplier)
-                .limit(MAX_NUMBER_OF_CUSTOMERS)
+                .limit(maxNumberOfCustomers)
                 .toList();
     }
 
     private void populateOrders() {
         var orderSupplier = orderSupplier();
         orders = Stream.generate(orderSupplier)
-                .limit(MAX_NUMBER_OF_ORDERS)
+                .limit(maxNumberOfOrders)
                 .toList();
     }
 
     private Set<Book> getBooksForOrder(int countOfBooks) {
         return Stream.generate(() -> {
-            int randomBook = faker.number().numberBetween(0, MAX_NUMBER_OF_BOOKS);
+            int randomBook = faker.number().numberBetween(0, maxNumberOfBooks);
             return books.get(randomBook);
         }).limit(countOfBooks).collect(Collectors.toSet());
     }
@@ -188,12 +188,12 @@ public class Bootstrap implements CommandLineRunner {
     private Set<Author> getAuthorsForBook() {
         int numberOfAuthors = 1;
 
-        if (MAX_NUMBER_OF_AUTHORS_PER_BOOK > 1) {
-            numberOfAuthors = faker.number().numberBetween(1, MAX_NUMBER_OF_AUTHORS_PER_BOOK);
+        if (maxNumberOfAuthorsPerBook > 1) {
+            numberOfAuthors = faker.number().numberBetween(1, maxNumberOfAuthorsPerBook);
         }
 
         return Stream.generate(() -> {
-            int randomAuthor = faker.number().numberBetween(0, MAX_NUMBER_OF_AUTHORS);
+            int randomAuthor = faker.number().numberBetween(0, maxNumberOfAuthors);
             return authors.get(randomAuthor);
         }).limit(numberOfAuthors).collect(Collectors.toSet());
     }
