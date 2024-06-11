@@ -40,6 +40,76 @@ public class OrderRepository {
         }
     }
 
+    public List<Order> findByCustomerId(UUID customerId) {
+        try {
+            var listOfOrders = new ArrayList<Order>();
+
+            Set<UUID> ordersId = new HashSet<>(
+                    jdbcTemplate.query(
+                            String.format(sqlForOrdersIdByCustomerId, customerId.toString()),
+                            (rs, rowNum) -> UUID.fromString(rs.getString("id"))
+                    )
+            );
+
+            ordersId.forEach(id ->
+                    listOfOrders.add(
+                            jdbcTemplate.query(
+                                    connection -> connection.prepareStatement(
+                                            String.format(sqlForGetOrder, id),
+                                            ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                            ResultSet.CONCUR_READ_ONLY
+                                    ),
+                                    new RowToOrder()
+                            ).getFirst()
+                    )
+            );
+            return listOfOrders;
+        } catch (EmptyResultDataAccessException e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Order> findByBookId(UUID bookId) {
+        try {
+            var listOfOrders = new ArrayList<Order>();
+
+            Set<UUID> ordersId = new HashSet<>(
+                    jdbcTemplate.query(
+                            String.format(sqlForOrdersIdByBookId, bookId.toString()),
+                            (rs, rowNum) -> UUID.fromString(rs.getString("id"))
+                    )
+            );
+
+            ordersId.forEach(id ->
+                    listOfOrders.add(
+                            jdbcTemplate.query(
+                                    connection -> connection.prepareStatement(
+                                            String.format(sqlForGetOrder, id),
+                                            ResultSet.TYPE_SCROLL_INSENSITIVE,
+                                            ResultSet.CONCUR_READ_ONLY
+                                    ),
+                                    new RowToOrder()
+                            ).getFirst()
+                    )
+            );
+            return listOfOrders;
+        } catch (EmptyResultDataAccessException e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private static final String sqlForOrdersIdByCustomerId = """
+            Select Orders.id From Orders
+            Where Orders.customer_id = '%s'
+            """;
+
+    private static final String sqlForOrdersIdByBookId = """
+            Select Orders.id From Orders
+            JOIN Book_Order On Orders.id = Book_Order.order_id
+            JOIN Books On Book_Order.book_id = Books.id
+            WHERE Books.id = '%s'
+            """;
+
     private static final String sqlForGetOrder = """
             Select
               o.id AS order_id,

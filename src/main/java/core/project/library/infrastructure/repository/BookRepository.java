@@ -61,7 +61,7 @@ public class BookRepository {
         }
     }
 
-    public Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize) {
+    public List<Book> listOfBooks(Integer pageNumber, Integer pageSize) {
         try {
             var listOfBooks = new ArrayList<Book>();
             final int limit = buildLimit(pageSize);
@@ -86,13 +86,13 @@ public class BookRepository {
                             ).getFirst()
                     )
             );
-            return Optional.of(listOfBooks);
+            return listOfBooks;
         } catch (EmptyResultDataAccessException | NoSuchElementException e) {
-            return Optional.empty();
+            return Collections.emptyList();
         }
     }
 
-    public Optional<List<Book>> listByCategory(Integer pageNumber, Integer pageSize, String category) {
+    public List<Book> listByCategory(Integer pageNumber, Integer pageSize, String category) {
         try {
             var listOfBooks = new ArrayList<Book>();
             final int limit = buildLimit(pageSize);
@@ -117,13 +117,13 @@ public class BookRepository {
                             ).getFirst()
                     )
             );
-            return Optional.of(listOfBooks);
+            return listOfBooks;
         } catch (EmptyResultDataAccessException | NoSuchElementException e) {
-            return Optional.empty();
+            return Collections.emptyList();
         }
     }
 
-    public Optional<List<Book>> listByAuthor(Integer pageNumber, Integer pageSize, String author) {
+    public List<Book> listByAuthor(Integer pageNumber, Integer pageSize, String author) {
         try {
             var listOfBooks = new ArrayList<Book>();
             final int limit = buildLimit(pageSize);
@@ -148,9 +148,9 @@ public class BookRepository {
                             ).getFirst()
                     )
             );
-            return Optional.of(listOfBooks);
+            return listOfBooks;
         } catch (EmptyResultDataAccessException | NoSuchElementException e) {
-            return Optional.empty();
+            return Collections.emptyList();
         }
     }
 

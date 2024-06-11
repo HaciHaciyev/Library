@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -33,5 +34,25 @@ public class OrderController {
                 .body(entityMapper.toModel(
                         orderRepository.findById(orderId).orElseThrow(NotFoundException::new)
                 ));
+    }
+
+    @GetMapping("/findByCustomerId/{customerIdForOrders}")
+    final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(orderRepository
+                        .findByCustomerId(customerId)
+                        .stream().map(entityMapper::toModel).toList()
+                );
+    }
+
+    @GetMapping("/findByBookId/{bookIdForOrders}")
+    final ResponseEntity<List<OrderModel>> findByBookId(@PathVariable("bookIdForOrders")UUID bookId) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(orderRepository
+                        .findByCustomerId(bookId)
+                        .stream().map(entityMapper::toModel).toList()
+                );
     }
 }

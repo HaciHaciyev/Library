@@ -103,7 +103,6 @@ public class BookController {
                 .status(HttpStatus.OK)
                 .body(bookService
                         .listOfBooks(pageNumber, pageSize, category, author)
-                        .orElseThrow(NotFoundException::new)
                         .stream().map(entityMapper::toModel).toList());
     }
 }

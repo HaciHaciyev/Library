@@ -25,7 +25,7 @@ public class BookService {
         return bookRepository.findByTitle(title);
     }
 
-    public final Optional<List<Book>> listOfBooks(Integer pageNumber, Integer pageSize,
+    public final List<Book> listOfBooks(Integer pageNumber, Integer pageSize,
                                                   String category, String author) {
         if (category != null && author == null) {
             return bookRepository.listByCategory(pageNumber, pageSize, category);
