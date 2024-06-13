@@ -43,7 +43,6 @@ public class OrderRepository {
     public List<Order> findByCustomerId(UUID customerId) {
         try {
             var listOfOrders = new ArrayList<Order>();
-
             Set<UUID> ordersId = new HashSet<>(
                     jdbcTemplate.query(
                             String.format(sqlForOrdersIdByCustomerId, customerId.toString()),
@@ -72,7 +71,6 @@ public class OrderRepository {
     public List<Order> findByBookId(UUID bookId) {
         try {
             var listOfOrders = new ArrayList<Order>();
-
             Set<UUID> ordersId = new HashSet<>(
                     jdbcTemplate.query(
                             String.format(sqlForOrdersIdByBookId, bookId.toString()),

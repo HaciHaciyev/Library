@@ -53,6 +53,7 @@ public class BookController {
                 .status(HttpStatus.OK)
                 .body(bookService
                         .listOfBooks(pageNumber, pageSize, category, author)
-                        .stream().map(entityMapper::toModel).toList());
+                        .stream().filter(Objects::nonNull)
+                        .map(entityMapper::toModel).toList());
     }
 }
