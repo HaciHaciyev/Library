@@ -128,19 +128,30 @@ public class Publisher {
         }
 
         public final Publisher build() {
-            validateToNullAndBlank(new Object[]{id, publisherName, address,
-                    phone, email, events});
+            validate();
 
             return new Publisher(id, publisherName, address,
                     phone, email, events, new HashSet<>());
         }
-    }
 
-    private static void validateToNullAndBlank(Object[] o) {
-        for (Object object : o) {
-            Objects.requireNonNull(object);
-            if (object instanceof String string && string.isBlank()) {
-                throw new IllegalArgumentException("String should`t be blank.");
+        private void validate() {
+            if (id == null) {
+                throw new IllegalArgumentException("id can't be null");
+            }
+            if (publisherName == null) {
+                throw new IllegalArgumentException("publisherName can't be null");
+            }
+            if (address == null) {
+                throw new IllegalArgumentException("address can't be null");
+            }
+            if (phone == null) {
+                throw new IllegalArgumentException("phone can't be null");
+            }
+            if (email == null) {
+                throw new IllegalArgumentException("email can't be null");
+            }
+            if (events == null) {
+                throw new IllegalArgumentException("events can't be null");
             }
         }
     }

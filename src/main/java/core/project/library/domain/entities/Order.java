@@ -111,7 +111,7 @@ public class Order {
         }
 
         public final Order build() {
-            validateFields();
+            validate();
 
             Order order = new Order(id, countOfBooks, totalPrice,
                     events, customer, Collections.unmodifiableSet(books));
@@ -121,7 +121,7 @@ public class Order {
             return order;
         }
 
-        private void validateFields() {
+        private void validate() {
             if (countOfBooks == null || countOfBooks < 0) {
                 throw new IllegalArgumentException("Count of books can't be null or negative");
             }

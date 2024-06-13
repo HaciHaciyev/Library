@@ -74,7 +74,7 @@ class CustomerControllerTest {
 
         @Test
         @DisplayName("Reject UUID of non existent customer")
-        void testNonExistent() throws Exception{
+        void testNonExistent() throws Exception {
             UUID nonExistent = UUID.randomUUID();
             when(customerRepository.findById(nonExistent)).thenReturn(Optional.empty());
 
@@ -87,16 +87,18 @@ class CustomerControllerTest {
         }
 
         private static Stream<Arguments> randomCustomer() {
-            return Stream.generate(() -> arguments(
-                    Customer.builder()
-                            .id(UUID.randomUUID())
-                            .firstName(randomFirstName())
-                            .lastName(randomLastName())
-                            .password(randomPassword())
-                            .email(randomEmail())
-                            .address(randomAddress())
-                            .events(new Events())
-                            .build())).limit(1);
+            Supplier<Customer> customerSupplier = () -> Customer.builder()
+                    .id(UUID.randomUUID())
+                    .firstName(randomFirstName())
+                    .lastName(randomLastName())
+                    .password(randomPassword())
+                    .email(randomEmail())
+                    .address(randomAddress())
+                    .events(new Events())
+                    .build();
+
+            return Stream.generate(() -> arguments(customerSupplier.get()))
+                    .limit(1);
         }
     }
 
@@ -154,10 +156,11 @@ class CustomerControllerTest {
                             .events(new Events())
                             .build();
 
-            return Stream.generate(() -> arguments(
-                            Stream.generate(customerSupplier)
-                                    .limit(5)
-                                    .toList(), lastName))
+            List<Customer> customers = Stream.generate(customerSupplier)
+                    .limit(5)
+                    .toList();
+
+            return Stream.generate(() -> arguments(customers, lastName))
                     .limit(5);
         }
     }

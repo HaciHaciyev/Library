@@ -14,33 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * REST controller for managing books in the library system.
- *
- * <p>This controller provides endpoints to handle CRUD operations for books,
- * including retrieving book details by ID or title, listing books with pagination,
- * saving new books, updating existing books, and patching book details. Each endpoint
- * interacts with the {@link BookService} to perform the necessary operations and
- * uses the {@link EntityMapper} to convert between entity and model representations.</p>
- *
- * <p>Endpoints:
- * <ul>
- *     <li>GET /library/book/getBookById/{bookId} - Retrieve a book by its ID.</li>
- *     <li>GET /library/book/findByName/{title} - Find a book by its title.</li>
- *     <li>GET /library/book/page - List books with pagination support.</li>
- *     <li>POST /library/book/saveBook - Save a new book.</li>
- *     <li>PUT /library/book/updateBook/{bookId} - Update an existing book.</li>
- *     <li>PATCH /library/book/patchBook/{bookId} - Patch book details.</li>
- * </ul>
- * </p>
- *
- * <p>Each endpoint returns a {@link ResponseEntity} with appropriate HTTP status codes
- * and headers, and in the case of successful operations, the updated or created
- * {@link BookModel}.</p>
- *
- * <p>Exceptions such as {@link NotFoundException} are thrown when the specified
- * book is not found, ensuring proper error handling and response.</p>
- */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -51,13 +24,6 @@ public class BookController {
 
     private final BookService bookService;
 
-    /**
-     * Retrieves a book by its ID.
-     *
-     * @param bookId the ID of the book
-     * @return a {@code ResponseEntity} containing the {@code BookModel} of the found book
-     * @throws NotFoundException if the book is not found
-     */
     @GetMapping("/findById/{bookId}")
     final ResponseEntity<BookModel> findById(@PathVariable("bookId") UUID bookId) {
         return ResponseEntity
@@ -67,13 +33,6 @@ public class BookController {
                 );
     }
 
-    /**
-     * Finds a book by its title.
-     *
-     * @param title the title of the book
-     * @return a {@code ResponseEntity} containing the {@code BookModel} of the found book
-     * @throws NotFoundException if the book is not found
-     */
     @GetMapping("/findByTitle/{title}")
     final ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
         return ResponseEntity
@@ -83,15 +42,6 @@ public class BookController {
                 ));
     }
 
-    /**
-     * Retrieves a paginated list of books.
-     *
-     * @param pageNumber the page number of the book list to retrieve
-     * @param pageSize the number of books per page
-     * @param category (optional) the category of books to filter
-     * @return a {@code ResponseEntity} containing the paginated list of {@code BookModel}s
-     * @throws NotFoundException if no books are found for the specified criteria
-     */
     @GetMapping("/pageOfBook")
     final ResponseEntity<List<BookModel>> listOfBooks(@RequestParam Integer pageNumber,
                                                       @RequestParam Integer pageSize,

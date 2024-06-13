@@ -10,7 +10,7 @@ class PublisherNameTest {
     void invalidPublisherName() {
         try {
             PublisherName publisherName = new PublisherName(null);
-        } catch (NullPointerException e) {
+        } catch (IllegalArgumentException e) {
             log.info("Publisher name can`t be null.");
         }
 

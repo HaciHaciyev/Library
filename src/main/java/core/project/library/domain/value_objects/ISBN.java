@@ -9,12 +9,15 @@ public record ISBN(@org.hibernate.validator.constraints.ISBN
                    String isbn) {
 
     public ISBN {
-        Objects.requireNonNull(isbn);
+        if (isbn == null) {
+            throw new IllegalArgumentException("ISBN is missing");
+        }
         if (isbn.isBlank()) {
             throw new IllegalArgumentException("ISBN should`t be blank.");
         }
         if (!isIsbn13Valid(isbn)) {
-            throw new IllegalArgumentException("Invalid ISBN number.");
+            throw new IllegalArgumentException("Invalid ISBN number." +
+                    "\n ISBN: " + isbn);
         }
     }
 

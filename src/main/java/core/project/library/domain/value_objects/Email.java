@@ -11,7 +11,9 @@ public record Email(@NotBlank
                     String email) {
 
     public Email {
-        Objects.requireNonNull(email);
+        if (email == null) {
+            throw new IllegalArgumentException("Email cannot be null");
+        }
         if (email.isBlank()) {
             throw new IllegalArgumentException("Email should`t be blank.");
         }
@@ -20,7 +22,8 @@ public record Email(@NotBlank
         Pattern pattern = Pattern.compile(emailRegex);
         Matcher matcher = pattern.matcher(email);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid email.");
+            throw new IllegalArgumentException("Invalid email." +
+                    "\n Email: " + email);
         }
     }
 }
