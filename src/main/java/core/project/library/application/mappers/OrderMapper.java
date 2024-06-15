@@ -9,8 +9,12 @@ import java.util.List;
 
 @Mapper
 public interface OrderMapper {
-    OrderDTO dtoFrom(Order order);
-    OrderModel modelFrom(Order order);
-    List<OrderDTO> dtosFrom(List<Order> orders);
-    List<OrderModel> modelsFrom(List<Order> orders);
+
+    OrderDTO toDTO(Order order);
+
+    OrderModel toModel(Order order);
+
+    List<OrderDTO> listOfDTO(List<Order> orders);
+
+    List<OrderModel> listOfModel(List<Order> orders);
 }

@@ -9,8 +9,12 @@ import java.util.List;
 
 @Mapper
 public interface BookMapper {
-    BookDTO dtoFrom(Book book);
-    BookModel modelFrom(Book book);
-    List<BookDTO> dtosFrom(List<Book> books);
-    List<BookModel> modelsFrom(List<Book> books);
+
+    BookDTO toDTO(Book book);
+
+    BookModel toModel(Book book);
+
+    List<BookDTO> listOfDTO(List<Book> books);
+
+    List<BookModel> listOfModel(List<Book> books);
 }

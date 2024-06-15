@@ -41,7 +41,7 @@ public class BookController {
     final ResponseEntity<BookModel> findById(@PathVariable("bookId") UUID bookId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(bookMapper.modelFrom(
+                .body(bookMapper.toModel(
                         bookService.findById(bookId).orElseThrow(NotFoundException::new))
                 );
     }
@@ -50,7 +50,7 @@ public class BookController {
     final ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(bookMapper.modelFrom(
+                .body(bookMapper.toModel(
                         bookService.findByTitle(title).orElseThrow(NotFoundException::new)
                 ));
     }
@@ -71,7 +71,7 @@ public class BookController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(bookMapper.modelsFrom(books));
+                .body(bookMapper.listOfModel(books));
     }
 
     @PostMapping("/saveBook")

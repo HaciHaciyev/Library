@@ -96,6 +96,30 @@ public class OrderRepository {
         }
     }
 
+    public void saveOrder(Order order) {
+        jdbcTemplate.update("""
+                        Insert into Orders (id, customer_id,
+                                        count_of_book, total_price,
+                                        creation_date, last_modified_date)
+                                        values (?,?,?,?,?,?)
+                        """,
+                order.getId().toString(), order.getCustomer().getId().toString(),
+                order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
+                order.getEvents().creation_date(), order.getEvents().last_update_date()
+        );
+
+        Set<Book> books = order.getBooks();
+        for (Book book : books) {
+            jdbcTemplate.update("""
+                        Insert into Book_Order (book_id, order_id)
+                                    values (?,?)
+                        """,
+                    book.getId().toString(),
+                    order.getId().toString()
+            );
+        }
+    }
+
     private static final String sqlForOrdersIdByCustomerId = """
             Select Orders.id From Orders
             Where Orders.customer_id = '%s'
