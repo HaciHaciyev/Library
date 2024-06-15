@@ -39,7 +39,7 @@ public class CustomerRepository {
                     (rs, rowNum) -> new Email(rs.getString("email")),
                     verifiableEmail.email()
             );
-            return email == null && email != verifiableEmail;
+            return email != null;
         } catch (EmptyResultDataAccessException e) {
             return false;
         }

@@ -27,6 +27,19 @@ public class BookRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean isIsbnExists(ISBN verifiableIsbn) {
+        try {
+            ISBN isbn = jdbcTemplate.queryForObject(
+                    findISBN,
+                    (rs, rowNum) -> new ISBN(rs.getString("isbn")),
+                    verifiableIsbn.isbn()
+            );
+            return isbn != null;
+        } catch (EmptyResultDataAccessException e) {
+            return false;
+        }
+    }
+
     public Optional<Book> findById(UUID bookId) {
         try {
             return Optional.ofNullable(
@@ -154,6 +167,31 @@ public class BookRepository {
         }
     }
 
+    public void completelySaveBook(Book book) {
+        jdbcTemplate.update("""
+                        Insert into Books (id, publisher_id, title, description, isbn, price,
+                                  quantity_on_hand, category, creation_date, last_modified_date)
+                                  values (?,?,?,?,?,?,?,?,?,?)
+                        """,
+                book.getId().toString(), book.getPublisher().getId().toString(),
+                book.getTitle().title(), book.getDescription().description(),
+                book.getIsbn().isbn(), book.getPrice(), book.getQuantityOnHand(),
+                book.getCategory().toString(), book.getEvents().creation_date(),
+                book.getEvents().last_update_date()
+        );
+
+        Set<Author> authors = book.getAuthors();
+        for (Author author : authors) {
+            jdbcTemplate.update("""
+                        Insert into Book_Author (book_id, author_id)
+                                    values (?,?)
+                        """,
+                    book.getId().toString(),
+                    author.getId().toString()
+            );
+        }
+    }
+
     public static int buildLimit(Integer pageSize) {
         int limit;
         if (pageSize > 0 && pageSize < 25) {
@@ -179,6 +217,9 @@ public class BookRepository {
     }
 
     private static final String byId = "WHERE b.id = '%s'";
+
+    private static final String findISBN =
+            "Select isbn from Books where isbn = ?";
 
     private static final String sqlForBooksId = """
     Select id from Books LIMIT %s OFFSET %s

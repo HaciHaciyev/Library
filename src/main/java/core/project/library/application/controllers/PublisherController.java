@@ -47,8 +47,8 @@ public class PublisherController {
                         .orElseThrow(NotFoundException::new)));
     }
 
-    @PostMapping("/createPublisher")
-    final ResponseEntity<Void> createPublisher(@RequestBody @Valid PublisherDTO publisherDTO) {
+    @PostMapping("/savePublisher")
+    final ResponseEntity<Void> savePublisher(@RequestBody @Valid PublisherDTO publisherDTO) {
         if (publisherRepository.isEmailExists(Objects.requireNonNull(publisherDTO.email()))) {
             throw new IllegalArgumentException("This email is used.");
         }

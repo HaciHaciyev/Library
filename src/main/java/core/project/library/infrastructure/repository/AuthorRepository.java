@@ -27,6 +27,19 @@ public class AuthorRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean isAuthorExists(UUID verifiableAuthorId) {
+        try {
+            UUID authorId = jdbcTemplate.queryForObject(
+                    isAuthorExists,
+                    (rs, rowNum) -> UUID.fromString(rs.getString("id")),
+                    verifiableAuthorId.toString()
+            );
+            return authorId != null;
+        } catch (EmptyResultDataAccessException e) {
+            return false;
+        }
+    }
+
     public boolean isEmailExists(Email verifiableEmail) {
         try {
             Email email = jdbcTemplate.queryForObject(
@@ -34,23 +47,10 @@ public class AuthorRepository {
                     (rs, rowNum) -> new Email(rs.getString("email")),
                     verifiableEmail.email()
             );
-            return email == null && email != verifiableEmail;
+            return email != null;
         } catch (EmptyResultDataAccessException e) {
             return false;
         }
-    }
-
-    public void saveAuthor(Author author) {
-        jdbcTemplate.update("""
-                        Insert into Authors (id, first_name, last_name, email,
-                                    state, city, street, home, creation_date, last_modified_date)
-                                    values (?,?,?,?,?,?,?,?,?,?)
-                        """,
-                author.getId().toString(), author.getFirstName().firstName(), author.getLastName().lastName(),
-                author.getEmail().email(), author.getAddress().state(), author.getAddress().city(),
-                author.getAddress().street(), author.getAddress().home(),
-                author.getEvents().creation_date(), author.getEvents().last_update_date()
-        );
     }
 
     public Optional<Author> findById(UUID authorId) {
@@ -73,6 +73,19 @@ public class AuthorRepository {
         }
     }
 
+    public void saveAuthor(Author author) {
+        jdbcTemplate.update("""
+                        Insert into Authors (id, first_name, last_name, email,
+                                    state, city, street, home, creation_date, last_modified_date)
+                                    values (?,?,?,?,?,?,?,?,?,?)
+                        """,
+                author.getId().toString(), author.getFirstName().firstName(), author.getLastName().lastName(),
+                author.getEmail().email(), author.getAddress().state(), author.getAddress().city(),
+                author.getAddress().street(), author.getAddress().home(),
+                author.getEvents().creation_date(), author.getEvents().last_update_date()
+        );
+    }
+
     private static final String sqlForGetAuthor = """
             Select * from Authors Where id = ?
             """;
@@ -84,6 +97,9 @@ public class AuthorRepository {
     private static final String sqlForEmail = """
             Select email from Authors Where email = ?
             """;
+
+    private static final String isAuthorExists =
+            "Select id from Authors where id = ?";
 
     private static final class RowToAuthor implements RowMapper<Author> {
         @Override

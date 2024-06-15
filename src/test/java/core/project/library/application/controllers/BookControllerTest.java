@@ -8,7 +8,9 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.Category;
 import core.project.library.domain.value_objects.FirstName;
 import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.repository.AuthorRepository;
 import core.project.library.infrastructure.repository.BookRepository;
+import core.project.library.infrastructure.repository.PublisherRepository;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +56,10 @@ class BookControllerTest {
     BookService service;
     @MockBean
     BookRepository repository;
+    @MockBean
+    AuthorRepository authorRepository;
+    @MockBean
+    PublisherRepository publisherRepository;
 
     private static Supplier<Book> bookSupplier() {
         Supplier<Publisher> publisherSupplier = publisherSupplier();

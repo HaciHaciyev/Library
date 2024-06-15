@@ -1,6 +1,7 @@
 package core.project.library.application.service;
 
 import core.project.library.domain.entities.Book;
+import core.project.library.domain.value_objects.ISBN;
 import core.project.library.infrastructure.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
@@ -34,5 +35,9 @@ public class BookService {
         } else {
             return bookRepository.listOfBooks(pageNumber, pageSize);
         }
+    }
+
+    public boolean isIsbnExists(ISBN isbn) {
+        return bookRepository.isIsbnExists(isbn);
     }
 }

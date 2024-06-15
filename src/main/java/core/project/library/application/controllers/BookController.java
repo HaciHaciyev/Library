@@ -1,19 +1,26 @@
 package core.project.library.application.controllers;
 
 import core.project.library.application.mappers.BookMapper;
+import core.project.library.application.model.BookDTO;
 import core.project.library.application.model.BookModel;
 import core.project.library.application.service.BookService;
+import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
+import core.project.library.domain.entities.Publisher;
+import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.repository.AuthorRepository;
+import core.project.library.infrastructure.repository.BookRepository;
+import core.project.library.infrastructure.repository.PublisherRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -21,15 +28,20 @@ import java.util.UUID;
 @RequestMapping("/library/book")
 public class BookController {
 
-    private final BookMapper mapper;
+    private final BookMapper bookMapper;
 
     private final BookService bookService;
+
+    private final AuthorRepository authorRepository;
+
+    private final PublisherRepository publisherRepository;
+    private final BookRepository bookRepository;
 
     @GetMapping("/findById/{bookId}")
     final ResponseEntity<BookModel> findById(@PathVariable("bookId") UUID bookId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.modelFrom(
+                .body(bookMapper.modelFrom(
                         bookService.findById(bookId).orElseThrow(NotFoundException::new))
                 );
     }
@@ -38,7 +50,7 @@ public class BookController {
     final ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.modelFrom(
+                .body(bookMapper.modelFrom(
                         bookService.findByTitle(title).orElseThrow(NotFoundException::new)
                 ));
     }
@@ -59,6 +71,55 @@ public class BookController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.modelsFrom(books));
+                .body(bookMapper.modelsFrom(books));
+    }
+
+    @PostMapping("/saveBook")
+    final ResponseEntity<Void> saveBook(@RequestBody @Valid BookDTO bookDTO,
+                                        @RequestParam UUID publisherId,
+                                        @RequestParam List<UUID> authorsId) {
+        if (bookService.isIsbnExists(Objects.requireNonNull(bookDTO.isbn()))) {
+            throw new IllegalArgumentException("ISBN was be used");
+        }
+
+        if (!publisherRepository.isPublisherExists(publisherId)) {
+            throw new IllegalArgumentException("Publisher don`t found");
+        }
+
+        for (UUID authorId : authorsId) {
+            if (!authorRepository.isAuthorExists(authorId)) {
+                throw new IllegalArgumentException("Author was not found");
+            }
+        }
+
+        Publisher publisher = publisherRepository.findById(publisherId).get();
+
+        Set<Author> authors = new HashSet<>();
+        for (UUID authorId : authorsId) {
+            authors.add(authorRepository.findById(authorId).get());
+        }
+
+        Book book = entityCollectorForBook(bookDTO, publisher, authors);
+
+        bookRepository.completelySaveBook(book);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Location", String.format("/library/book/findById/%s", book.getId().toString()));
+        return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
+    }
+
+    private Book entityCollectorForBook(BookDTO bookDTO, Publisher publisher, Set<Author> authors) {
+        return Book.builder()
+                .id(UUID.randomUUID())
+                .title(bookDTO.title())
+                .description(bookDTO.description())
+                .isbn(bookDTO.isbn())
+                .price(bookDTO.price())
+                .quantityOnHand(bookDTO.quantityOnHand())
+                .category(bookDTO.category())
+                .events(new Events())
+                .publisher(publisher)
+                .authors(authors)
+                .build();
     }
 }

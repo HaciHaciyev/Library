@@ -32,10 +32,26 @@ public class PublisherRepository {
     private static final String FIND_PHONE =
             "Select phone from Publishers where phone = ?";
 
+    private static final String isExists =
+            "Select id from Publishers where id = ?";
+
     private final JdbcTemplate jdbcTemplate;
 
     public PublisherRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public boolean isPublisherExists(UUID verifiablePublisherId) {
+        try {
+             UUID publisherId = jdbcTemplate.queryForObject(
+                     isExists,
+                     (rs, rowNum) -> UUID.fromString(rs.getString("id")),
+                     verifiablePublisherId.toString()
+             );
+             return publisherId != null;
+        } catch (EmptyResultDataAccessException e) {
+            return false;
+        }
     }
 
     public boolean isEmailExists(Email verifiableEmail) {
@@ -45,7 +61,7 @@ public class PublisherRepository {
                     (rs, rowNum) -> new Email(rs.getString("email")),
                     verifiableEmail.email()
             );
-            return email == null && email != verifiableEmail;
+            return email != null;
         } catch (EmptyResultDataAccessException e) {
             return false;
         }
@@ -58,7 +74,7 @@ public class PublisherRepository {
                     (rs, rowNum) -> new Phone(rs.getString("phone")),
                     verifiablePhone.phoneNumber()
             );
-            return phone == null && phone != verifiablePhone;
+            return phone != null;
         } catch (EmptyResultDataAccessException e) {
             return false;
         }
