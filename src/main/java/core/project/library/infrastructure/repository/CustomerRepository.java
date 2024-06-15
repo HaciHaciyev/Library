@@ -23,10 +23,26 @@ public class CustomerRepository {
     private static final String GET_BY_ID =
             "Select * from Customers where id=?";
 
+    private static final String FIND_EMAIL =
+            "Select email from Customers where email=?";
+
     private final JdbcTemplate jdbcTemplate;
 
     public CustomerRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public boolean isEmailExists(Email verifiableEmail) {
+        try {
+            Email email = jdbcTemplate.queryForObject(
+                    FIND_EMAIL,
+                    (rs, rowNum) -> new Email(rs.getString("email")),
+                    verifiableEmail.email()
+            );
+            return email == null && email != verifiableEmail;
+        } catch (EmptyResultDataAccessException e) {
+            return false;
+        }
     }
 
     public Optional<Customer> findById(UUID customerId) {
@@ -45,6 +61,20 @@ public class CustomerRepository {
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
+    }
+
+    public void saveCustomer(Customer customer) {
+        jdbcTemplate.update("""
+                        Insert into Customers (id, first_name, last_name, email, password,
+                                      state, city, street, home,
+                                      creation_date, last_modified_date)
+                                      values (?,?,?,?,?,?,?,?,?,?,?)
+                        """,
+                customer.getId().toString(), customer.getFirstName().firstName(), customer.getLastName().lastName(),
+                customer.getEmail().email(), customer.getPassword().password(), customer.getAddress().state(),
+                customer.getAddress().city(), customer.getAddress().street(), customer.getAddress().home(),
+                customer.getEvents().creation_date(), customer.getEvents().last_update_date()
+        );
     }
 
     final Customer customerMapper(ResultSet rs, int ignored) throws SQLException {

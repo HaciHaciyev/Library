@@ -9,8 +9,12 @@ import java.util.List;
 
 @Mapper
 public interface CustomerMapper {
-    CustomerDTO dtoFrom(Customer customer);
-    CustomerModel modelFrom(Customer customer);
-    List<CustomerDTO> dtosFrom(List<Customer> customers);
-    List<CustomerModel> modelsFrom(List<Customer> customers);
+
+    CustomerDTO toDTO(Customer customer);
+
+    CustomerModel toModel(Customer customer);
+
+    List<CustomerDTO> listOfDTO(List<Customer> customers);
+
+    List<CustomerModel> listOfModel(List<Customer> customers);
 }
