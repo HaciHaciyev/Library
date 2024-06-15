@@ -135,24 +135,12 @@ public class Publisher {
         }
 
         private void validate() {
-            if (id == null) {
-                throw new IllegalArgumentException("id can't be null");
-            }
-            if (publisherName == null) {
-                throw new IllegalArgumentException("publisherName can't be null");
-            }
-            if (address == null) {
-                throw new IllegalArgumentException("address can't be null");
-            }
-            if (phone == null) {
-                throw new IllegalArgumentException("phone can't be null");
-            }
-            if (email == null) {
-                throw new IllegalArgumentException("email can't be null");
-            }
-            if (events == null) {
-                throw new IllegalArgumentException("events can't be null");
-            }
+            Objects.requireNonNull(id, "Id can't be null");
+            Objects.requireNonNull(publisherName, "Publisher name can't be null");
+            Objects.requireNonNull(address, "Address can't be null");
+            Objects.requireNonNull(phone, "Phone can't be null");
+            Objects.requireNonNull(email, "Email can't be null");
+            Objects.requireNonNull(events, "Events can't be null");
         }
     }
 }

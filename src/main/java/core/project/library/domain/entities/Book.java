@@ -174,32 +174,21 @@ public class Book {
         }
 
         private void validate() {
-            if (title == null) {
-                throw new IllegalArgumentException("Title can't be null");
+            Objects.requireNonNull(title, "Title can't be null");
+            Objects.requireNonNull(description, "Description can't be null");
+            Objects.requireNonNull(isbn, "ISBN can't be null");
+            Objects.requireNonNull(price, "Price can't be null");
+            Objects.requireNonNull(quantityOnHand, "QuantityOnHand can't be null");
+            Objects.requireNonNull(category, "Category can't be null");
+            Objects.requireNonNull(events, "Events can't be null");
+            Objects.requireNonNull(publisher, "Publisher can't be null");
+            Objects.requireNonNull(authors, "Authors can't be null");
+
+            if (price.doubleValue() < 0) {
+                throw new IllegalArgumentException("Price can't be negative");
             }
-            if (description == null) {
-                throw new IllegalArgumentException("Description can't be null");
-            }
-            if (isbn == null) {
-                throw new IllegalArgumentException("ISBN can't be null");
-            }
-            if (price == null || price.doubleValue() < 0) {
-                throw new IllegalArgumentException("Price can't be null or negative");
-            }
-            if (quantityOnHand == null || quantityOnHand < 0) {
-                throw new IllegalArgumentException("Quantity can't be null or negative");
-            }
-            if (category == null) {
-                throw new IllegalArgumentException("Category can't be null");
-            }
-            if (events == null) {
-                throw new IllegalArgumentException("Events can't be null");
-            }
-            if (publisher == null) {
-                throw new IllegalArgumentException("Publisher can't be null");
-            }
-            if (authors == null || authors.isEmpty()) {
-                throw new IllegalArgumentException("Authors can't be null or empty");
+            if (quantityOnHand < 0) {
+                throw new IllegalArgumentException("Quantity can't be negative");
             }
         }
     }

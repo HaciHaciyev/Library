@@ -122,20 +122,20 @@ public class Order {
         }
 
         private void validate() {
-            if (countOfBooks == null || countOfBooks < 0) {
-                throw new IllegalArgumentException("Count of books can't be null or negative");
+            Objects.requireNonNull(countOfBooks, "countOfBooks can't be null");
+            Objects.requireNonNull(totalPrice, "totalPrice can't be null");
+            Objects.requireNonNull(events, "events can't be null");
+            Objects.requireNonNull(customer, "customer can't be null");
+            Objects.requireNonNull(books, "books can't be null");
+
+            if (countOfBooks < 0) {
+                throw new IllegalArgumentException("Count of books can't be negative");
             }
-            if (totalPrice == null || totalPrice.totalPrice().doubleValue() < 0) {
-                throw new IllegalArgumentException("Total price can't be null or negative");
+            if (totalPrice.totalPrice().doubleValue() < 0) {
+                throw new IllegalArgumentException("Total price can't be negative");
             }
-            if (events == null) {
-                throw new IllegalArgumentException("Events can't be null");
-            }
-            if (customer == null) {
-                throw new IllegalArgumentException("Customer can't be null");
-            }
-            if (books == null || books.isEmpty()) {
-                throw new IllegalArgumentException("Books can't be null or empty");
+            if (books.isEmpty()) {
+                throw new IllegalArgumentException("Books can't be empty");
             }
         }
     }

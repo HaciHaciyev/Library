@@ -135,24 +135,12 @@ public class Author {
                     email, address, events, new HashSet<>());
         }
         private void validate() {
-            if (id == null) {
-                throw new IllegalArgumentException("Id can't be null");
-            }
-            if (firstName == null) {
-                throw new IllegalArgumentException("FirstName can't be null");
-            }
-            if (lastName == null) {
-                throw new IllegalArgumentException("LastName can't be null");
-            }
-            if (email == null) {
-                throw new IllegalArgumentException("Email can't be null");
-            }
-            if (address == null) {
-                throw new IllegalArgumentException("Address can't be null");
-            }
-            if (events == null) {
-                throw new IllegalArgumentException("Events can't be null");
-            }
+            Objects.requireNonNull(id, "id can't be null");
+            Objects.requireNonNull(firstName, "firstName can't be null");
+            Objects.requireNonNull(lastName, "lastName can't be null");
+            Objects.requireNonNull(email, "email can't be null");
+            Objects.requireNonNull(address, "address can't be null");
+            Objects.requireNonNull(events, "events can't be null");
         }
     }
 }
