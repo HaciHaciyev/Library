@@ -2,14 +2,15 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.mappers.AuthorMapper;
 import core.project.library.application.model.AuthorDTO;
+import core.project.library.domain.entities.Author;
+import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.AuthorRepository;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,12 +19,12 @@ import java.util.UUID;
 @RequestMapping("/library/author")
 public class AuthorController {
 
-    private final AuthorMapper mapper;
+    private final AuthorMapper authorMapper;
 
     private final AuthorRepository authorRepository;
 
-    public AuthorController(AuthorMapper mapper, AuthorRepository authorRepository) {
-        this.mapper = mapper;
+    public AuthorController(AuthorMapper authorMapper, AuthorRepository authorRepository) {
+        this.authorMapper = authorMapper;
         this.authorRepository = authorRepository;
     }
 
@@ -31,7 +32,7 @@ public class AuthorController {
     final ResponseEntity<AuthorDTO> findById(@PathVariable("authorId") UUID authorId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.dtoFrom(
+                .body(authorMapper.toDTO(
                         authorRepository.findById(authorId).orElseThrow(NotFoundException::new)
                 ));
     }
@@ -40,8 +41,30 @@ public class AuthorController {
     final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("authorLastName") String authorLastName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.dtosFrom(authorRepository
+                .body(authorMapper.listOfDTO(authorRepository
                         .findByLastName(authorLastName)
                         .orElseThrow(NotFoundException::new)));
+    }
+
+    @PostMapping("/saveAuthor")
+    final ResponseEntity<Void> saveAuthor(@RequestBody @Valid AuthorDTO authorDTO) {
+        if (authorRepository.isEmailExists(authorDTO.email())) {
+            throw new IllegalArgumentException("Email was be used");
+        }
+
+        Author author = Author.builder()
+                .id(UUID.randomUUID())
+                .firstName(authorDTO.firstName())
+                .lastName(authorDTO.lastName())
+                .email(authorDTO.email())
+                .address(authorDTO.address())
+                .events(new Events())
+                .build();
+
+        authorRepository.saveAuthor(author);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Location", String.format("/library/author/findById/%s", author.getId().toString()));
+        return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
     }
 }

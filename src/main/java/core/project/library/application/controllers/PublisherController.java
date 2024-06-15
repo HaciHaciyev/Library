@@ -68,10 +68,7 @@ public class PublisherController {
         publisherRepository.savePublisher(publisher);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(
-                "Location", String.format("/library/publisher/findById/%s", publisher.getId().toString())
-        );
-
+        httpHeaders.add("Location", String.format("/library/publisher/findById/%s", publisher.getId().toString()));
         return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
     }
 }

@@ -16,5 +16,5 @@ public interface PublisherMapper {
 
     List<PublisherDTO> listOfDTO(List<Publisher> publishers);
 
-    List<PublisherModel> listOfModels(List<Publisher> publishers);
+    List<PublisherModel> listOfModel(List<Publisher> publishers);
 }
