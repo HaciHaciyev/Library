@@ -5,6 +5,7 @@ import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
+import core.project.library.domain.value_objects.Category;
 import core.project.library.domain.value_objects.FirstName;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.BookRepository;
@@ -38,7 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -55,9 +55,9 @@ class BookControllerTest {
     @MockBean
     BookRepository repository;
 
-    private static Supplier<Book> getBookSupplier() {
-        Supplier<Publisher> publisherSupplier = getPublisherSupplier();
-        Supplier<Set<Author>> authorSupplier = getAuthorSupplier();
+    private static Supplier<Book> bookSupplier() {
+        Supplier<Publisher> publisherSupplier = publisherSupplier();
+        Supplier<Set<Author>> authorSupplier = authorSupplier();
 
         return () -> Book.builder()
                 .id(UUID.randomUUID())
@@ -73,7 +73,7 @@ class BookControllerTest {
                 .build();
     }
 
-    private static Supplier<Set<Author>> getAuthorSupplier() {
+    private static Supplier<Set<Author>> authorSupplier() {
         int random = ThreadLocalRandom.current().nextInt(1, 4);
         return () -> Stream.generate(() -> Author.builder()
                 .id(UUID.randomUUID())
@@ -85,7 +85,7 @@ class BookControllerTest {
                 .build()).limit(random).collect(Collectors.toSet());
     }
 
-    private static Supplier<Publisher> getPublisherSupplier() {
+    private static Supplier<Publisher> publisherSupplier() {
         return () -> Publisher.builder()
                 .id(UUID.randomUUID())
                 .publisherName(randomPublisherName())
@@ -103,7 +103,7 @@ class BookControllerTest {
         private static final String FIND_BY_ID = "/library/book/findById/";
 
         private static Stream<Arguments> randomBook() {
-            Supplier<Book> bookSupplier = getBookSupplier();
+            Supplier<Book> bookSupplier = bookSupplier();
             return Stream.generate(() -> arguments(bookSupplier.get()))
                     .limit(1);
         }
@@ -112,10 +112,8 @@ class BookControllerTest {
         @MethodSource("randomBook")
         @DisplayName("Accept valid UUID")
         void acceptValidId(Book book) throws Exception {
-            given(
-                    service.findById(any(UUID.class))
-            )
-                    .willReturn(Optional.of(book));
+            when(service.findById(any(UUID.class)))
+                    .thenReturn(Optional.of(book));
 
             MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + book.getId().toString())
                             .accept(MediaType.APPLICATION_JSON))
@@ -130,9 +128,7 @@ class BookControllerTest {
         @DisplayName("Reject UUID of non existent book")
         void rejectInvalidId() throws Exception {
             UUID nonExistent = UUID.randomUUID();
-            when(
-                    service.findById(nonExistent)
-            )
+            when(service.findById(nonExistent))
                     .thenReturn(Optional.empty());
 
             MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + nonExistent)
@@ -151,7 +147,7 @@ class BookControllerTest {
         private static final String FIND_BY_NAME = "/library/book/findByTitle/";
 
         private static Stream<Arguments> randomBook() {
-            Supplier<Book> bookSupplier = getBookSupplier();
+            Supplier<Book> bookSupplier = bookSupplier();
             return Stream.generate(() -> arguments(bookSupplier.get()))
                     .limit(1);
         }
@@ -161,9 +157,7 @@ class BookControllerTest {
         @DisplayName("Accept existing name")
         void acceptExistingName(Book book) throws Exception {
             String title = book.getTitle().title();
-            when(
-                    service.findByTitle(title)
-            )
+            when(service.findByTitle(title))
                     .thenReturn(Optional.of(book));
 
             mockMvc.perform(get(FIND_BY_NAME + title)
@@ -176,9 +170,7 @@ class BookControllerTest {
         @DisplayName("Throw exception in case of no match")
         void testNoMatch() throws Exception {
             String title = "title";
-            when(
-                    service.findByTitle(title)
-            )
+            when(service.findByTitle(title))
                     .thenReturn(Optional.empty());
 
             MvcResult mvcResult = mockMvc.perform(get(FIND_BY_NAME + title)
@@ -196,7 +188,7 @@ class BookControllerTest {
     class Page {
 
         private static Stream<Arguments> bookList() {
-            Supplier<Book> bookSupplier = getBookSupplier();
+            Supplier<Book> bookSupplier = bookSupplier();
             int pageSize = ThreadLocalRandom.current().nextInt(1, 11);
             return Stream.generate(() -> arguments(
                     Stream.generate(bookSupplier).limit(pageSize).toList(),
@@ -205,8 +197,9 @@ class BookControllerTest {
         }
 
         private static Stream<Arguments> bookListByCategory() {
-            Supplier<Publisher> publisherSupplier = getPublisherSupplier();
-            Supplier<Set<Author>> authorSupplier = getAuthorSupplier();
+            Supplier<Publisher> publisherSupplier = publisherSupplier();
+            Supplier<Set<Author>> authorSupplier = authorSupplier();
+            Category category = randomCategory();
 
             Supplier<Book> bookSupplier = () ->
                     Book.builder()
@@ -217,21 +210,21 @@ class BookControllerTest {
                             .price(BigDecimal.ONE)
                             .quantityOnHand(1)
                             .events(new Events())
-                            .category(randomCategory())
+                            .category(category)
                             .publisher(publisherSupplier.get())
                             .authors(authorSupplier.get())
                             .build();
 
             int pageSize = ThreadLocalRandom.current().nextInt(1, 11);
             return Stream.generate(() -> arguments(
-                    Stream.generate(bookSupplier).limit(10).toList(),
-                    randomCategory().name(),
+                    Stream.generate(bookSupplier).limit(pageSize).toList(),
+                    category.name(),
                     pageSize
             )).limit(1);
         }
 
         private static Stream<Arguments> bookListByAuthor() {
-            Supplier<Publisher> publisherSupplier = getPublisherSupplier();
+            Supplier<Publisher> publisherSupplier = publisherSupplier();
 
             String name = faker.name().firstName();
             Supplier<Set<Author>> authorSupplier = () -> {
@@ -271,46 +264,37 @@ class BookControllerTest {
         @MethodSource("bookList")
         @DisplayName("Get list of books")
         void getListOfBooks(List<Book> books, int pageSize) throws Exception {
-            when(
-                    service.listOfBooks(
-                            0, pageSize, null, null)
-            )
-                    .thenReturn(Optional.of(books));
+            when(service.listOfBooks(0, pageSize, null, null))
+                    .thenReturn(books);
 
             mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=%s"
                             .formatted(pageSize))
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn();
-
         }
 
         @ParameterizedTest
         @MethodSource("bookListByCategory")
         @DisplayName("Get list of books sorted by category")
-        void getListOfBookSortedByCategory(List<Book> books,
-                                           String category, int pageSize) throws Exception {
-            when(
-                    service.listOfBooks(
-                            0, pageSize, category, null)
-            )
-                    .thenReturn(Optional.of(books));
+        void getListOfBookSortedByCategory(List<Book> books, String category, int pageSize) throws Exception {
+            when(service.listOfBooks(0, pageSize, category, null))
+                    .thenReturn(books);
+            System.out.println(books);
 
             mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=%s&category=%s"
                             .formatted(pageSize, category))
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn();
+
         }
 
         @Test
         @DisplayName("Reject invalid category")
         void rejectInvalidCategory() throws Exception {
-            when(
-                    service.listOfBooks(
-                            0, 10, "invalid", null)
-            )
-                    .thenReturn(Optional.empty());
+            when(service.listOfBooks(0, 10, "invalid", null))
+                    .thenThrow(NotFoundException.class);
 
             MvcResult mvcResult = mockMvc.perform(
                             get("/library/book/pageOfBook?pageNumber=0&pageSize=10&category=invalid")
@@ -327,18 +311,11 @@ class BookControllerTest {
         @DisplayName("Get list of books sorted by author")
         void getListOfBooksSortedByAuthor(List<Book> books,
                                           String author, int pageSize) throws Exception {
-            given(
-                    service.listOfBooks(
-                            0, pageSize, null, author
-                    )
-            )
-                    .willReturn(Optional.of(books));
+            when(service.listOfBooks(0, pageSize, null, author)).thenReturn(books);
 
-            mockMvc.perform(
-                            get("/library/book/pageOfBook?pageNumber=0&pageSize=%s&author=%s"
+            mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=%s&author=%s"
                                     .formatted(pageSize, author))
-                                    .accept(MediaType.APPLICATION_JSON)
-                    )
+                                    .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").isNotEmpty())
                     .andReturn();
@@ -348,12 +325,8 @@ class BookControllerTest {
         @DisplayName("Reject invalid author")
         void rejectInvalidAuthor() throws Exception {
             String category = "Adventure";
-            when(
-                    service.listOfBooks(
-                            0, 10, category, "invalid"
-                    )
-            )
-                    .thenReturn(Optional.empty());
+            when(service.listOfBooks(0, 10, category, "invalid"))
+                    .thenThrow(NotFoundException.class);
 
             MvcResult mvcResult = mockMvc.perform(
                             get("/library/book/pageOfBook?pageNumber=0&pageSize=10&author=invalid")
