@@ -4,9 +4,11 @@ import core.project.library.domain.value_objects.*;
 import net.datafaker.Faker;
 
 import java.math.BigDecimal;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ValueObjects {
+
+    private ValueObjects() {}
 
     private static final Faker faker = new Faker();
 
@@ -43,12 +45,11 @@ public class ValueObjects {
     }
 
     public static ISBN randomISBN13() {
-        Random random = new Random();
         StringBuilder isbn = new StringBuilder();
-        isbn.append(random.nextBoolean() ? "978" : "979");
+        isbn.append(ThreadLocalRandom.current().nextBoolean() ? "978" : "979");
 
         for (int i = 0; i < 9; i++) {
-            isbn.append(random.nextInt(10));
+            isbn.append(ThreadLocalRandom.current().nextInt(10));
         }
 
         int sum = 0;

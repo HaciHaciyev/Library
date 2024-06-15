@@ -15,6 +15,8 @@ import static core.project.library.infrastructure.utilities.ValueObjects.*;
 
 public class Domain {
 
+    private Domain() {}
+
     private static final Faker faker = new Faker();
 
     public static Supplier<Author> author() {

@@ -49,7 +49,7 @@ public class OrderController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(orderRepository
-                        .findByCustomerId(bookId)
+                        .findByBookId(bookId)
                         .stream().map(mapper::modelFrom).toList());
     }
 }
