@@ -1,6 +1,6 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.EntityMapper;
+import core.project.library.application.mappers.PublisherMapper;
 import core.project.library.application.model.PublisherDTO;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.PublisherRepository;
@@ -18,11 +18,11 @@ import java.util.UUID;
 @RequestMapping("/library/publisher")
 public class PublisherController {
 
-    private final EntityMapper mapper;
+    private final PublisherMapper mapper;
 
     private final PublisherRepository publisherRepository;
 
-    public PublisherController(EntityMapper mapper, PublisherRepository publisherRepository) {
+    public PublisherController(PublisherMapper mapper, PublisherRepository publisherRepository) {
         this.mapper = mapper;
         this.publisherRepository = publisherRepository;
     }
@@ -31,7 +31,7 @@ public class PublisherController {
     ResponseEntity<PublisherDTO> findById(@PathVariable("publisherId") UUID publisherId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.toDto(
+                .body(mapper.dtoFrom(
                         publisherRepository.findById(publisherId).orElseThrow(NotFoundException::new))
                 );
     }
@@ -40,9 +40,8 @@ public class PublisherController {
     ResponseEntity<List<PublisherDTO>> findByName(@PathVariable("publisherName") String publisherName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(publisherRepository
+                .body(mapper.dtosFrom(publisherRepository
                         .findByName(publisherName)
-                        .orElseThrow(NotFoundException::new)
-                        .stream().map(mapper::toDto).toList());
+                        .orElseThrow(NotFoundException::new)));
     }
 }

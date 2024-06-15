@@ -1,7 +1,8 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.EntityMapper;
+import core.project.library.application.mappers.CustomerMapper;
 import core.project.library.application.model.CustomerDTO;
+import core.project.library.application.model.CustomerModel;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.CustomerRepository;
 import org.springframework.http.HttpStatus;
@@ -18,12 +19,12 @@ import java.util.UUID;
 @RequestMapping("/library/customer")
 public class CustomerController {
 
-    private final EntityMapper mapper;
+    private final CustomerMapper mapper;
 
     private final CustomerRepository customerRepository;
 
-    public CustomerController(EntityMapper entityMapper, CustomerRepository customerRepository) {
-        this.mapper = entityMapper;
+    public CustomerController(CustomerMapper mapper, CustomerRepository customerRepository) {
+        this.mapper = mapper;
         this.customerRepository = customerRepository;
     }
 
@@ -31,7 +32,7 @@ public class CustomerController {
     ResponseEntity<CustomerDTO> findById(@PathVariable("customerId") UUID customerId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(mapper.toDTO(customerRepository
+                .body(mapper.dtoFrom(customerRepository
                         .findById(customerId).orElseThrow(NotFoundException::new))
                 );
     }
@@ -40,9 +41,8 @@ public class CustomerController {
     ResponseEntity<List<CustomerDTO>> findByLastName(@PathVariable("customerLastName") String customerLastName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(customerRepository
+                .body(mapper.dtosFrom(customerRepository
                         .findByLastName(customerLastName)
-                        .orElseThrow(NotFoundException::new)
-                        .stream().map(mapper::toDTO).toList());
+                        .orElseThrow(NotFoundException::new)));
     }
 }

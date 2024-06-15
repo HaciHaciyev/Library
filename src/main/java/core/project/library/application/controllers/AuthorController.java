@@ -1,6 +1,6 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.EntityMapper;
+import core.project.library.application.mappers.AuthorMapper;
 import core.project.library.application.model.AuthorDTO;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.AuthorRepository;
@@ -18,12 +18,12 @@ import java.util.UUID;
 @RequestMapping("/library/author")
 public class AuthorController {
 
-    private final EntityMapper entityMapper;
+    private final AuthorMapper mapper;
 
     private final AuthorRepository authorRepository;
 
-    public AuthorController(EntityMapper entityMapper, AuthorRepository authorRepository) {
-        this.entityMapper = entityMapper;
+    public AuthorController(AuthorMapper mapper, AuthorRepository authorRepository) {
+        this.mapper = mapper;
         this.authorRepository = authorRepository;
     }
 
@@ -31,20 +31,17 @@ public class AuthorController {
     final ResponseEntity<AuthorDTO> findById(@PathVariable("authorId") UUID authorId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(entityMapper.toDTO(
+                .body(mapper.dtoFrom(
                         authorRepository.findById(authorId).orElseThrow(NotFoundException::new)
                 ));
     }
 
     @GetMapping("/findByLastName/{authorLastName}")
-    final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("authorLastName")
-                                                             String authorLastName) {
+    final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("authorLastName") String authorLastName) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(authorRepository
+                .body(mapper.dtosFrom(authorRepository
                         .findByLastName(authorLastName)
-                        .orElseThrow(NotFoundException::new)
-                        .stream().map(entityMapper::toDTO).toList()
-                );
+                        .orElseThrow(NotFoundException::new)));
     }
 }

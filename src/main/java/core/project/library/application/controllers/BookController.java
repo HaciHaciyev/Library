@@ -1,8 +1,9 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.EntityMapper;
+import core.project.library.application.mappers.BookMapper;
 import core.project.library.application.model.BookModel;
 import core.project.library.application.service.BookService;
+import core.project.library.domain.entities.Book;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @RequestMapping("/library/book")
 public class BookController {
 
-    private final EntityMapper entityMapper;
+    private final BookMapper mapper;
 
     private final BookService bookService;
 
@@ -28,7 +29,7 @@ public class BookController {
     final ResponseEntity<BookModel> findById(@PathVariable("bookId") UUID bookId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(entityMapper.toModel(
+                .body(mapper.modelFrom(
                         bookService.findById(bookId).orElseThrow(NotFoundException::new))
                 );
     }
@@ -37,7 +38,7 @@ public class BookController {
     final ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(entityMapper.toModel(
+                .body(mapper.modelFrom(
                         bookService.findByTitle(title).orElseThrow(NotFoundException::new)
                 ));
     }
@@ -49,11 +50,15 @@ public class BookController {
                                                       @RequestParam(required = false) String author) {
         Objects.requireNonNull(pageNumber);
         Objects.requireNonNull(pageSize);
+
+        List<Book> books = bookService.listOfBooks(pageNumber, pageSize, category, author);
+
+        if (books.isEmpty()) {
+            throw new NotFoundException("Books not found");
+        }
+
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(bookService
-                        .listOfBooks(pageNumber, pageSize, category, author)
-                        .stream().filter(Objects::nonNull)
-                        .map(entityMapper::toModel).toList());
+                .body(mapper.modelsFrom(books));
     }
 }

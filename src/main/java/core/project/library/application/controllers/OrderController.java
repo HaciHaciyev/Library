@@ -1,6 +1,6 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.EntityMapper;
+import core.project.library.application.mappers.OrderMapper;
 import core.project.library.application.model.OrderModel;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.OrderRepository;
@@ -18,12 +18,12 @@ import java.util.UUID;
 @RequestMapping("/library/order")
 public class OrderController {
 
-    private final EntityMapper entityMapper;
+    private final OrderMapper mapper;
 
     private final OrderRepository orderRepository;
 
-    public OrderController(EntityMapper entityMapper, OrderRepository orderRepository) {
-        this.entityMapper = entityMapper;
+    public OrderController(OrderMapper mapper, OrderRepository orderRepository) {
+        this.mapper = mapper;
         this.orderRepository = orderRepository;
     }
 
@@ -31,7 +31,7 @@ public class OrderController {
     final ResponseEntity<OrderModel> findById(@PathVariable("orderId")UUID orderId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(entityMapper.toModel(
+                .body(mapper.modelFrom(
                         orderRepository.findById(orderId).orElseThrow(NotFoundException::new)
                 ));
     }
@@ -40,10 +40,8 @@ public class OrderController {
     final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(orderRepository
-                        .findByCustomerId(customerId)
-                        .stream().map(entityMapper::toModel).toList()
-                );
+                .body(mapper.modelsFrom(orderRepository
+                        .findByCustomerId(customerId)));
     }
 
     @GetMapping("/findByBookId/{bookIdForOrders}")
@@ -52,7 +50,6 @@ public class OrderController {
                 .status(HttpStatus.OK)
                 .body(orderRepository
                         .findByCustomerId(bookId)
-                        .stream().map(entityMapper::toModel).toList()
-                );
+                        .stream().map(mapper::modelFrom).toList());
     }
 }
