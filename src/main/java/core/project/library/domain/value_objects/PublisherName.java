@@ -3,8 +3,6 @@ package core.project.library.domain.value_objects;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.Objects;
-
 public record PublisherName(@NotBlank @Size(min = 4, max = 50) String publisherName) {
 
      public PublisherName {

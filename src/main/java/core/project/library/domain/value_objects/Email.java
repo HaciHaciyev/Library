@@ -2,7 +2,6 @@ package core.project.library.domain.value_objects;
 
 import jakarta.validation.constraints.NotBlank;
 
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

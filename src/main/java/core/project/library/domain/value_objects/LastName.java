@@ -3,8 +3,6 @@ package core.project.library.domain.value_objects;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.Objects;
-
 public record LastName(@NotBlank @Size(min = 3, max = 25) String lastName) {
 
     public LastName {
