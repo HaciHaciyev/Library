@@ -9,8 +9,12 @@ import java.util.List;
 
 @Mapper
 public interface PublisherMapper {
-    PublisherDTO dtoFrom(Publisher publisher);
-    PublisherModel modelFrom(Publisher publisher);
-    List<PublisherDTO> dtosFrom(List<Publisher> publishers);
-    List<PublisherModel> modelsFrom(List<Publisher> publishers);
+
+    PublisherDTO toDTO(Publisher publisher);
+
+    PublisherModel toModel(Publisher publisher);
+
+    List<PublisherDTO> listOfDTO(List<Publisher> publishers);
+
+    List<PublisherModel> listOfModels(List<Publisher> publishers);
 }

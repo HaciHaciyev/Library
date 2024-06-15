@@ -26,16 +26,48 @@ public class PublisherRepository {
     private static final String GET_BY_NAME =
             "Select * from Publishers where publisher_name = ?";
 
-    private final JdbcTemplate template;
+    private static final String FIND_EMAIL =
+            "Select email from Publishers where email = ?";
 
-    public PublisherRepository(JdbcTemplate template) {
-        this.template = template;
+    private static final String FIND_PHONE =
+            "Select phone from Publishers where phone = ?";
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public PublisherRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public boolean isEmailExists(Email verifiableEmail) {
+        try {
+            Email email = jdbcTemplate.queryForObject(
+                    FIND_EMAIL,
+                    (rs, rowNum) -> new Email(rs.getString("email")),
+                    verifiableEmail.email()
+            );
+            return email == null && email != verifiableEmail;
+        } catch (EmptyResultDataAccessException e) {
+            return false;
+        }
+    }
+
+    public boolean isPhoneExists(Phone verifiablePhone) {
+        try {
+            Phone phone = jdbcTemplate.queryForObject(
+                    FIND_PHONE,
+                    (rs, rowNum) -> new Phone(rs.getString("phone")),
+                    verifiablePhone.phoneNumber()
+            );
+            return phone == null && phone != verifiablePhone;
+        } catch (EmptyResultDataAccessException e) {
+            return false;
+        }
     }
 
     public Optional<Publisher> findById(UUID publisherId) {
         try {
             return Optional.ofNullable(
-                    template.queryForObject(GET_BY_ID, this::publisherMapper, publisherId.toString())
+                    jdbcTemplate.queryForObject(GET_BY_ID, this::publisherMapper, publisherId.toString())
             );
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -45,11 +77,25 @@ public class PublisherRepository {
     public Optional<List<Publisher>> findByName(String name) {
         try {
             return Optional.of(
-                    template.query(GET_BY_NAME, this::publisherMapper, name)
+                    jdbcTemplate.query(GET_BY_NAME, this::publisherMapper, name)
             );
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
+    }
+
+    public void savePublisher(Publisher publisher) {
+        jdbcTemplate.update("""
+                        Insert into Publishers (id, publisher_name, state, city, street, home,
+                                       phone, email, creation_date, last_modified_date)
+                                       values (?,?,?,?,?,?,?,?,?,?)
+                        """,
+                publisher.getId().toString(), publisher.getPublisherName().publisherName(),
+                publisher.getAddress().state(), publisher.getAddress().city(),
+                publisher.getAddress().street(), publisher.getAddress().home(),
+                publisher.getPhone().phoneNumber(), publisher.getEmail().email(),
+                publisher.getEvents().creation_date(), publisher.getEvents().last_update_date()
+        );
     }
 
     private Publisher publisherMapper(ResultSet rs, int ignored) throws SQLException {
