@@ -96,7 +96,7 @@ public class OrderRepository {
         }
     }
 
-    public void saveOrder(Order order) {
+    public void completelySaveOrder(Order order) {
         jdbcTemplate.update("""
                         Insert into Orders (id, customer_id,
                                         count_of_book, total_price,
@@ -108,8 +108,7 @@ public class OrderRepository {
                 order.getEvents().creation_date(), order.getEvents().last_update_date()
         );
 
-        Set<Book> books = order.getBooks();
-        for (Book book : books) {
+        for (Book book : order.getBooks()) {
             jdbcTemplate.update("""
                         Insert into Book_Order (book_id, order_id)
                                     values (?,?)

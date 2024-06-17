@@ -26,26 +26,10 @@ public class CustomerRepository {
     private static final String FIND_EMAIL =
             "Select email from Customers where email=?";
 
-    private static final String IS_EXISTS =
-            "Select id from Customers where id=?";
-
     private final JdbcTemplate jdbcTemplate;
 
     public CustomerRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-    }
-
-    public boolean isCustomerExists(UUID verifiableCustomerId) {
-        try {
-            UUID customerId = jdbcTemplate.queryForObject(
-                    IS_EXISTS,
-                    (rs, rowNum) -> UUID.fromString(rs.getString("id")),
-                    verifiableCustomerId.toString()
-            );
-            return customerId != null;
-        } catch (EmptyResultDataAccessException e) {
-            return false;
-        }
     }
 
     public boolean isEmailExists(Email verifiableEmail) {

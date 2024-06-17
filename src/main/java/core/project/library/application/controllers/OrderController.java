@@ -65,22 +65,11 @@ public class OrderController {
     @PostMapping("/createOrder")
     final ResponseEntity<Void> createOrder(@RequestParam UUID customerId,
                                            @RequestParam List<UUID> booksId) {
-        if (!customerRepository.isCustomerExists(customerId)) {
-            throw new IllegalArgumentException("Customer was not found");
-        }
-
-        for (UUID bookId : booksId) {
-            if (!bookRepository.isBookExists(bookId)) {
-                throw new IllegalArgumentException("Book was not found");
-            }
-        }
-
-        Customer customer = customerRepository.findById(customerId).get();
-
         double totalPrice = 0.0;
         Set<Book> books = new HashSet<>();
+        Customer customer = customerRepository.findById(customerId).orElseThrow(NotFoundException::new);
         for (UUID bookId : booksId) {
-            Book book = bookRepository.findById(bookId).get();
+            Book book = bookRepository.findById(bookId).orElseThrow(NotFoundException::new);
             books.add(book);
             totalPrice += book.getPrice().doubleValue();
         }
@@ -94,7 +83,7 @@ public class OrderController {
                 .books(books)
                 .build();
 
-        orderRepository.saveOrder(order);
+        orderRepository.completelySaveOrder(order);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Location", String.format("/library/order/findById/%s", order.getId()));

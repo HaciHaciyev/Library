@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -49,7 +48,7 @@ public class AuthorController {
 
     @PostMapping("/saveAuthor")
     final ResponseEntity<Void> saveAuthor(@RequestBody @Valid AuthorDTO authorDTO) {
-        if (authorRepository.isEmailExists(Objects.requireNonNull(authorDTO.email()))) {
+        if (authorRepository.isEmailExists(authorDTO.email())) {
             throw new IllegalArgumentException("Email was be used");
         }
 

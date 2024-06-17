@@ -172,7 +172,7 @@ public class PublisherControllerTests {
         @ParameterizedTest
         @MethodSource("getPublisherDTO")
         @DisplayName("reject existing phone number")
-        void rejectExistingPhoneNumber(PublisherDTO customerDTO) throws Exception {
+        void rejectExistingPhoneNumber(PublisherDTO customerDTO) {
             when(publisherRepository.isPhoneExists(customerDTO.phone())).thenReturn(true);
 
             assertThatThrownBy(() ->

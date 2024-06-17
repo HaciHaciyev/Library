@@ -27,6 +27,10 @@ public class BookRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public Integer count() {
+        return jdbcTemplate.queryForObject("Select COUNT(id) from Books", Integer.class);
+    }
+
     public boolean isBookExists(UUID verifiableBookId) {
         try {
             UUID bookId = jdbcTemplate.queryForObject(
@@ -193,8 +197,7 @@ public class BookRepository {
                 book.getEvents().last_update_date()
         );
 
-        Set<Author> authors = book.getAuthors();
-        for (Author author : authors) {
+        for (Author author : book.getAuthors()) {
             jdbcTemplate.update("""
                         Insert into Book_Author (book_id, author_id)
                                     values (?,?)

@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
+import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.CustomerRepository;
 import core.project.library.infrastructure.repository.OrderRepository;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +29,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static core.project.library.infrastructure.utilities.Domain.*;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
@@ -165,7 +168,6 @@ public class OrderControllerTests {
         @MethodSource("customerAndBooks")
         @DisplayName("Accept valid customer and book ids")
         void acceptValidCustomerAndBook(Customer customer, List<Book> books) throws Exception {
-            when(customerRepository.isCustomerExists(customer.getId())).thenReturn(true);
             when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
             books.forEach(book -> when(bookRepository.isBookExists(book.getId())).thenReturn(true));
             books.forEach(book -> when(bookRepository.findById(book.getId())).thenReturn(Optional.of(book)));
@@ -181,35 +183,36 @@ public class OrderControllerTests {
                     .andExpect(header().exists("Location"));
         }
 
+        @SneakyThrows
         @ParameterizedTest
         @MethodSource("getCustomer")
         @DisplayName("reject when customer does not exist")
-        void rejectInvalidCustomerId(Customer customer) throws Exception {
-            when(customerRepository.isCustomerExists(any(UUID.class))).thenReturn(false);
-
-            assertThatThrownBy(() ->
-                    mockMvc.perform(post("/library/order/createOrder")
+        void rejectInvalidCustomerId(Customer customer) {
+            MvcResult mvcResult = mockMvc.perform(post("/library/order/createOrder")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(customer))
                             .param("customerId", UUID.randomUUID().toString())
-                            .param("booksId", UUID.randomUUID().toString())))
-                    .hasMessageContaining("Customer was not found");
+                            .param("booksId", UUID.randomUUID().toString()))
+                    .andReturn();
+
+            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
 
+        @SneakyThrows
         @ParameterizedTest
         @MethodSource("getCustomer")
         @DisplayName("reject when book does not exist")
-        void rejectInvalidBookId(Customer customer) throws Exception {
-            when(customerRepository.isCustomerExists(any(UUID.class))).thenReturn(true);
+        void rejectInvalidBookId(Customer customer) {
             when(bookRepository.isBookExists(any(UUID.class))).thenReturn(false);
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(post("/library/order/createOrder")
+            MvcResult mvcResult = mockMvc.perform(post("/library/order/createOrder")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(customer))
                             .param("customerId", UUID.randomUUID().toString())
-                            .param("booksId", UUID.randomUUID().toString())))
-                    .hasMessageContaining("Book was not found");
+                            .param("booksId", UUID.randomUUID().toString()))
+                    .andReturn();
+
+            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
     }
 }

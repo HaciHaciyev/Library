@@ -27,19 +27,6 @@ public class AuthorRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public boolean isAuthorExists(UUID verifiableAuthorId) {
-        try {
-            UUID authorId = jdbcTemplate.queryForObject(
-                    isAuthorExists,
-                    (rs, rowNum) -> UUID.fromString(rs.getString("id")),
-                    verifiableAuthorId.toString()
-            );
-            return authorId != null;
-        } catch (EmptyResultDataAccessException e) {
-            return false;
-        }
-    }
-
     public boolean isEmailExists(Email verifiableEmail) {
         try {
             Email email = jdbcTemplate.queryForObject(
@@ -90,16 +77,13 @@ public class AuthorRepository {
             Select * from Authors Where id = ?
             """;
 
-    private static final String sqlForAuthorByLastName = """
-            Select * from Authors Where last_name = ?
-            """;
-
     private static final String sqlForEmail = """
             Select email from Authors Where email = ?
             """;
 
-    private static final String isAuthorExists =
-            "Select id from Authors where id = ?";
+    private static final String sqlForAuthorByLastName = """
+            Select * from Authors Where last_name = ?
+            """;
 
     private static final class RowToAuthor implements RowMapper<Author> {
         @Override
@@ -114,7 +98,8 @@ public class AuthorRepository {
                             rs.getString("city"),
                             rs.getString("street"),
                             rs.getString("home")
-                    ))
+                            )
+                    )
                     .events(new Events(
                             rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                             rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()

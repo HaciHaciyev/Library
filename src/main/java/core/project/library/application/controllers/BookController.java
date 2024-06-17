@@ -82,34 +82,13 @@ public class BookController {
             throw new IllegalArgumentException("ISBN was be used");
         }
 
-        if (!publisherRepository.isPublisherExists(publisherId)) {
-            throw new IllegalArgumentException("Publisher don`t found");
-        }
-
-        for (UUID authorId : authorsId) {
-            if (!authorRepository.isAuthorExists(authorId)) {
-                throw new IllegalArgumentException("Author was not found");
-            }
-        }
-
-        Publisher publisher = publisherRepository.findById(publisherId).get();
-
+        Publisher publisher = publisherRepository.findById(publisherId).orElseThrow(NotFoundException::new);
         Set<Author> authors = new HashSet<>();
         for (UUID authorId : authorsId) {
-            authors.add(authorRepository.findById(authorId).get());
+            authors.add(authorRepository.findById(authorId).orElseThrow(NotFoundException::new));
         }
 
-        Book book = entityCollectorForBook(bookDTO, publisher, authors);
-
-        bookRepository.completelySaveBook(book);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Location", String.format("/library/book/findById/%s", book.getId().toString()));
-        return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
-    }
-
-    private Book entityCollectorForBook(BookDTO bookDTO, Publisher publisher, Set<Author> authors) {
-        return Book.builder()
+        Book book = Book.builder()
                 .id(UUID.randomUUID())
                 .title(bookDTO.title())
                 .description(bookDTO.description())
@@ -121,5 +100,11 @@ public class BookController {
                 .publisher(publisher)
                 .authors(authors)
                 .build();
+
+        bookRepository.completelySaveBook(book);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Location", String.format("/library/book/findById/%s", book.getId().toString()));
+        return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
     }
 }

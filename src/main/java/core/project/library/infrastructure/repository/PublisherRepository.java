@@ -122,12 +122,16 @@ public class PublisherRepository {
                         rs.getString("state"),
                         rs.getString("city"),
                         rs.getString("street"),
-                        rs.getString("home")))
+                        rs.getString("home")
+                        )
+                )
                 .phone(new Phone(rs.getString("phone")))
                 .email(new Email(rs.getString("email")))
                 .events(new Events(
                         rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
                         rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
-                )).build();
+                        )
+                )
+                .build();
     }
 }

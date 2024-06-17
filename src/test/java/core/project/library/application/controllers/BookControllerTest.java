@@ -14,6 +14,7 @@ import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.PublisherRepository;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
@@ -389,9 +390,7 @@ class BookControllerTest {
         @DisplayName("accept valid bookDTO, publisherId, and authors")
         void acceptValidDTO(BookDTO dto, Publisher publisher, List<Author> authors) throws Exception {
             when(bookService.isIsbnExists(dto.isbn())).thenReturn(false);
-            when(publisherRepository.isPublisherExists(publisher.getId())).thenReturn(true);
             when(publisherRepository.findById(publisher.getId())).thenReturn(Optional.of(publisher));
-            authors.forEach(author -> when(authorRepository.isAuthorExists(author.getId())).thenReturn(true));
             authors.forEach(author -> when(authorRepository.findById(author.getId())).thenReturn(Optional.of(author)));
 
             List<UUID> authorIds = authors.stream().map(Author::getId).toList();
@@ -420,6 +419,7 @@ class BookControllerTest {
                     .hasMessageContaining("ISBN was be used");
         }
 
+        @SneakyThrows
         @ParameterizedTest
         @MethodSource("validDTO")
         @DisplayName("reject when publisher is not found")
@@ -427,31 +427,31 @@ class BookControllerTest {
             when(bookService.isIsbnExists(any(ISBN.class))).thenReturn(false);
             when(publisherRepository.isPublisherExists(any(UUID.class))).thenReturn(false);
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(post("/library/book/saveBook")
+            MvcResult mvcResult = mockMvc.perform(post("/library/book/saveBook")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto))
                             .param("publisherId", UUID.randomUUID().toString())
-                            .param("authorsId", UUID.randomUUID().toString())))
-                    .hasMessageContaining("Publisher don`t found");
+                            .param("authorsId", UUID.randomUUID().toString()))
+                    .andReturn();
+
+            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
 
+        @SneakyThrows
         @ParameterizedTest
         @MethodSource("validDTO")
         @DisplayName("reject when author/s is not found")
         void rejectInvalidAuthor(BookDTO dto) {
             when(bookService.isIsbnExists(any(ISBN.class))).thenReturn(false);
-            when(publisherRepository.isPublisherExists(any(UUID.class))).thenReturn(true);
-            when(authorRepository.isAuthorExists(any(UUID.class))).thenReturn(false);
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(post("/library/book/saveBook")
+            MvcResult mvcResult = mockMvc.perform(post("/library/book/saveBook")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto))
                             .param("publisherId", UUID.randomUUID().toString())
-                            .param("authorsId", UUID.randomUUID().toString())))
-                    .hasMessageContaining("Author was not found");
-        }
+                            .param("authorsId", UUID.randomUUID().toString()))
+                    .andReturn();
 
+            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+        }
     }
 }

@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -49,7 +48,7 @@ public class PublisherController {
 
     @PostMapping("/savePublisher")
     final ResponseEntity<Void> savePublisher(@RequestBody @Valid PublisherDTO publisherDTO) {
-        if (publisherRepository.isEmailExists(Objects.requireNonNull(publisherDTO.email()))) {
+        if (publisherRepository.isEmailExists(publisherDTO.email())) {
             throw new IllegalArgumentException("This email is used.");
         }
 

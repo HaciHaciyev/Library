@@ -1,8 +1,8 @@
-package core.project.library.infrastructure.bootstrap;
+package core.project.library.application.bootstrap;
 
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
-import core.project.library.infrastructure.repository.BootstrapRepository;
+import core.project.library.infrastructure.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
@@ -16,7 +16,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static core.project.library.infrastructure.utilities.Domain.*;
+import static core.project.library.infrastructure.utilities.Domain.customer;
+import static core.project.library.infrastructure.utilities.Domain.publisher;
 import static core.project.library.infrastructure.utilities.ValueObjects.*;
 
 @Slf4j
@@ -39,31 +40,34 @@ public class Bootstrap implements CommandLineRunner {
     private List<Customer> customers;
     private List<Order> orders;
 
-    private final BootstrapRepository repository;
+    private final PublisherRepository publisherRepository;
+    private final AuthorRepository authorRepository;
+    private final BookRepository bookRepository;
+    private final CustomerRepository customerRepository;
+    private final OrderRepository orderRepository;
 
-    public Bootstrap(BootstrapRepository repository) {
+    public Bootstrap(PublisherRepository publisherRepository, AuthorRepository authorRepository,
+                     BookRepository bookRepository, CustomerRepository customerRepository, OrderRepository orderRepository) {
+        this.publisherRepository = publisherRepository;
+        this.authorRepository = authorRepository;
+        this.bookRepository = bookRepository;
+        this.customerRepository = customerRepository;
+        this.orderRepository = orderRepository;
         populatePublishers();
         populateAuthors();
         populateBooks();
         populateCustomers();
         populateOrders();
-        this.repository = repository;
     }
 
     @Override
     public final void run(String... args) throws Exception {
-        if (repository.count() < 1) {
-            publishers.forEach(repository::savePublisher);
-            authors.forEach(repository::saveAuthor);
-            books.forEach(book -> {
-                repository.saveBook(book);
-                book.getAuthors().forEach(author -> repository.saveBookAuthor(book, author));
-            });
-            customers.forEach(repository::saveCustomer);
-            orders.forEach(order -> {
-                repository.saveOrder(order);
-                order.getBooks().forEach(book -> repository.saveBookOrder(book, order));
-            });
+        if (bookRepository.count() < 1) {
+            publishers.forEach(publisherRepository::savePublisher);
+            authors.forEach(authorRepository::saveAuthor);
+            books.forEach(bookRepository::completelySaveBook);
+            customers.forEach(customerRepository::saveCustomer);
+            orders.forEach(orderRepository::completelySaveOrder);
             log.info("Bootstrap is completed basic values in database.");
         }
     }

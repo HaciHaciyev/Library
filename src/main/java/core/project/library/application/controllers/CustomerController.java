@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 
@@ -50,7 +49,7 @@ public class CustomerController {
 
     @PostMapping("/saveCustomer")
     final ResponseEntity<Void> saveCustomer(@RequestBody @Valid CustomerDTO customerDTO) {
-        if (customerRepository.isEmailExists(Objects.requireNonNull(customerDTO.email()))) {
+        if (customerRepository.isEmailExists(customerDTO.email())) {
             throw new IllegalArgumentException("Email was be used");
         }
 
