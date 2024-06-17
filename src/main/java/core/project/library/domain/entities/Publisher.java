@@ -135,12 +135,12 @@ public class Publisher {
         }
 
         private void validate() {
-            Objects.requireNonNull(id, "Id can't be null");
-            Objects.requireNonNull(publisherName, "Publisher name can't be null");
-            Objects.requireNonNull(address, "Address can't be null");
-            Objects.requireNonNull(phone, "Phone can't be null");
-            Objects.requireNonNull(email, "Email can't be null");
-            Objects.requireNonNull(events, "Events can't be null");
+            Objects.requireNonNull(id, "Id can`t be null");
+            Objects.requireNonNull(publisherName, "Publisher name can`t be null");
+            Objects.requireNonNull(address, "Address can`t be null");
+            Objects.requireNonNull(phone, "Phone can`t be null");
+            Objects.requireNonNull(email, "Email can`t be null");
+            Objects.requireNonNull(events, "Events can`t be null");
         }
     }
 }

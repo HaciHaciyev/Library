@@ -174,21 +174,21 @@ public class Book {
         }
 
         private void validate() {
-            Objects.requireNonNull(title, "Title can't be null");
-            Objects.requireNonNull(description, "Description can't be null");
-            Objects.requireNonNull(isbn, "ISBN can't be null");
-            Objects.requireNonNull(price, "Price can't be null");
-            Objects.requireNonNull(quantityOnHand, "QuantityOnHand can't be null");
-            Objects.requireNonNull(category, "Category can't be null");
-            Objects.requireNonNull(events, "Events can't be null");
-            Objects.requireNonNull(publisher, "Publisher can't be null");
-            Objects.requireNonNull(authors, "Authors can't be null");
+            Objects.requireNonNull(title, "Title can`t be null");
+            Objects.requireNonNull(description, "Description can`t be null");
+            Objects.requireNonNull(isbn, "ISBN can`t be null");
+            Objects.requireNonNull(price, "Price can`t be null");
+            Objects.requireNonNull(quantityOnHand, "QuantityOnHand can`t be null");
+            Objects.requireNonNull(category, "Category can`t be null");
+            Objects.requireNonNull(events, "Events can`t be null");
+            Objects.requireNonNull(publisher, "Publisher can`t be null");
+            Objects.requireNonNull(authors, "Authors can`t be null");
 
             if (price.doubleValue() < 0) {
-                throw new IllegalArgumentException("Price can't be negative");
+                throw new IllegalArgumentException("Price can`t be negative");
             }
             if (quantityOnHand < 0) {
-                throw new IllegalArgumentException("Quantity can't be negative");
+                throw new IllegalArgumentException("Quantity can`t be negative");
             }
         }
     }

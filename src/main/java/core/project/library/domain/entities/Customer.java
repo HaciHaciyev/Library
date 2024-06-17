@@ -136,13 +136,13 @@ public class Customer {
                     email, address, events, new HashSet<>());
         }
         private void validate() {
-            Objects.requireNonNull(id, "id can't be null");
-            Objects.requireNonNull(firstName, "firstName can't be null");
-            Objects.requireNonNull(lastName, "lastName can't be null");
-            Objects.requireNonNull(password, "password can't be null");
-            Objects.requireNonNull(email, "email can't be null");
-            Objects.requireNonNull(address, "address can't be null");
-            Objects.requireNonNull(events, "events can't be null");
+            Objects.requireNonNull(id, "id can`t be null");
+            Objects.requireNonNull(firstName, "firstName can`t be null");
+            Objects.requireNonNull(lastName, "lastName can`t be null");
+            Objects.requireNonNull(password, "password can`t be null");
+            Objects.requireNonNull(email, "email can`t be null");
+            Objects.requireNonNull(address, "address can`t be null");
+            Objects.requireNonNull(events, "events can`t be null");
         }
     }
 }

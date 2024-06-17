@@ -1,5 +1,7 @@
 package core.project.library.application.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.library.application.model.CustomerDTO;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.LastName;
@@ -27,28 +29,45 @@ import java.util.stream.Stream;
 
 import static core.project.library.infrastructure.utilities.ValueObjects.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CustomerController.class)
 class CustomerControllerTest {
 
+    private static final Faker faker = new Faker();
     @Autowired
     MockMvc mockMvc;
-
+    @Autowired
+    ObjectMapper objectMapper;
     @MockBean
     CustomerRepository customerRepository;
-
-    private static final Faker faker = new Faker();
 
     @Nested
     @DisplayName("FindById endpoint")
     class FindByIdTests {
 
         private static final String FIND_BY_ID = "/library/customer/findById/";
+
+        private static Stream<Arguments> randomCustomer() {
+            Supplier<Customer> customerSupplier = () -> Customer.builder()
+                    .id(UUID.randomUUID())
+                    .firstName(randomFirstName())
+                    .lastName(randomLastName())
+                    .password(randomPassword())
+                    .email(randomEmail())
+                    .address(randomAddress())
+                    .events(new Events())
+                    .build();
+
+            return Stream.generate(() -> arguments(customerSupplier.get()))
+                    .limit(1);
+        }
 
         @ParameterizedTest
         @MethodSource("randomCustomer")
@@ -85,21 +104,6 @@ class CustomerControllerTest {
 
             assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
-
-        private static Stream<Arguments> randomCustomer() {
-            Supplier<Customer> customerSupplier = () -> Customer.builder()
-                    .id(UUID.randomUUID())
-                    .firstName(randomFirstName())
-                    .lastName(randomLastName())
-                    .password(randomPassword())
-                    .email(randomEmail())
-                    .address(randomAddress())
-                    .events(new Events())
-                    .build();
-
-            return Stream.generate(() -> arguments(customerSupplier.get()))
-                    .limit(1);
-        }
     }
 
     @Nested
@@ -107,6 +111,27 @@ class CustomerControllerTest {
     class FindByLastNameTests {
 
         private static final String FIND_BY_LAST_NAME = "/library/customer/findByLastName/";
+
+        private static Stream<Arguments> customersWithSameLastName() {
+            String lastName = faker.name().lastName();
+
+            Supplier<Customer> customerSupplier = () -> Customer.builder()
+                    .id(UUID.randomUUID())
+                    .firstName(randomFirstName())
+                    .lastName(new LastName(lastName))
+                    .password(randomPassword())
+                    .email(randomEmail())
+                    .address(randomAddress())
+                    .events(new Events())
+                    .build();
+
+            List<Customer> customers = Stream.generate(customerSupplier)
+                    .limit(5)
+                    .toList();
+
+            return Stream.generate(() -> arguments(customers, lastName))
+                    .limit(5);
+        }
 
         @ParameterizedTest
         @MethodSource("customersWithSameLastName")
@@ -116,7 +141,7 @@ class CustomerControllerTest {
                     .thenReturn(Optional.of(customerList));
 
             mockMvc.perform(get(FIND_BY_LAST_NAME + lastName)
-                    .accept(MediaType.APPLICATION_JSON))
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpectAll(
                             status().isOk(),
                             content().contentType(MediaType.APPLICATION_JSON),
@@ -142,26 +167,48 @@ class CustomerControllerTest {
 
             assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
+    }
 
-        private static Stream<Arguments> customersWithSameLastName() {
-            String lastName = faker.name().lastName();
+    @Nested
+    @DisplayName("Save customer endpoint")
+    class SaveCustomerTests {
 
-            Supplier<Customer> customerSupplier = () -> Customer.builder()
-                            .id(UUID.randomUUID())
-                            .firstName(randomFirstName())
-                            .lastName(new LastName(lastName))
-                            .password(randomPassword())
-                            .email(randomEmail())
-                            .address(randomAddress())
-                            .events(new Events())
-                            .build();
+        private static Stream<Arguments> validDTO() {
+            CustomerDTO dto = new CustomerDTO(
+                    randomFirstName(),
+                    randomLastName(),
+                    randomPassword(),
+                    randomEmail(),
+                    randomAddress()
+            );
 
-            List<Customer> customers = Stream.generate(customerSupplier)
-                    .limit(5)
-                    .toList();
+            return Stream.generate(() -> arguments(dto)).limit(1);
+        }
 
-            return Stream.generate(() -> arguments(customers, lastName))
-                    .limit(5);
+        @ParameterizedTest
+        @MethodSource("validDTO")
+        @DisplayName("accept valid customerDTO")
+        void acceptValidDTO(CustomerDTO customerDTO) throws Exception {
+            when(customerRepository.isEmailExists(customerDTO.email())).thenReturn(false);
+
+            mockMvc.perform(post("/library/customer/saveCustomer")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(customerDTO)))
+                    .andExpect(status().isCreated())
+                    .andExpect(header().exists("Location"));
+        }
+
+        @ParameterizedTest
+        @MethodSource("validDTO")
+        @DisplayName("reject if email exists")
+        void rejectInvalidEmail(CustomerDTO customerDTO) {
+            when(customerRepository.isEmailExists(customerDTO.email())).thenReturn(true);
+
+            assertThatThrownBy(() ->
+                    mockMvc.perform(post("/library/customer/saveCustomer")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(customerDTO))))
+                    .hasMessageContaining("Email was be used");
         }
     }
 }

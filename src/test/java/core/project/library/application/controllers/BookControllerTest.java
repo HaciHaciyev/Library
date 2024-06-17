@@ -1,5 +1,7 @@
 package core.project.library.application.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.library.application.model.BookDTO;
 import core.project.library.application.service.BookService;
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
@@ -7,6 +9,7 @@ import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.Category;
 import core.project.library.domain.value_objects.FirstName;
+import core.project.library.domain.value_objects.ISBN;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import core.project.library.infrastructure.repository.BookRepository;
@@ -38,11 +41,13 @@ import java.util.stream.Stream;
 
 import static core.project.library.infrastructure.utilities.ValueObjects.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
@@ -52,10 +57,12 @@ class BookControllerTest {
     private static final Faker faker = new Faker();
     @Autowired
     MockMvc mockMvc;
+    @Autowired
+    ObjectMapper objectMapper;
     @MockBean
-    BookService service;
+    BookService bookService;
     @MockBean
-    BookRepository repository;
+    BookRepository bookRepository;
     @MockBean
     AuthorRepository authorRepository;
     @MockBean
@@ -118,7 +125,7 @@ class BookControllerTest {
         @MethodSource("randomBook")
         @DisplayName("Accept valid UUID")
         void acceptValidId(Book book) throws Exception {
-            when(service.findById(any(UUID.class)))
+            when(bookService.findById(any(UUID.class)))
                     .thenReturn(Optional.of(book));
 
             MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + book.getId().toString())
@@ -134,7 +141,7 @@ class BookControllerTest {
         @DisplayName("Reject UUID of non existent book")
         void rejectInvalidId() throws Exception {
             UUID nonExistent = UUID.randomUUID();
-            when(service.findById(nonExistent))
+            when(bookService.findById(nonExistent))
                     .thenReturn(Optional.empty());
 
             MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + nonExistent)
@@ -163,7 +170,7 @@ class BookControllerTest {
         @DisplayName("Accept existing name")
         void acceptExistingName(Book book) throws Exception {
             String title = book.getTitle().title();
-            when(service.findByTitle(title))
+            when(bookService.findByTitle(title))
                     .thenReturn(Optional.of(book));
 
             mockMvc.perform(get(FIND_BY_NAME + title)
@@ -176,7 +183,7 @@ class BookControllerTest {
         @DisplayName("Throw exception in case of no match")
         void testNoMatch() throws Exception {
             String title = "title";
-            when(service.findByTitle(title))
+            when(bookService.findByTitle(title))
                     .thenReturn(Optional.empty());
 
             MvcResult mvcResult = mockMvc.perform(get(FIND_BY_NAME + title)
@@ -270,7 +277,7 @@ class BookControllerTest {
         @MethodSource("bookList")
         @DisplayName("Get list of books")
         void getListOfBooks(List<Book> books, int pageSize) throws Exception {
-            when(service.listOfBooks(0, pageSize, null, null))
+            when(bookService.listOfBooks(0, pageSize, null, null))
                     .thenReturn(books);
 
             mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=%s"
@@ -284,7 +291,7 @@ class BookControllerTest {
         @MethodSource("bookListByCategory")
         @DisplayName("Get list of books sorted by category")
         void getListOfBookSortedByCategory(List<Book> books, String category, int pageSize) throws Exception {
-            when(service.listOfBooks(0, pageSize, category, null))
+            when(bookService.listOfBooks(0, pageSize, category, null))
                     .thenReturn(books);
             System.out.println(books);
 
@@ -299,7 +306,7 @@ class BookControllerTest {
         @Test
         @DisplayName("Reject invalid category")
         void rejectInvalidCategory() throws Exception {
-            when(service.listOfBooks(0, 10, "invalid", null))
+            when(bookService.listOfBooks(0, 10, "invalid", null))
                     .thenThrow(NotFoundException.class);
 
             MvcResult mvcResult = mockMvc.perform(
@@ -317,13 +324,13 @@ class BookControllerTest {
         @DisplayName("Get list of books sorted by author")
         void getListOfBooksSortedByAuthor(List<Book> books,
                                           String author, int pageSize) throws Exception {
-            when(service.listOfBooks(0, pageSize, null, author)).thenReturn(books);
+            when(bookService.listOfBooks(0, pageSize, null, author)).thenReturn(books);
 
             mockMvc.perform(get("/library/book/pageOfBook?pageNumber=0&pageSize=%s&author=%s"
-                                    .formatted(pageSize, author))
-                                    .accept(MediaType.APPLICATION_JSON))
+                            .formatted(pageSize, author))
+                            .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").isNotEmpty())
+                    .andExpect(jsonPath("$").isNotEmpty())
                     .andReturn();
         }
 
@@ -331,7 +338,7 @@ class BookControllerTest {
         @DisplayName("Reject invalid author")
         void rejectInvalidAuthor() throws Exception {
             String category = "Adventure";
-            when(service.listOfBooks(0, 10, category, "invalid"))
+            when(bookService.listOfBooks(0, 10, category, "invalid"))
                     .thenThrow(NotFoundException.class);
 
             MvcResult mvcResult = mockMvc.perform(
@@ -343,5 +350,108 @@ class BookControllerTest {
 
             assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
         }
+    }
+
+    @Nested
+    @DisplayName("Save book endpoint")
+    class SaveBookEndpoint {
+
+        private static Stream<Arguments> validDTO() {
+            BookDTO bookDTO = new BookDTO(randomTitle(),
+                    randomDescription(),
+                    randomISBN13(),
+                    BigDecimal.ONE,
+                    1,
+                    randomCategory());
+
+            return Stream.generate(() -> arguments(bookDTO)).limit(1);
+        }
+
+        private static Stream<Arguments> validDTO_ValidPublisher_ValidAuthors() {
+            BookDTO bookDTO = new BookDTO(randomTitle(),
+                    randomDescription(),
+                    randomISBN13(),
+                    BigDecimal.ONE,
+                    1,
+                    randomCategory());
+
+            List<Author> authors = List.copyOf(authorSupplier().get());
+
+            return Stream.generate(() -> arguments(
+                    bookDTO,
+                    publisherSupplier().get(),
+                    authors
+            )).limit(1);
+        }
+
+        @ParameterizedTest
+        @MethodSource("validDTO_ValidPublisher_ValidAuthors")
+        @DisplayName("accept valid bookDTO, publisherId, and authors")
+        void acceptValidDTO(BookDTO dto, Publisher publisher, List<Author> authors) throws Exception {
+            when(bookService.isIsbnExists(dto.isbn())).thenReturn(false);
+            when(publisherRepository.isPublisherExists(publisher.getId())).thenReturn(true);
+            when(publisherRepository.findById(publisher.getId())).thenReturn(Optional.of(publisher));
+            authors.forEach(author -> when(authorRepository.isAuthorExists(author.getId())).thenReturn(true));
+            authors.forEach(author -> when(authorRepository.findById(author.getId())).thenReturn(Optional.of(author)));
+
+            List<UUID> authorIds = authors.stream().map(Author::getId).toList();
+
+            mockMvc.perform(post("/library/book/saveBook")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto))
+                            .param("publisherId", publisher.getId().toString())
+                            .param("authorsId", authorIds.toString().replaceAll("[\\[\\]]", "")))
+                    .andExpect(status().isCreated())
+                    .andExpect(header().exists("Location"));
+        }
+
+        @ParameterizedTest
+        @MethodSource("validDTO")
+        @DisplayName("reject invalid bookDTO isbn")
+        void rejectInvalidISBN(BookDTO dto) {
+            when(bookService.isIsbnExists(any(ISBN.class))).thenReturn(true);
+
+            assertThatThrownBy(() ->
+                    mockMvc.perform(post("/library/book/saveBook")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto))
+                            .param("publisherId", UUID.randomUUID().toString())
+                            .param("authorsId", UUID.randomUUID().toString())))
+                    .hasMessageContaining("ISBN was be used");
+        }
+
+        @ParameterizedTest
+        @MethodSource("validDTO")
+        @DisplayName("reject when publisher is not found")
+        void rejectInvalidPublisher(BookDTO dto) {
+            when(bookService.isIsbnExists(any(ISBN.class))).thenReturn(false);
+            when(publisherRepository.isPublisherExists(any(UUID.class))).thenReturn(false);
+
+            assertThatThrownBy(() ->
+                    mockMvc.perform(post("/library/book/saveBook")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto))
+                            .param("publisherId", UUID.randomUUID().toString())
+                            .param("authorsId", UUID.randomUUID().toString())))
+                    .hasMessageContaining("Publisher don`t found");
+        }
+
+        @ParameterizedTest
+        @MethodSource("validDTO")
+        @DisplayName("reject when author/s is not found")
+        void rejectInvalidAuthor(BookDTO dto) {
+            when(bookService.isIsbnExists(any(ISBN.class))).thenReturn(false);
+            when(publisherRepository.isPublisherExists(any(UUID.class))).thenReturn(true);
+            when(authorRepository.isAuthorExists(any(UUID.class))).thenReturn(false);
+
+            assertThatThrownBy(() ->
+                    mockMvc.perform(post("/library/book/saveBook")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto))
+                            .param("publisherId", UUID.randomUUID().toString())
+                            .param("authorsId", UUID.randomUUID().toString())))
+                    .hasMessageContaining("Author was not found");
+        }
+
     }
 }
