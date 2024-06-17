@@ -1,6 +1,6 @@
 package core.project.library.application.controllers;
 
-import core.project.library.application.mappers.*;
+import core.project.library.infrastructure.mappers.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;

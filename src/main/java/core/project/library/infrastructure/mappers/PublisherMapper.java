@@ -1,4 +1,4 @@
-package core.project.library.application.mappers;
+package core.project.library.infrastructure.mappers;
 
 import core.project.library.application.model.PublisherDTO;
 import core.project.library.application.model.PublisherModel;
