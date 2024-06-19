@@ -1,6 +1,6 @@
 package core.project.library.domain.value_objects;
 
-import core.project.library.infrastructure.utilities.ValueObjects;
+import core.project.library.application.bootstrap.Bootstrap;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -93,7 +93,7 @@ class AddressTests {
     @DisplayName("Addresses with random values")
     void shouldCreateAddressWithRandomValues() {
         assertThatNoException()
-                .isThrownBy(ValueObjects::randomAddress);
+                .isThrownBy(Bootstrap::randomAddress);
     }
 
     @Nested

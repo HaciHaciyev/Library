@@ -1,6 +1,7 @@
 package core.project.library.application.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.library.application.bootstrap.Bootstrap;
 import core.project.library.application.model.AuthorDTO;
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.events.Events;
@@ -28,7 +29,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static core.project.library.infrastructure.utilities.ValueObjects.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
@@ -60,10 +60,10 @@ public class AuthorControllerTest {
         private static Stream<Arguments> author() {
             Supplier<Author> authorSupplier = () -> Author.builder()
                     .id(UUID.randomUUID())
-                    .firstName(randomFirstName())
-                    .lastName(randomLastName())
-                    .email(randomEmail())
-                    .address(randomAddress())
+                    .firstName(Bootstrap.randomFirstName())
+                    .lastName(Bootstrap.randomLastName())
+                    .email(Bootstrap.randomEmail())
+                    .address(Bootstrap.randomAddress())
                     .events(new Events())
                     .build();
 
@@ -115,10 +115,10 @@ public class AuthorControllerTest {
             String lastName = faker.name().lastName();
             Supplier<Author> authorSupplier = () -> Author.builder()
                     .id(UUID.randomUUID())
-                    .firstName(randomFirstName())
+                    .firstName(Bootstrap.randomFirstName())
                     .lastName(new LastName(lastName))
-                    .email(randomEmail())
-                    .address(randomAddress())
+                    .email(Bootstrap.randomEmail())
+                    .address(Bootstrap.randomAddress())
                     .events(new Events())
                     .build();
 
@@ -155,10 +155,10 @@ public class AuthorControllerTest {
     class SaveAuthorEndpoint {
 
         private static Stream<Arguments> authorDTO() {
-            AuthorDTO authorDTO = new AuthorDTO(randomFirstName(),
-                    randomLastName(),
-                    randomEmail(),
-                    randomAddress());
+            AuthorDTO authorDTO = new AuthorDTO(Bootstrap.randomFirstName(),
+                    Bootstrap.randomLastName(),
+                    Bootstrap.randomEmail(),
+                    Bootstrap.randomAddress());
 
             return Stream.generate(() -> arguments(authorDTO)).limit(1);
         }

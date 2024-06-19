@@ -1,6 +1,7 @@
 package core.project.library.application.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.library.application.bootstrap.Bootstrap;
 import core.project.library.application.model.CustomerDTO;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
@@ -27,7 +28,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static core.project.library.infrastructure.utilities.ValueObjects.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
@@ -57,11 +57,11 @@ class CustomerControllerTest {
         private static Stream<Arguments> randomCustomer() {
             Supplier<Customer> customerSupplier = () -> Customer.builder()
                     .id(UUID.randomUUID())
-                    .firstName(randomFirstName())
-                    .lastName(randomLastName())
-                    .password(randomPassword())
-                    .email(randomEmail())
-                    .address(randomAddress())
+                    .firstName(Bootstrap.randomFirstName())
+                    .lastName(Bootstrap.randomLastName())
+                    .password(Bootstrap.randomPassword())
+                    .email(Bootstrap.randomEmail())
+                    .address(Bootstrap.randomAddress())
                     .events(new Events())
                     .build();
 
@@ -117,11 +117,11 @@ class CustomerControllerTest {
 
             Supplier<Customer> customerSupplier = () -> Customer.builder()
                     .id(UUID.randomUUID())
-                    .firstName(randomFirstName())
+                    .firstName(Bootstrap.randomFirstName())
                     .lastName(new LastName(lastName))
-                    .password(randomPassword())
-                    .email(randomEmail())
-                    .address(randomAddress())
+                    .password(Bootstrap.randomPassword())
+                    .email(Bootstrap.randomEmail())
+                    .address(Bootstrap.randomAddress())
                     .events(new Events())
                     .build();
 
@@ -175,11 +175,11 @@ class CustomerControllerTest {
 
         private static Stream<Arguments> validDTO() {
             CustomerDTO dto = new CustomerDTO(
-                    randomFirstName(),
-                    randomLastName(),
-                    randomPassword(),
-                    randomEmail(),
-                    randomAddress()
+                    Bootstrap.randomFirstName(),
+                    Bootstrap.randomLastName(),
+                    Bootstrap.randomPassword(),
+                    Bootstrap.randomEmail(),
+                    Bootstrap.randomAddress()
             );
 
             return Stream.generate(() -> arguments(dto)).limit(1);

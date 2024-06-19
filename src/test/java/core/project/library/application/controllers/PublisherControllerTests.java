@@ -1,6 +1,7 @@
 package core.project.library.application.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.library.application.bootstrap.Bootstrap;
 import core.project.library.application.model.PublisherDTO;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
@@ -26,8 +27,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static core.project.library.infrastructure.utilities.Domain.publisher;
-import static core.project.library.infrastructure.utilities.ValueObjects.*;
+import static core.project.library.application.bootstrap.Bootstrap.publisher;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -86,13 +86,13 @@ public class PublisherControllerTests {
     class FindByNameEndpointTest {
 
         private static Stream<Arguments> getPublishersByName() {
-            PublisherName name = randomPublisherName();
+            PublisherName name = Bootstrap.randomPublisherName();
             Supplier<Publisher> supplier = () -> Publisher.builder()
                     .id(UUID.randomUUID())
                     .publisherName(name)
-                    .address(randomAddress())
-                    .phone(randomPhone())
-                    .email(randomEmail())
+                    .address(Bootstrap.randomAddress())
+                    .phone(Bootstrap.randomPhone())
+                    .email(Bootstrap.randomEmail())
                     .events(new Events())
                     .build();
 
@@ -132,14 +132,14 @@ public class PublisherControllerTests {
     class SavePublisherEndpointTest {
 
         private static Stream<Arguments> getPublisherDTO() {
-            PublisherDTO dto = new PublisherDTO(
-                    randomPublisherName(),
-                    randomAddress(),
-                    randomPhone(),
-                    randomEmail()
+            Supplier<PublisherDTO> supplier = () -> new PublisherDTO(
+                    Bootstrap.randomPublisherName(),
+                    Bootstrap.randomAddress(),
+                    Bootstrap.randomPhone(),
+                    Bootstrap.randomEmail()
             );
 
-            return Stream.of(arguments(dto));
+            return Stream.generate(() -> arguments(supplier.get())).limit(1);
         }
 
         @ParameterizedTest

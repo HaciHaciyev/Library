@@ -1,6 +1,7 @@
 package core.project.library.application.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.library.application.bootstrap.Bootstrap;
 import core.project.library.application.model.BookDTO;
 import core.project.library.application.service.BookService;
 import core.project.library.domain.entities.Author;
@@ -40,7 +41,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static core.project.library.infrastructure.utilities.ValueObjects.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.core.Is.is;
@@ -75,13 +75,13 @@ class BookControllerTest {
 
         return () -> Book.builder()
                 .id(UUID.randomUUID())
-                .title(randomTitle())
-                .description(randomDescription())
-                .isbn(randomISBN13())
+                .title(Bootstrap.randomTitle())
+                .description(Bootstrap.randomDescription())
+                .isbn(Bootstrap.randomISBN13())
                 .price(BigDecimal.ONE)
                 .quantityOnHand(1)
                 .events(new Events())
-                .category(randomCategory())
+                .category(Bootstrap.randomCategory())
                 .publisher(publisherSupplier.get())
                 .authors(authorSupplier.get())
                 .build();
@@ -91,10 +91,10 @@ class BookControllerTest {
         int random = ThreadLocalRandom.current().nextInt(1, 4);
         return () -> Stream.generate(() -> Author.builder()
                 .id(UUID.randomUUID())
-                .firstName(randomFirstName())
-                .lastName(randomLastName())
-                .email(randomEmail())
-                .address(randomAddress())
+                .firstName(Bootstrap.randomFirstName())
+                .lastName(Bootstrap.randomLastName())
+                .email(Bootstrap.randomEmail())
+                .address(Bootstrap.randomAddress())
                 .events(new Events())
                 .build()).limit(random).collect(Collectors.toSet());
     }
@@ -102,10 +102,10 @@ class BookControllerTest {
     private static Supplier<Publisher> publisherSupplier() {
         return () -> Publisher.builder()
                 .id(UUID.randomUUID())
-                .publisherName(randomPublisherName())
-                .address(randomAddress())
-                .phone(randomPhone())
-                .email(randomEmail())
+                .publisherName(Bootstrap.randomPublisherName())
+                .address(Bootstrap.randomAddress())
+                .phone(Bootstrap.randomPhone())
+                .email(Bootstrap.randomEmail())
                 .events(new Events())
                 .build();
     }
@@ -213,14 +213,14 @@ class BookControllerTest {
         private static Stream<Arguments> bookListByCategory() {
             Supplier<Publisher> publisherSupplier = publisherSupplier();
             Supplier<Set<Author>> authorSupplier = authorSupplier();
-            Category category = randomCategory();
+            Category category = Bootstrap.randomCategory();
 
             Supplier<Book> bookSupplier = () ->
                     Book.builder()
                             .id(UUID.randomUUID())
-                            .title(randomTitle())
-                            .description(randomDescription())
-                            .isbn(randomISBN13())
+                            .title(Bootstrap.randomTitle())
+                            .description(Bootstrap.randomDescription())
+                            .isbn(Bootstrap.randomISBN13())
                             .price(BigDecimal.ONE)
                             .quantityOnHand(1)
                             .events(new Events())
@@ -246,22 +246,22 @@ class BookControllerTest {
                 return Stream.generate(() -> Author.builder()
                         .id(UUID.randomUUID())
                         .firstName(new FirstName(name))
-                        .lastName(randomLastName())
-                        .email(randomEmail())
-                        .address(randomAddress())
+                        .lastName(Bootstrap.randomLastName())
+                        .email(Bootstrap.randomEmail())
+                        .address(Bootstrap.randomAddress())
                         .events(new Events())
                         .build()).limit(numberOfAuthors).collect(Collectors.toSet());
             };
 
             Supplier<Book> bookSupplier = () -> Book.builder()
                     .id(UUID.randomUUID())
-                    .title(randomTitle())
-                    .description(randomDescription())
-                    .isbn(randomISBN13())
+                    .title(Bootstrap.randomTitle())
+                    .description(Bootstrap.randomDescription())
+                    .isbn(Bootstrap.randomISBN13())
                     .price(BigDecimal.ONE)
                     .quantityOnHand(1)
                     .events(new Events())
-                    .category(randomCategory())
+                    .category(Bootstrap.randomCategory())
                     .publisher(publisherSupplier.get())
                     .authors(authorSupplier.get())
                     .build();
@@ -358,23 +358,23 @@ class BookControllerTest {
     class SaveBookEndpoint {
 
         private static Stream<Arguments> validDTO() {
-            BookDTO bookDTO = new BookDTO(randomTitle(),
-                    randomDescription(),
-                    randomISBN13(),
+            BookDTO bookDTO = new BookDTO(Bootstrap.randomTitle(),
+                    Bootstrap.randomDescription(),
+                    Bootstrap.randomISBN13(),
                     BigDecimal.ONE,
                     1,
-                    randomCategory());
+                    Bootstrap.randomCategory());
 
             return Stream.generate(() -> arguments(bookDTO)).limit(1);
         }
 
         private static Stream<Arguments> validDTO_ValidPublisher_ValidAuthors() {
-            BookDTO bookDTO = new BookDTO(randomTitle(),
-                    randomDescription(),
-                    randomISBN13(),
+            BookDTO bookDTO = new BookDTO(Bootstrap.randomTitle(),
+                    Bootstrap.randomDescription(),
+                    Bootstrap.randomISBN13(),
                     BigDecimal.ONE,
                     1,
-                    randomCategory());
+                    Bootstrap.randomCategory());
 
             List<Author> authors = List.copyOf(authorSupplier().get());
 

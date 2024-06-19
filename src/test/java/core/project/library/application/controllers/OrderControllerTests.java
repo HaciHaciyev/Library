@@ -1,6 +1,8 @@
 package core.project.library.application.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import core.project.library.DomainProviders;
+import core.project.library.application.bootstrap.Bootstrap;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
@@ -28,7 +30,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static core.project.library.infrastructure.utilities.Domain.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.any;
@@ -56,7 +57,7 @@ public class OrderControllerTests {
     class FindByIdEndpointTest {
 
         private static Stream<Arguments> getOrder() {
-            return Stream.generate(() -> arguments(order().get())).limit(1);
+            return Stream.generate(() -> arguments(DomainProviders.order().get())).limit(1);
         }
 
         @ParameterizedTest
@@ -87,7 +88,7 @@ public class OrderControllerTests {
     class FindByCustomerIdEndpointTest {
 
         private static Stream<Arguments> orderAndCustomerId() {
-            List<Order> orders = Stream.generate(() -> order().get()).limit(5).toList();
+            List<Order> orders = Stream.generate(() -> DomainProviders.order().get()).limit(5).toList();
             return Stream.generate(() -> arguments(orders, UUID.randomUUID())).limit(1);
         }
 
@@ -122,7 +123,7 @@ public class OrderControllerTests {
     class FindByBookIdEndpointTest {
 
         private static Stream<Arguments> orderAndBookId() {
-            List<Order> orders = Stream.generate(() -> order().get()).limit(5).toList();
+            List<Order> orders = Stream.generate(() -> DomainProviders.order().get()).limit(5).toList();
             return Stream.generate(() -> arguments(orders, UUID.randomUUID())).limit(1);
         }
 
@@ -155,12 +156,12 @@ public class OrderControllerTests {
     class CreateOrderEndpointTest {
 
         private static Stream<Arguments> customerAndBooks() {
-            List<Book> books = Stream.generate(book()).limit(5).toList();
-            return Stream.generate(() -> arguments(customer().get(), books)).limit(1);
+            List<Book> books = Stream.generate(DomainProviders.book()).limit(5).toList();
+            return Stream.generate(() -> arguments(Bootstrap.customer().get(), books)).limit(1);
         }
 
         private static Stream<Arguments> getCustomer() {
-            return Stream.of(arguments(customer().get()));
+            return Stream.of(arguments(Bootstrap.customer().get()));
         }
 
         @ParameterizedTest
