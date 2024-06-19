@@ -44,7 +44,6 @@ public class OrderControllerTests {
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
-
     @MockBean
     BookRepository bookRepository;
     @MockBean
@@ -169,7 +168,6 @@ public class OrderControllerTests {
         @DisplayName("Accept valid customer and book ids")
         void acceptValidCustomerAndBook(Customer customer, List<Book> books) throws Exception {
             when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
-            books.forEach(book -> when(bookRepository.isBookExists(book.getId())).thenReturn(true));
             books.forEach(book -> when(bookRepository.findById(book.getId())).thenReturn(Optional.of(book)));
 
             List<UUID> bookIds = books.stream().map(Book::getId).toList();
@@ -203,8 +201,6 @@ public class OrderControllerTests {
         @MethodSource("getCustomer")
         @DisplayName("reject when book does not exist")
         void rejectInvalidBookId(Customer customer) {
-            when(bookRepository.isBookExists(any(UUID.class))).thenReturn(false);
-
             MvcResult mvcResult = mockMvc.perform(post("/library/order/createOrder")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(customer))

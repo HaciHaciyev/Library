@@ -31,23 +31,10 @@ public class BookRepository {
         return jdbcTemplate.queryForObject("Select COUNT(id) from Books", Integer.class);
     }
 
-    public boolean isBookExists(UUID verifiableBookId) {
-        try {
-            UUID bookId = jdbcTemplate.queryForObject(
-                    isExists,
-                    (rs, rowNum) -> UUID.fromString(rs.getString("id")),
-                    verifiableBookId.toString()
-            );
-            return bookId != null;
-        } catch (EmptyResultDataAccessException e) {
-            return false;
-        }
-    }
-
     public boolean isIsbnExists(ISBN verifiableIsbn) {
         try {
             ISBN isbn = jdbcTemplate.queryForObject(
-                    findISBN,
+                    "Select isbn from Books where isbn = ?",
                     (rs, rowNum) -> new ISBN(rs.getString("isbn")),
                     verifiableIsbn.isbn()
             );
@@ -208,6 +195,18 @@ public class BookRepository {
         }
     }
 
+    public void updateBook(Book foundBook) {
+        jdbcTemplate.update("""
+            Update Books Set
+                 description = ?,
+                 price = ?,
+                 quantity_on_hand = ?
+            Where id = ?
+            """, foundBook.getDescription().description(),
+                foundBook.getPrice(), foundBook.getQuantityOnHand(),
+                foundBook.getId().toString());
+    }
+
     public static int buildLimit(Integer pageSize) {
         int limit;
         if (pageSize > 0 && pageSize < 25) {
@@ -233,12 +232,6 @@ public class BookRepository {
     }
 
     private static final String byId = "WHERE b.id = '%s'";
-
-    private static final String isExists =
-            "Select id from Books where id=?";
-
-    private static final String findISBN =
-            "Select isbn from Books where isbn = ?";
 
     private static final String sqlForBooksId = """
     Select id from Books LIMIT %s OFFSET %s

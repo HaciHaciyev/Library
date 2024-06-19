@@ -32,10 +32,11 @@ public class BookController {
 
     private final BookService bookService;
 
+    private final BookRepository bookRepository;
+
     private final AuthorRepository authorRepository;
 
     private final PublisherRepository publisherRepository;
-    private final BookRepository bookRepository;
 
     @GetMapping("/findById/{bookId}")
     final ResponseEntity<BookModel> findById(@PathVariable("bookId") UUID bookId) {
@@ -106,5 +107,21 @@ public class BookController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Location", String.format("/library/book/findById/%s", book.getId().toString()));
         return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/patchBook/{bookId}")
+    final ResponseEntity<Void> updateBook(@PathVariable("bookId") UUID bookId,
+                                          @RequestParam(required = false) String description,
+                                          @RequestParam(required = false) Double price,
+                                          @RequestParam(required = false) Integer quantityOnHand) {
+        boolean isAllValuesNull = price == null && description == null && quantityOnHand == null;
+
+        if (isAllValuesNull) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } else {
+            bookService.patchBook(bookId, description, price, quantityOnHand);
+        }
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

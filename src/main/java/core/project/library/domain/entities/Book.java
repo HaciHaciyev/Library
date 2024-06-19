@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 public class Book {
     private final UUID id;
     private final Title title;
-    private final Description description;
+    private Description description;
     private final ISBN isbn;
-    private final BigDecimal price;
-    private final Integer quantityOnHand;
+    private BigDecimal price;
+    private Integer quantityOnHand;
     private final Category category;
     private final Events events;
     private final /**@ManyToOne*/ Publisher publisher;
@@ -36,8 +36,32 @@ public class Book {
         return new HashSet<>(orders);
     }
 
+    public Description getDescription() {
+        return new Description(description.description());
+    }
+
+    public BigDecimal getPrice() {
+        return BigDecimal.valueOf(price.doubleValue());
+    }
+
+    public Integer getQuantityOnHand() {
+        return price.intValue();
+    }
+
     public static Builder builder() {
         return new Builder();
+    }
+
+    public void changeDescription(Description description) {
+        this.description = description;
+    }
+
+    public void changePrice(Double price) {
+        this.price = BigDecimal.valueOf(price);
+    }
+
+    public void changeQuantityOnHand(Integer quantityOnHand) {
+        this.quantityOnHand = quantityOnHand;
     }
 
     @Override
