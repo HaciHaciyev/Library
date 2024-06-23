@@ -45,7 +45,7 @@ public class Book {
     }
 
     public Integer getQuantityOnHand() {
-        return price.intValue();
+        return quantityOnHand;
     }
 
     public static Builder builder() {

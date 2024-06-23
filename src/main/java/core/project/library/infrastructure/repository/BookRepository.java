@@ -177,10 +177,15 @@ public class BookRepository {
                                   quantity_on_hand, category, creation_date, last_modified_date)
                                   values (?,?,?,?,?,?,?,?,?,?)
                         """,
-                book.getId().toString(), book.getPublisher().getId().toString(),
-                book.getTitle().title(), book.getDescription().description(),
-                book.getIsbn().isbn(), book.getPrice(), book.getQuantityOnHand(),
-                book.getCategory().toString(), book.getEvents().creation_date(),
+                book.getId().toString(),
+                book.getPublisher().getId().toString(),
+                book.getTitle().title(),
+                book.getDescription().description(),
+                book.getIsbn().isbn(),
+                book.getPrice(),
+                book.getQuantityOnHand(),
+                book.getCategory().toString(),
+                book.getEvents().creation_date(),
                 book.getEvents().last_update_date()
         );
 

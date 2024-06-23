@@ -27,7 +27,7 @@ import java.util.UUID;
 @RequestMapping("/library/order")
 @RequiredArgsConstructor
 public class OrderController {
-
+//TODO
     private final OrderMapper mapper;
 
     private final BookRepository bookRepository;
@@ -45,22 +45,22 @@ public class OrderController {
                 ));
     }
 
-    @GetMapping("/findByCustomerId/{customerIdForOrders}")
-    final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(mapper.listOfModel(orderRepository
-                        .findByCustomerId(customerId)));
-    }
+//    @GetMapping("/findByCustomerId/{customerIdForOrders}")
+//    final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(mapper.listOfModel(orderRepository
+//                        .findByCustomerId(customerId)));
+//    }
 
-    @GetMapping("/findByBookId/{bookIdForOrders}")
-    final ResponseEntity<List<OrderModel>> findByBookId(@PathVariable("bookIdForOrders")UUID bookId) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(orderRepository
-                        .findByBookId(bookId)
-                        .stream().map(mapper::toModel).toList());
-    }
+//    @GetMapping("/findByBookId/{bookIdForOrders}")
+//    final ResponseEntity<List<OrderModel>> findByBookId(@PathVariable("bookIdForOrders")UUID bookId) {
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(orderRepository
+//                        .findByBookId(bookId)
+//                        .stream().map(mapper::toModel).toList());
+//    }
 
     @PostMapping("/createOrder")
     final ResponseEntity<Void> createOrder(@RequestParam UUID customerId,
@@ -83,7 +83,7 @@ public class OrderController {
                 .books(books)
                 .build();
 
-        orderRepository.completelySaveOrder(order);
+        orderRepository.save(order);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Location", String.format("/library/order/findById/%s", order.getId()));

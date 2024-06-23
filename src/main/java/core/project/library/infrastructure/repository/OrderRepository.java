@@ -3,9 +3,11 @@ package core.project.library.infrastructure.repository;
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
-import org.springframework.dao.EmptyResultDataAccessException;
+import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.Result;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -17,122 +19,8 @@ import java.util.*;
 @Repository
 public class OrderRepository {
 
-    private final JdbcTemplate jdbcTemplate;
-
-    public OrderRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
-    public Optional<Order> findById(UUID orderId) {
-        try {
-            return Optional.ofNullable(
-                    jdbcTemplate.query(
-                            connection -> connection.prepareStatement(
-                                    String.format(sqlForGetOrder, orderId.toString()),
-                                    ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                    ResultSet.CONCUR_READ_ONLY
-                            ),
-                            new RowToOrder()
-                    ).getFirst()
-            );
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
-    }
-
-    public List<Order> findByCustomerId(UUID customerId) {
-        try {
-            var listOfOrders = new ArrayList<Order>();
-            Set<UUID> ordersId = new HashSet<>(
-                    jdbcTemplate.query(
-                            String.format(sqlForOrdersIdByCustomerId, customerId.toString()),
-                            (rs, rowNum) -> UUID.fromString(rs.getString("id"))
-                    )
-            );
-
-            ordersId.forEach(id ->
-                    listOfOrders.add(
-                            jdbcTemplate.query(
-                                    connection -> connection.prepareStatement(
-                                            String.format(sqlForGetOrder, id),
-                                            ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                            ResultSet.CONCUR_READ_ONLY
-                                    ),
-                                    new RowToOrder()
-                            ).getFirst()
-                    )
-            );
-            return listOfOrders;
-        } catch (EmptyResultDataAccessException e) {
-            return Collections.emptyList();
-        }
-    }
-
-    public List<Order> findByBookId(UUID bookId) {
-        try {
-            var listOfOrders = new ArrayList<Order>();
-            Set<UUID> ordersId = new HashSet<>(
-                    jdbcTemplate.query(
-                            String.format(sqlForOrdersIdByBookId, bookId.toString()),
-                            (rs, rowNum) -> UUID.fromString(rs.getString("id"))
-                    )
-            );
-
-            ordersId.forEach(id ->
-                    listOfOrders.add(
-                            jdbcTemplate.query(
-                                    connection -> connection.prepareStatement(
-                                            String.format(sqlForGetOrder, id),
-                                            ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                            ResultSet.CONCUR_READ_ONLY
-                                    ),
-                                    new RowToOrder()
-                            ).getFirst()
-                    )
-            );
-            return listOfOrders;
-        } catch (EmptyResultDataAccessException e) {
-            return Collections.emptyList();
-        }
-    }
-
-    public void completelySaveOrder(Order order) {
-        jdbcTemplate.update("""
-                        Insert into Orders (id, customer_id,
-                                        count_of_book, total_price,
-                                        creation_date, last_modified_date)
-                                        values (?,?,?,?,?,?)
-                        """,
-                order.getId().toString(), order.getCustomer().getId().toString(),
-                order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
-                order.getEvents().creation_date(), order.getEvents().last_update_date()
-        );
-
-        for (Book book : order.getBooks()) {
-            jdbcTemplate.update("""
-                        Insert into Book_Order (book_id, order_id)
-                                    values (?,?)
-                        """,
-                    book.getId().toString(),
-                    order.getId().toString()
-            );
-        }
-    }
-
-    private static final String sqlForOrdersIdByCustomerId = """
-            Select Orders.id From Orders
-            Where Orders.customer_id = '%s'
-            """;
-
-    private static final String sqlForOrdersIdByBookId = """
-            Select Orders.id From Orders
-            JOIN Book_Order On Orders.id = Book_Order.order_id
-            JOIN Books On Book_Order.book_id = Books.id
-            WHERE Books.id = '%s'
-            """;
-
-    private static final String sqlForGetOrder = """
-            Select
+    private static final String GET_ORDER_BY_ID = """
+            SELECT
               o.id AS order_id,
               o.count_of_book AS order_count_of_book,
               o.total_price AS order_total_price,
@@ -192,124 +80,273 @@ public class OrderRepository {
             WHERE o.id = '%s'
             """;
 
-    private static final class RowToOrder implements RowMapper<Order> {
-        @Override
-        public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
-            try {
-                var listOfBooks = new HashSet<Book>();
-                int countOfRowsScrollForBooksOfOrder = 0;
-                do {
-                    Publisher publisher = Publisher.builder()
-                            .id(UUID.fromString(rs.getString("publisher_id")))
-                            .publisherName(new PublisherName(rs.getString("publisher_name")))
-                            .address(new Address(
-                                            rs.getString("publisher_state"),
-                                            rs.getString("publisher_city"),
-                                            rs.getString("publisher_street"),
-                                            rs.getString("publisher_home")
-                                    )
-                            )
-                            .phone(new Phone(rs.getString("publisher_phone")))
-                            .email(new Email(rs.getString("publisher_email")))
-                            .events(new Events(
-                                            rs.getObject("publisher_creation_date",
-                                                    Timestamp.class).toLocalDateTime(),
-                                            rs.getObject("publisher_last_modified_date",
-                                                    Timestamp.class).toLocalDateTime()
-                                    )
-                            )
-                            .build();
+    private final JdbcTemplate jdbcTemplate;
 
-                    int countOfRowsScrollForBookAuthors = 0;
-                    Set<Author> authors = new LinkedHashSet<>();
-                    do {
-                        Author author = Author.builder()
-                                .id(UUID.fromString(rs.getString("author_id")))
-                                .firstName(new FirstName(rs.getString("author_first_name")))
-                                .lastName(new LastName(rs.getString("author_last_name")))
-                                .email(new Email(rs.getString("author_email")))
-                                .address(new Address(
-                                                rs.getString("author_state"),
-                                                rs.getString("author_city"),
-                                                rs.getString("author_street"),
-                                                rs.getString("author_home")
-                                        )
-                                )
-                                .events(new Events(
-                                                rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
-                                                rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
-                                        )
-                                )
-                                .build();
-                        authors.add(author);
-                        countOfRowsScrollForBookAuthors++;
-                    } while (rs.next());
+    public OrderRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
-                    while (countOfRowsScrollForBookAuthors != 0) {
-                        rs.previous();
-                        countOfRowsScrollForBookAuthors--;
-                    }
+    public Result<Order, Exception> findById(UUID orderId) {
+        try {
+            Order order = jdbcTemplate.query(getStatement(orderId),
+                    this::mapOrder);
 
-                    Book book = Book.builder()
-                            .id(UUID.fromString(rs.getString("book_id")))
-                            .title(new Title(rs.getString("book_title")))
-                            .description(new Description(rs.getString("book_description")))
-                            .isbn(new ISBN(rs.getString("book_isbn")))
-                            .price(new BigDecimal(rs.getString("book_price")))
-                            .quantityOnHand(rs.getInt("book_quantity"))
-                            .category(Category.valueOf(rs.getString("book_category")))
-                            .events(new Events(
-                                            rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
-                                            rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
-                                    )
-                            )
-                            .publisher(publisher)
-                            .authors(authors)
-                            .build();
-                    listOfBooks.add(book);
-                    countOfRowsScrollForBooksOfOrder++;
-                } while (rs.next());
+            return Result.success(order);
 
-                while (countOfRowsScrollForBooksOfOrder != 0) {
-                    rs.previous();
-                    countOfRowsScrollForBooksOfOrder--;
-                }
-
-                Customer customer = Customer.builder()
-                        .id(UUID.fromString(rs.getString("customer_id")))
-                        .firstName(new FirstName(rs.getString("customer_first_name")))
-                        .lastName(new LastName(rs.getString("customer_last_name")))
-                        .password(new Password(rs.getString("customer_password")))
-                        .email(new Email(rs.getString("customer_email")))
-                        .address(new Address(
-                                rs.getString("customer_state"),
-                                rs.getString("customer_city"),
-                                rs.getString("customer_street"),
-                                rs.getString("customer_home")
-                                )
-                        )
-                        .events(new Events(
-                                rs.getObject("customer_creation_date", Timestamp.class).toLocalDateTime(),
-                                rs.getObject("customer_last_modified_date", Timestamp.class).toLocalDateTime()
-                                )
-                        )
-                        .build();
-
-                return Order.builder()
-                        .id(UUID.fromString(rs.getString("order_id")))
-                        .countOfBooks(rs.getInt("order_count_of_book"))
-                        .totalPrice(new TotalPrice(new BigDecimal(rs.getString("order_total_price"))))
-                        .events(new Events(
-                                rs.getObject("order_creation_date", Timestamp.class).toLocalDateTime(),
-                                rs.getObject("order_last_modified_date", Timestamp.class).toLocalDateTime()
-                                )
-                        )
-                        .customer(customer)
-                        .books(listOfBooks)
-                        .build();
-            } catch (EmptyResultDataAccessException e) {
-                return null;
-            }
+        } catch (DataAccessException e) {
+            return Result.failure(new NotFoundException("Couldn't find order"));
         }
+    }
+
+    //Constructs scrollable resultSet with given id
+    private PreparedStatementCreator getStatement(UUID id) {
+        return connection -> connection.prepareStatement(
+                GET_ORDER_BY_ID.formatted(id.toString()),
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY
+        );
+    }
+
+    public Result<List<Order>, Exception> findByCustomerId(UUID customerId) {
+        try {
+            String findByCustomerId = """
+                    SELECT Orders.id FROM Orders
+                    WHERE Orders.customer_id = ?
+                    """;
+
+            List<Order> orders = jdbcTemplate.query(
+                            findByCustomerId,
+                            (rs, _) -> UUID.fromString(rs.getString("id")),
+                            customerId.toString())
+                    .stream()
+                    .distinct()
+                    .map(this::mapUUIDToOrder)
+                    .toList();
+
+            return Result.success(orders);
+
+        } catch (DataAccessException e) {
+            return Result.failure(new NotFoundException("Couldn't find orders"));
+        }
+    }
+
+    public Result<List<Order>, Exception> findByBookId(UUID bookId) {
+        try {
+            String findByBookId = """
+                    Select Orders.id FROM Orders
+                    JOIN Book_Order ON Orders.id = Book_Order.order_id
+                    JOIN Books ON Book_Order.book_id = Books.id
+                    WHERE Books.id = ?
+                    """;
+
+            List<Order> orders = jdbcTemplate.query(
+                            findByBookId,
+                            (rs, _) -> UUID.fromString(rs.getString("id")),
+                            bookId.toString())
+                    .stream()
+                    .distinct()
+                    .map(this::mapUUIDToOrder)
+                    .toList();
+
+            return Result.success(orders);
+
+        } catch (DataAccessException e) {
+            return Result.failure(new NotFoundException("Couldn't find orders"));
+        }
+    }
+
+    private Order mapUUIDToOrder(UUID uuid) throws DataAccessException {
+        return jdbcTemplate.query(
+                getStatement(uuid),
+                this::mapOrder
+        );
+    }
+
+    public Result<Order, Exception> save(Order order) {
+        try {
+            jdbcTemplate.update("""
+                            INSERT INTO Orders (id, customer_id,
+                                            count_of_book, total_price,
+                                            creation_date, last_modified_date)
+                                            VALUES (?,?,?,?,?,?)
+                            """,
+                    order.getId().toString(), order.getCustomer().getId().toString(),
+                    order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
+                    order.getEvents().creation_date(), order.getEvents().last_update_date()
+            );
+
+            order.getBooks().forEach(book ->
+                    jdbcTemplate.update("""
+                                    INSERT INTO Book_Order (book_id, order_id)
+                                                VALUES (?,?)
+                                    """,
+                            book.getId().toString(),
+                            order.getId().toString()
+                    ));
+
+            return Result.success(order);
+        } catch (DataAccessException e) {
+            return Result.failure(e);
+        }
+    }
+
+    private Order mapOrder(ResultSet rs) throws SQLException {
+
+        //TODO refactor and fix
+        rs.first();
+        var listOfBooks = new HashSet<Book>();
+
+        int countOfRowsScrollForBooksOfOrder = 0;
+        // scroll books
+        do {
+            String bookId = rs.getString("book_id");
+
+            // get publisher for book
+            Publisher publisher = mapPublisher(rs);
+
+            int countOfRowsScrollForBookAuthors = 0;
+            Set<Author> authors = new LinkedHashSet<>();
+
+            // scroll authors
+            if (rs.getRow() == 1) {
+                Author author = mapAuthor(rs);
+                authors.add(author);
+            }
+            do {
+                if (bookId.equals(rs.getString("book_id"))) {
+                    Author author = mapAuthor(rs);
+                    authors.add(author);
+                }
+                countOfRowsScrollForBookAuthors++;
+            } while (rs.next());
+
+            // scroll back from authors
+            while (countOfRowsScrollForBookAuthors != 0) {
+                rs.previous();
+                countOfRowsScrollForBookAuthors--;
+            }
+
+            // construct book
+            Book book = mapBook(rs, publisher, authors);
+
+            listOfBooks.add(book);
+            countOfRowsScrollForBooksOfOrder++;
+        } while (rs.next());
+
+        // scroll back from books
+//        while (countOfRowsScrollForBooksOfOrder != 0) {
+//            rs.previous();
+//            countOfRowsScrollForBooksOfOrder--;
+//        }
+        rs.first();
+
+        Customer customer = mapCustomer(rs);
+
+        return constructOrder(rs, customer, listOfBooks);
+    }
+
+    private Order constructOrder(ResultSet rs, Customer customer, HashSet<Book> listOfBooks) throws SQLException {
+        Events events = new Events(
+                rs.getObject("order_creation_date", Timestamp.class).toLocalDateTime(),
+                rs.getObject("order_last_modified_date", Timestamp.class).toLocalDateTime()
+        );
+
+        return Order.builder()
+                .id(UUID.fromString(rs.getString("order_id")))
+                .countOfBooks(rs.getInt("order_count_of_book"))
+                .totalPrice(new TotalPrice(new BigDecimal(rs.getString("order_total_price"))))
+                .events(events)
+                .customer(customer)
+                .books(listOfBooks)
+                .build();
+    }
+
+    private Customer mapCustomer(ResultSet rs) throws SQLException {
+        Address address = new Address(
+                rs.getString("customer_state"),
+                rs.getString("customer_city"),
+                rs.getString("customer_street"),
+                rs.getString("customer_home")
+        );
+
+        Events events = new Events(
+                rs.getObject("customer_creation_date", Timestamp.class).toLocalDateTime(),
+                rs.getObject("customer_last_modified_date", Timestamp.class).toLocalDateTime()
+        );
+
+        return Customer.builder()
+                .id(UUID.fromString(rs.getString("customer_id")))
+                .firstName(new FirstName(rs.getString("customer_first_name")))
+                .lastName(new LastName(rs.getString("customer_last_name")))
+                .password(new Password(rs.getString("customer_password")))
+                .email(new Email(rs.getString("customer_email")))
+                .address(address)
+                .events(events)
+                .build();
+    }
+
+    private Book mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
+        Events events = new Events(
+                rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
+                rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
+        );
+
+        return Book.builder()
+                .id(UUID.fromString(rs.getString("book_id")))
+                .title(new Title(rs.getString("book_title")))
+                .description(new Description(rs.getString("book_description")))
+                .isbn(new ISBN(rs.getString("book_isbn")))
+                .price(new BigDecimal(rs.getString("book_price")))
+                .quantityOnHand(rs.getInt("book_quantity"))
+                .category(Category.valueOf(rs.getString("book_category")))
+                .events(events)
+                .publisher(publisher)
+                .authors(authors)
+                .build();
+    }
+
+    private Author mapAuthor(ResultSet rs) throws SQLException {
+        Address address = new Address(
+                rs.getString("author_state"),
+                rs.getString("author_city"),
+                rs.getString("author_street"),
+                rs.getString("author_home")
+        );
+        Events events = new Events(
+                rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
+                rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
+        );
+
+        return Author.builder()
+                .id(UUID.fromString(rs.getString("author_id")))
+                .firstName(new FirstName(rs.getString("author_first_name")))
+                .lastName(new LastName(rs.getString("author_last_name")))
+                .email(new Email(rs.getString("author_email")))
+                .address(address)
+                .events(events)
+                .build();
+    }
+
+    private Publisher mapPublisher(ResultSet rs) throws SQLException {
+        Address address = new Address(
+                rs.getString("publisher_state"),
+                rs.getString("publisher_city"),
+                rs.getString("publisher_street"),
+                rs.getString("publisher_home")
+        );
+
+        Events events = new Events(
+                rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
+                rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
+        );
+
+        return Publisher.builder()
+                .id(UUID.fromString(rs.getString("publisher_id")))
+                .publisherName(new PublisherName(rs.getString("publisher_name")))
+                .address(address)
+                .phone(new Phone(rs.getString("publisher_phone")))
+                .email(new Email(rs.getString("publisher_email")))
+                .events(events)
+                .build();
     }
 }

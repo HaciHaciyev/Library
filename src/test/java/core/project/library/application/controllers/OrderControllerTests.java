@@ -7,6 +7,7 @@ import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
 import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.Result;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.CustomerRepository;
 import core.project.library.infrastructure.repository.OrderRepository;
@@ -18,16 +19,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
+import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,16 +39,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(OrderController.class)
+@AutoConfigureDataJdbc
 public class OrderControllerTests {
-
+//TODO
     @Autowired
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
     @MockBean
     BookRepository bookRepository;
-    @MockBean
-    OrderRepository orderRepository;
+
+    @Autowired
+    OrderRepository orderRepositoryActual;
+
+    @MockBean(name = "orderRepositoryMock")
+    OrderRepository mockOrderRepo;
+
+
     @MockBean
     CustomerRepository customerRepository;
 
@@ -64,9 +71,9 @@ public class OrderControllerTests {
         @MethodSource("getOrder")
         @DisplayName("Accept valid uuid")
         void acceptValidUuid(Order order) throws Exception {
-            when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+//            when(mockOrderRepo.findById(order.getId())).thenReturn(Optional.of(order));
 
-            mockMvc.perform(get("/library/order/findById/" + order.getId())
+            mockMvc.perform(get("/library/order/findById/" + "cc44dcec-1a4f-472e-aa01-4cbc9b50bba4")
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isNotEmpty());
@@ -75,7 +82,7 @@ public class OrderControllerTests {
         @Test
         @DisplayName("Reject invalid id")
         void rejectInvalidId() throws Exception {
-            when(orderRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+            when(mockOrderRepo.findById(any(UUID.class))).thenReturn(Optional.empty());
 
             mockMvc.perform(get("/library/order/findById/" + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
@@ -96,7 +103,7 @@ public class OrderControllerTests {
         @MethodSource("orderAndCustomerId")
         @DisplayName("accept valid customer id")
         void acceptValidCustomerId(List<Order> orders, UUID customerId) throws Exception {
-            when(orderRepository.findByCustomerId(customerId)).thenReturn(orders);
+            when(mockOrderRepo.findByCustomerId(customerId)).thenReturn(orders);
 
             mockMvc.perform(get("/library/order/findByCustomerId/" + customerId)
                             .accept(MediaType.APPLICATION_JSON))
@@ -108,7 +115,7 @@ public class OrderControllerTests {
         @Test
         @DisplayName("reject invalid customer id")
         void rejectInvalidCustomerId() throws Exception {
-            when(orderRepository.findByCustomerId(any(UUID.class))).thenReturn(Collections.emptyList());
+            when(mockOrderRepo.findByCustomerId(any(UUID.class))).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/library/order/findByCustomerId/" + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
@@ -131,7 +138,7 @@ public class OrderControllerTests {
         @MethodSource("orderAndBookId")
         @DisplayName("Accept valid book id")
         void acceptValidBookId(List<Order> orders, UUID bookId) throws Exception {
-            when(orderRepository.findByBookId(bookId)).thenReturn(orders);
+            when(mockOrderRepo.findByBookId(bookId)).thenReturn(Result.success(orders));
 
             mockMvc.perform(get("/library/order/findByBookId/" + bookId)
                             .accept(MediaType.APPLICATION_JSON))
@@ -142,7 +149,7 @@ public class OrderControllerTests {
         @Test
         @DisplayName("reject invalid book id")
         void rejectInvalidBookId() throws Exception {
-            when(orderRepository.findByBookId(any(UUID.class))).thenReturn(Collections.emptyList());
+            when(mockOrderRepo.findByBookId(any(UUID.class))).thenReturn(Result.failure(null));
 
             mockMvc.perform(get("/library/order/findByBookId/" + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
@@ -168,7 +175,7 @@ public class OrderControllerTests {
         @MethodSource("customerAndBooks")
         @DisplayName("Accept valid customer and book ids")
         void acceptValidCustomerAndBook(Customer customer, List<Book> books) throws Exception {
-            when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+            when(customerRepository.findById(customer.getId())).thenReturn(Result.success(customer));
             books.forEach(book -> when(bookRepository.findById(book.getId())).thenReturn(Optional.of(book)));
 
             List<UUID> bookIds = books.stream().map(Book::getId).toList();

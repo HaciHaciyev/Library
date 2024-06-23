@@ -10,9 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -24,7 +22,7 @@ public class Bootstrap implements CommandLineRunner {
 
     private static final Faker faker = new Faker();
 
-    private final int maxNumberOfAuthors = faker.number().numberBetween(1, 15);
+    private final int maxNumberOfAuthors = faker.number().numberBetween(5, 15);
     private final int maxNumberOfAuthorsPerBook = faker.number().numberBetween(1, 4);
     private final int maxNumberOfPublishers = faker.number().numberBetween(1, 5);
     private final int maxNumberOfCustomers = faker.number().numberBetween(1, 10);
@@ -198,14 +196,14 @@ public class Bootstrap implements CommandLineRunner {
 
     @Override
     public final void run(String... args) {
-        if (bookRepository.count() < 1) {
+//        if (bookRepository.count() < 1) {
             publishers.forEach(publisherRepository::savePublisher);
             authors.forEach(authorRepository::saveAuthor);
             books.forEach(bookRepository::completelySaveBook);
             customers.forEach(customerRepository::saveCustomer);
-            orders.forEach(orderRepository::completelySaveOrder);
+            orders.forEach(orderRepository::save);
             log.info("Bootstrap is completed basic values in database.");
-        }
+//        }
     }
 
     private Supplier<Book> bookSupplier() {
@@ -238,6 +236,8 @@ public class Bootstrap implements CommandLineRunner {
             if (maxCountOfBooksForOrder > 1) {
                 countOfBooks = faker.number().numberBetween(1, maxCountOfBooksForOrder);
             }
+            // TODO possible issue with set
+            Set<Book> books = getBooksForOrder(countOfBooks);
 
             return Order.builder()
                     .id(UUID.randomUUID())
@@ -245,7 +245,7 @@ public class Bootstrap implements CommandLineRunner {
                     .totalPrice(randomTotalPrice())
                     .events(new Events())
                     .customer(customers.get(randomCustomer))
-                    .books(getBooksForOrder(countOfBooks))
+                    .books(books)
                     .build();
         };
     }
@@ -257,7 +257,13 @@ public class Bootstrap implements CommandLineRunner {
     }
 
     private void populateAuthors() {
-        var authorSupplier = (Supplier<Author>) () -> Author.builder()
+        authors = Stream.generate(authorSupplier())
+                .limit(maxNumberOfAuthors)
+                .toList();
+    }
+
+    public static Supplier<Author> authorSupplier() {
+        return () -> Author.builder()
                 .id(UUID.randomUUID())
                 .firstName(randomFirstName())
                 .lastName(randomLastName())
@@ -265,14 +271,12 @@ public class Bootstrap implements CommandLineRunner {
                 .address(randomAddress())
                 .events(new Events())
                 .build();
-        authors = Stream.generate(authorSupplier)
-                .limit(maxNumberOfAuthors)
-                .toList();
     }
 
     private void populateBooks() {
         var bookSupplier = bookSupplier();
         books = Stream.generate(bookSupplier)
+                .distinct()
                 .limit(maxNumberOfBooks)
                 .toList();
     }
@@ -292,6 +296,8 @@ public class Bootstrap implements CommandLineRunner {
     }
 
     private Set<Book> getBooksForOrder(int countOfBooks) {
+//        List<Book> booksForOrder = books.stream().distinct().toList();
+
         return Stream.generate(() -> {
             int randomBook = faker.number().numberBetween(0, maxNumberOfBooks);
             return books.get(randomBook);

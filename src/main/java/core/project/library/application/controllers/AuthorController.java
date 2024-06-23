@@ -2,16 +2,16 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.model.AuthorDTO;
 import core.project.library.domain.entities.Author;
-import core.project.library.domain.events.Events;
-import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.Result;
 import core.project.library.infrastructure.mappers.AuthorMapper;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,41 +30,44 @@ public class AuthorController {
 
     @GetMapping("/findById/{authorId}")
     final ResponseEntity<AuthorDTO> findById(@PathVariable("authorId") UUID authorId) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(authorMapper.toDTO(
-                        authorRepository.findById(authorId).orElseThrow(NotFoundException::new)
-                ));
+        var author = authorRepository
+                .findById(authorId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Author's not found"));
+
+        return ResponseEntity.ok(authorMapper.toDTO(author));
     }
 
     @GetMapping("/findByLastName/{authorLastName}")
     final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("authorLastName") String authorLastName) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(authorMapper.listOfDTO(authorRepository
-                        .findByLastName(authorLastName)
-                        .orElseThrow(NotFoundException::new)));
+        var authors = authorRepository
+                .findByLastName(authorLastName)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Author's not found"));
+
+        return ResponseEntity.ok(authorMapper.listOfDTO(authors));
     }
 
     @PostMapping("/saveAuthor")
-    final ResponseEntity<Void> saveAuthor(@RequestBody @Valid AuthorDTO authorDTO) {
-        if (authorRepository.isEmailExists(authorDTO.email())) {
-            throw new IllegalArgumentException("Email was be used");
+    final ResponseEntity<String> saveAuthor(@RequestBody @Valid AuthorDTO authorDTO) {
+        Author author = authorMapper.authorFromDTO(authorDTO);
+
+        var authorResult = authorRepository.saveAuthor(author);
+
+        authorResult.ifFailure(this::throwIfFailure);
+
+        Author savedAuthor = authorResult.value();
+
+        return ResponseEntity
+                .created(URI.create("/library/author/findById/" + savedAuthor.getId()))
+                .body("Successfully saved author");
+    }
+
+    private void throwIfFailure(Exception e) {
+        if (e instanceof IllegalArgumentException) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Couldn't save author");
         }
-
-        Author author = Author.builder()
-                .id(UUID.randomUUID())
-                .firstName(authorDTO.firstName())
-                .lastName(authorDTO.lastName())
-                .email(authorDTO.email())
-                .address(authorDTO.address())
-                .events(new Events())
-                .build();
-
-        authorRepository.saveAuthor(author);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Location", String.format("/library/author/findById/%s", author.getId().toString()));
-        return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
     }
 }

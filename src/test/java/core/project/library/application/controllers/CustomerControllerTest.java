@@ -6,7 +6,8 @@ import core.project.library.application.model.CustomerDTO;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.LastName;
-import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.Result;
+import core.project.library.infrastructure.mappers.CustomerMapper;
 import core.project.library.infrastructure.repository.CustomerRepository;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
@@ -20,18 +21,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.core.Every.everyItem;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -45,8 +45,12 @@ class CustomerControllerTest {
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
+
     @MockBean
-    CustomerRepository customerRepository;
+    CustomerRepository mockRepo;
+
+    @MockBean
+    CustomerMapper mockMapper;
 
     @Nested
     @DisplayName("FindById endpoint")
@@ -54,26 +58,27 @@ class CustomerControllerTest {
 
         private static final String FIND_BY_ID = "/library/customer/findById/";
 
-        private static Stream<Arguments> randomCustomer() {
-            Supplier<Customer> customerSupplier = () -> Customer.builder()
-                    .id(UUID.randomUUID())
-                    .firstName(Bootstrap.randomFirstName())
-                    .lastName(Bootstrap.randomLastName())
-                    .password(Bootstrap.randomPassword())
-                    .email(Bootstrap.randomEmail())
-                    .address(Bootstrap.randomAddress())
-                    .events(new Events())
-                    .build();
+        private static Stream<Arguments> dtoEntity() {
+            Customer customer = Bootstrap.customer().get();
 
-            return Stream.generate(() -> arguments(customerSupplier.get()))
+            CustomerDTO dto = new CustomerDTO(
+                    customer.getFirstName(),
+                    customer.getLastName(),
+                    customer.getPassword(),
+                    customer.getEmail(),
+                    customer.getAddress()
+            );
+
+            return Stream.generate(() -> arguments(customer, dto))
                     .limit(1);
         }
 
         @ParameterizedTest
-        @MethodSource("randomCustomer")
+        @MethodSource("dtoEntity")
         @DisplayName("Accept UUID of existing customer")
-        void testExisting(Customer customer) throws Exception {
-            when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+        void testExisting(Customer customer, CustomerDTO customerDTO) throws Exception {
+            when(mockRepo.findById(customer.getId())).thenReturn(Result.success(customer));
+            when(mockMapper.toDTO(customer)).thenReturn(customerDTO);
 
             mockMvc.perform(get(FIND_BY_ID + customer.getId().toString())
                             .accept(MediaType.APPLICATION_JSON))
@@ -94,15 +99,15 @@ class CustomerControllerTest {
         @Test
         @DisplayName("Reject UUID of non existent customer")
         void testNonExistent() throws Exception {
-            UUID nonExistent = UUID.randomUUID();
-            when(customerRepository.findById(nonExistent)).thenReturn(Optional.empty());
+            when(mockRepo.findById(any(UUID.class))).thenReturn(Result.failure(null));
 
-            MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + nonExistent)
+            mockMvc.perform(get(FIND_BY_ID + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
-                    .andReturn();
-
-            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Customer not found");
+                    });
         }
     }
 
@@ -112,7 +117,7 @@ class CustomerControllerTest {
 
         private static final String FIND_BY_LAST_NAME = "/library/customer/findByLastName/";
 
-        private static Stream<Arguments> customersWithSameLastName() {
+        private static Stream<Arguments> customersDtosName() {
             String lastName = faker.name().lastName();
 
             Supplier<Customer> customerSupplier = () -> Customer.builder()
@@ -129,27 +134,31 @@ class CustomerControllerTest {
                     .limit(5)
                     .toList();
 
-            return Stream.generate(() -> arguments(customers, lastName))
+            List<CustomerDTO> dtos = customers.stream()
+                    .map(customer -> new CustomerDTO(customer.getFirstName(),
+                            customer.getLastName(),
+                            customer.getPassword(),
+                            customer.getEmail(),
+                            customer.getAddress()))
+                    .toList();
+
+            return Stream.generate(() -> arguments(customers, dtos, lastName))
                     .limit(5);
         }
 
         @ParameterizedTest
-        @MethodSource("customersWithSameLastName")
+        @MethodSource("customersDtosName")
         @DisplayName("Return customers with matching last name")
-        void testWithMatchingName(List<Customer> customerList, String lastName) throws Exception {
-            when(customerRepository.findByLastName(lastName))
-                    .thenReturn(Optional.of(customerList));
+        void testWithMatchingName(List<Customer> customerList, List<CustomerDTO> dtos, String lastName) throws Exception {
+            when(mockRepo.findByLastName(lastName)).thenReturn(Result.success(customerList));
+            when(mockMapper.listOfDTO(customerList)).thenReturn(dtos);
 
             mockMvc.perform(get(FIND_BY_LAST_NAME + lastName)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpectAll(
                             status().isOk(),
                             content().contentType(MediaType.APPLICATION_JSON),
-                            jsonPath("$.[0].lastName.lastName", is(lastName)),
-                            jsonPath("$.[1].lastName.lastName", is(lastName)),
-                            jsonPath("$.[2].lastName.lastName", is(lastName)),
-                            jsonPath("$.[3].lastName.lastName", is(lastName)),
-                            jsonPath("$.[4].lastName.lastName", is(lastName))
+                            jsonPath("$.[*].lastName.lastName", everyItem(is(lastName)))
                     );
         }
 
@@ -157,15 +166,15 @@ class CustomerControllerTest {
         @DisplayName("Throw exception in case of no match")
         void testNoMatch() throws Exception {
             String lastName = "lastName";
-            when(customerRepository.findByLastName(lastName)).thenReturn(Optional.empty());
+            when(mockRepo.findByLastName(lastName)).thenReturn(Result.failure(null));
 
-
-            MvcResult mvcResult = mockMvc.perform(get(FIND_BY_LAST_NAME + lastName)
+            mockMvc.perform(get(FIND_BY_LAST_NAME + lastName)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
-                    .andReturn();
-
-            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Customer not found");
+                    });
         }
     }
 
@@ -173,42 +182,51 @@ class CustomerControllerTest {
     @DisplayName("Save customer endpoint")
     class SaveCustomerTests {
 
-        private static Stream<Arguments> validDTO() {
+        private static Stream<Arguments> customerAndDTO() {
+            Customer customer = Bootstrap.customer().get();
+
             CustomerDTO dto = new CustomerDTO(
-                    Bootstrap.randomFirstName(),
-                    Bootstrap.randomLastName(),
-                    Bootstrap.randomPassword(),
-                    Bootstrap.randomEmail(),
-                    Bootstrap.randomAddress()
+                    customer.getFirstName(),
+                    customer.getLastName(),
+                    customer.getPassword(),
+                    customer.getEmail(),
+                    customer.getAddress()
             );
 
-            return Stream.generate(() -> arguments(dto)).limit(1);
+            return Stream.generate(() -> arguments(customer, dto)).limit(1);
         }
 
         @ParameterizedTest
-        @MethodSource("validDTO")
+        @MethodSource("customerAndDTO")
         @DisplayName("accept valid customerDTO")
-        void acceptValidDTO(CustomerDTO customerDTO) throws Exception {
-            when(customerRepository.isEmailExists(customerDTO.email())).thenReturn(false);
+        void acceptValidDTO(Customer customer, CustomerDTO customerDTO) throws Exception {
+            when(mockRepo.saveCustomer(customer)).thenReturn(Result.success(customer));
+            when(mockMapper.customerFromDTO(customerDTO)).thenReturn(customer);
 
             mockMvc.perform(post("/library/customer/saveCustomer")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(customerDTO)))
                     .andExpect(status().isCreated())
+                    .andExpect(content().string("Successfully saved customer"))
                     .andExpect(header().exists("Location"));
         }
 
         @ParameterizedTest
-        @MethodSource("validDTO")
+        @MethodSource("customerAndDTO")
         @DisplayName("reject if email exists")
-        void rejectInvalidEmail(CustomerDTO customerDTO) {
-            when(customerRepository.isEmailExists(customerDTO.email())).thenReturn(true);
+        void rejectInvalidEmail(Customer customer, CustomerDTO customerDTO) throws Exception {
+            when(mockRepo.saveCustomer(customer))
+                    .thenReturn(Result.failure(new IllegalArgumentException("Email already exists")));
+            when(mockMapper.customerFromDTO(customerDTO)).thenReturn(customer);
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(post("/library/customer/saveCustomer")
+            mockMvc.perform(post("/library/customer/saveCustomer")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(customerDTO))))
-                    .hasMessageContaining("Email was be used");
+                            .content(objectMapper.writeValueAsString(customerDTO)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Email already exists");
+                    });
         }
     }
 }

@@ -6,7 +6,8 @@ import core.project.library.application.model.AuthorDTO;
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.LastName;
-import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.Result;
+import core.project.library.infrastructure.mappers.AuthorMapper;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
@@ -21,18 +22,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.core.Every.everyItem;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -48,36 +48,42 @@ public class AuthorControllerTest {
     MockMvc mockMvc;
 
     @MockBean
-    AuthorRepository repository;
+    AuthorRepository mockRepo;
+
+    @MockBean
+    AuthorMapper mockMapper;
 
     @Autowired
     ObjectMapper objectMapper;
+
 
     @Nested
     @DisplayName("FindById endpoint")
     class FindByIdEndpoint {
 
-        private static Stream<Arguments> author() {
-            Supplier<Author> authorSupplier = () -> Author.builder()
-                    .id(UUID.randomUUID())
-                    .firstName(Bootstrap.randomFirstName())
-                    .lastName(Bootstrap.randomLastName())
-                    .email(Bootstrap.randomEmail())
-                    .address(Bootstrap.randomAddress())
-                    .events(new Events())
-                    .build();
+        public static final String FIND_BY_ID = "/library/author/findById/";
 
-            return Stream.generate(() -> arguments(authorSupplier.get()))
-                    .limit(1);
+        private static Stream<Arguments> dtoEntity() {
+            Author entity = Bootstrap.authorSupplier().get();
+
+            AuthorDTO authorDTO = new AuthorDTO(
+                    entity.getFirstName(),
+                    entity.getLastName(),
+                    entity.getEmail(),
+                    entity.getAddress()
+            );
+
+            return Stream.generate(() -> arguments(authorDTO, entity)).limit(1);
         }
 
         @ParameterizedTest
-        @MethodSource("author")
+        @MethodSource("dtoEntity")
         @DisplayName("Accept valid UUID")
-        void acceptValidUuid(Author author) throws Exception {
-            when(repository.findById(author.getId())).thenReturn(Optional.of(author));
+        void acceptValidUuid(AuthorDTO authorDTO, Author author) throws Exception {
+            when(mockRepo.findById(author.getId())).thenReturn(Result.success(author));
+            when(mockMapper.toDTO(author)).thenReturn(authorDTO);
 
-            mockMvc.perform(get("/library/author/findById/" + author.getId())
+            mockMvc.perform(get(FIND_BY_ID + author.getId())
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpectAll(
                             status().isOk(),
@@ -95,15 +101,15 @@ public class AuthorControllerTest {
         @Test
         @DisplayName("Reject invalid UUID")
         void rejectInvalidId() throws Exception {
-            UUID invalid = UUID.randomUUID();
-            when(repository.findById(invalid)).thenReturn(Optional.empty());
+            when(mockRepo.findById(any(UUID.class))).thenReturn(Result.failure(null));
 
-            MvcResult mvcResult = mockMvc.perform(get("/library/author/findById/" + invalid)
+            mockMvc.perform(get(FIND_BY_ID + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
-                    .andReturn();
-
-            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Author's not found");
+                    });
         }
     }
 
@@ -111,8 +117,11 @@ public class AuthorControllerTest {
     @DisplayName("FindByLastName endpoint")
     class FindByLastName {
 
-        private static Stream<Arguments> authors() {
+        public static final String FIND_BY_LAST_NAME = "/library/author/findByLastName/";
+
+        private static Stream<Arguments> authorsDtosName() {
             String lastName = faker.name().lastName();
+
             Supplier<Author> authorSupplier = () -> Author.builder()
                     .id(UUID.randomUUID())
                     .firstName(Bootstrap.randomFirstName())
@@ -123,30 +132,45 @@ public class AuthorControllerTest {
                     .build();
 
             List<Author> authors = Stream.generate(authorSupplier).limit(5).toList();
-            return Stream.generate(() -> arguments(authors, lastName)).limit(1);
+
+            List<AuthorDTO> dtos = authors.stream()
+                    .map(author -> new AuthorDTO(
+                            author.getFirstName(),
+                            author.getLastName(),
+                            author.getEmail(),
+                            author.getAddress()))
+                    .toList();
+
+            return Stream.generate(() -> arguments(authors, dtos, lastName)).limit(1);
         }
 
         @ParameterizedTest
-        @MethodSource("authors")
+        @MethodSource("authorsDtosName")
         @DisplayName("Return matching authors")
-        void returnMatchingAuthors(List<Author> authors, String lastName) throws Exception {
-            when(repository.findByLastName(lastName)).thenReturn(Optional.of(authors));
+        void returnMatchingAuthors(List<Author> authors, List<AuthorDTO> authorDTOS, String lastName) throws Exception {
+            when(mockRepo.findByLastName(lastName)).thenReturn(Result.success(authors));
+            when(mockMapper.listOfDTO(authors)).thenReturn(authorDTOS);
 
-            mockMvc.perform(get("/library/author/findByLastName/" + lastName)
+            mockMvc.perform(get(FIND_BY_LAST_NAME + lastName)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$[*].lastName.lastName", everyItem(is(lastName))));
         }
 
         @Test
         @DisplayName("Reject invalid name")
         void rejectInvalidName() throws Exception {
             String invalid = "invalid";
-            when(repository.findByLastName(invalid)).thenReturn(Optional.empty());
+            when(mockRepo.findByLastName(invalid)).thenReturn(Result.failure(null));
 
-            mockMvc.perform(get("/library/author/findByLastName/" + invalid)
+            mockMvc.perform(get(FIND_BY_LAST_NAME + invalid)
                             .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isNotFound());
+                    .andExpect(status().isNotFound())
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Author's not found");
+                    });
         }
     }
 
@@ -154,39 +178,48 @@ public class AuthorControllerTest {
     @DisplayName("Save author endpoint")
     class SaveAuthorEndpoint {
 
+        public static final String SAVE_AUTHOR = "/library/author/saveAuthor";
+
         private static Stream<Arguments> authorDTO() {
             AuthorDTO authorDTO = new AuthorDTO(Bootstrap.randomFirstName(),
                     Bootstrap.randomLastName(),
                     Bootstrap.randomEmail(),
                     Bootstrap.randomAddress());
 
-            return Stream.generate(() -> arguments(authorDTO)).limit(1);
+            Supplier<Author> supplier = Bootstrap.authorSupplier();
+            return Stream.generate(() -> arguments(authorDTO, supplier.get())).limit(1);
         }
 
         @ParameterizedTest
         @MethodSource("authorDTO")
         @DisplayName("accept valid DTO")
-        void acceptValidDTO(AuthorDTO authorDTO) throws Exception {
-            when(repository.isEmailExists(authorDTO.email())).thenReturn(false);
+        void acceptValidDTO(AuthorDTO authorDTO, Author author) throws Exception {
+            when(mockRepo.saveAuthor(author)).thenReturn(Result.success(author));
+            when(mockMapper.authorFromDTO(authorDTO)).thenReturn(author);
 
-            mockMvc.perform(post("/library/author/saveAuthor")
+            mockMvc.perform(post(SAVE_AUTHOR)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(authorDTO)))
                     .andExpect(status().isCreated())
+                    .andExpect(content().string("Successfully saved author"))
                     .andExpect(header().exists("Location"));
         }
 
         @ParameterizedTest
         @MethodSource("authorDTO")
         @DisplayName("reject DTO with existing email")
-        void rejectDTOWithExistingEmail(AuthorDTO authorDTO) {
-            when(repository.isEmailExists(authorDTO.email())).thenReturn(true);
+        void rejectDTOWithExistingEmail(AuthorDTO authorDTO, Author author) throws Exception {
+            when(mockRepo.saveAuthor(author)).thenReturn(Result.failure(new IllegalArgumentException("Email already exists")));
+            when(mockMapper.authorFromDTO(authorDTO)).thenReturn(author);
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(post("/library/author/saveAuthor")
+            mockMvc.perform(post(SAVE_AUTHOR)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(authorDTO))))
-                    .hasMessageContaining("Email was be used");
+                            .content(objectMapper.writeValueAsString(authorDTO)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Email already exists");
+                    });
         }
     }
 }

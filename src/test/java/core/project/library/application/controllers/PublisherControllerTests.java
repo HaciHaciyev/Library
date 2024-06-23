@@ -6,7 +6,8 @@ import core.project.library.application.model.PublisherDTO;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.PublisherName;
-import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.Result;
+import core.project.library.infrastructure.mappers.PublisherMapper;
 import core.project.library.infrastructure.repository.PublisherRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,19 +20,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static core.project.library.application.bootstrap.Bootstrap.publisher;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.core.Every.everyItem;
+import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -45,39 +46,65 @@ public class PublisherControllerTests {
     ObjectMapper objectMapper;
 
     @MockBean
-    PublisherRepository publisherRepository;
+    PublisherRepository mockRepo;
+
+    @MockBean
+    PublisherMapper mockMapper;
 
     @Nested
     @DisplayName("Find by id endpoint")
     class FindByIdEndpointTest {
 
-        private static Stream<Arguments> getPublisher() {
-            return Stream.of(arguments(publisher().get()));
+        public static final String FIND_BY_ID = "/library/publisher/findById/";
+
+        private static Stream<Arguments> publisherAndDTO() {
+            Publisher publisher = publisher().get();
+
+            PublisherDTO dto = new PublisherDTO(
+                    publisher.getPublisherName(),
+                    publisher.getAddress(),
+                    publisher.getPhone(),
+                    publisher.getEmail()
+            );
+
+            return Stream.of(arguments(publisher, dto));
         }
 
         @ParameterizedTest
-        @MethodSource("getPublisher")
+        @MethodSource("publisherAndDTO")
         @DisplayName("Accept valid publisher id")
-        void acceptValidPublisherId(Publisher publisher) throws Exception {
-            when(publisherRepository.findById(publisher.getId())).thenReturn(Optional.of(publisher));
+        void acceptValidPublisherId(Publisher publisher, PublisherDTO publisherDTO) throws Exception {
+            when(mockRepo.findById(publisher.getId())).thenReturn(Result.success(publisher));
+            when(mockMapper.toDTO(publisher)).thenReturn(publisherDTO);
 
-            mockMvc.perform(get("/library/publisher/findById/" + publisher.getId())
+            mockMvc.perform(get(FIND_BY_ID + publisher.getId().toString())
                             .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isNotEmpty());
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentType(MediaType.APPLICATION_JSON),
+                            jsonPath("$.publisherName.publisherName", is(publisher.getPublisherName().publisherName())),
+                            jsonPath("$.email.email", is(publisher.getEmail().email())),
+                            jsonPath("$.phone.phoneNumber", is(publisher.getPhone().phoneNumber())),
+                            jsonPath("$.address.state", is(publisher.getAddress().state())),
+                            jsonPath("$.address.city", is(publisher.getAddress().city())),
+                            jsonPath("$.address.street", is(publisher.getAddress().street())),
+                            jsonPath("$.address.home", is(publisher.getAddress().home()))
+                    );
+
         }
 
         @Test
         @DisplayName("reject invalid id")
         void rejectInvalidId() throws Exception {
-            when(publisherRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+            when(mockRepo.findById(any(UUID.class))).thenReturn(Result.failure(null));
 
-            MvcResult mvcResult = mockMvc.perform(get("/library/publisher/findById/" + UUID.randomUUID())
+            mockMvc.perform(get(FIND_BY_ID + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
-                    .andReturn();
-
-            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Publisher not found");
+                    });
         }
     }
 
@@ -85,8 +112,11 @@ public class PublisherControllerTests {
     @DisplayName("Find by name endpoint")
     class FindByNameEndpointTest {
 
-        private static Stream<Arguments> getPublishersByName() {
+        public static final String FIND_BY_NAME = "/library/publisher/findByName/";
+
+        private static Stream<Arguments> publishersDtosName() {
             PublisherName name = Bootstrap.randomPublisherName();
+
             Supplier<Publisher> supplier = () -> Publisher.builder()
                     .id(UUID.randomUUID())
                     .publisherName(name)
@@ -97,33 +127,50 @@ public class PublisherControllerTests {
                     .build();
 
             List<Publisher> publishers = Stream.generate(supplier).limit(5).toList();
-            return Stream.of(arguments(publishers, name.publisherName()));
+
+            List<PublisherDTO> dtos = publishers.stream()
+                    .map(publisher -> new PublisherDTO(
+                            publisher.getPublisherName(),
+                            publisher.getAddress(),
+                            publisher.getPhone(),
+                            publisher.getEmail()))
+                    .toList();
+
+            return Stream.of(arguments(publishers, dtos, name.publisherName()));
         }
 
         @ParameterizedTest
-        @MethodSource("getPublishersByName")
+        @MethodSource("publishersDtosName")
         @DisplayName("Accept publishers with same name")
-        void acceptPublishersWithSameName(List<Publisher> publishers, String name) throws Exception {
-            when(publisherRepository.findByName(name))
-                    .thenReturn(Optional.of(publishers));
+        void acceptPublishersWithSameName(List<Publisher> publishers,
+                                          List<PublisherDTO> dtos,
+                                          String name) throws Exception {
 
-            mockMvc.perform(get("/library/publisher/findByName/" + name)
+            when(mockRepo.findByName(name)).thenReturn(Result.success(publishers));
+            when(mockMapper.listOfDTO(publishers)).thenReturn(dtos);
+
+            mockMvc.perform(get(FIND_BY_NAME + name)
                             .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isNotEmpty());
+                    .andExpectAll(
+                            status().isOk(),
+                            content().contentType(MediaType.APPLICATION_JSON),
+                            jsonPath("$.[*].publisherName.publisherName", everyItem(is(name)))
+                    );
         }
 
         @Test
         @DisplayName("reject when no publisher found")
         void rejectWhenNoPublisherFound() throws Exception {
-            when(publisherRepository.findByName(anyString())).thenReturn(Optional.empty());
+            String name = "randomName";
+            when(mockRepo.findByName(name)).thenReturn(Result.failure(null));
 
-            MvcResult mvcResult = mockMvc.perform(get("/library/publisher/findByName/" + "random")
+            mockMvc.perform(get(FIND_BY_NAME + name)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
-                    .andReturn();
-
-            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Publisher not found");
+                    });
         }
     }
 
@@ -131,55 +178,88 @@ public class PublisherControllerTests {
     @DisplayName("Save publisher endpoint")
     class SavePublisherEndpointTest {
 
-        private static Stream<Arguments> getPublisherDTO() {
-            Supplier<PublisherDTO> supplier = () -> new PublisherDTO(
-                    Bootstrap.randomPublisherName(),
-                    Bootstrap.randomAddress(),
-                    Bootstrap.randomPhone(),
-                    Bootstrap.randomEmail()
+        public static final String SAVE_PUBLISHER = "/library/publisher/savePublisher";
+
+        private static Stream<Arguments> publisherAndDTO() {
+            Publisher publisher = publisher().get();
+
+            PublisherDTO dto = new PublisherDTO(
+                    publisher.getPublisherName(),
+                    publisher.getAddress(),
+                    publisher.getPhone(),
+                    publisher.getEmail()
             );
 
-            return Stream.generate(() -> arguments(supplier.get())).limit(1);
+            return Stream.generate(() -> arguments(publisher, dto)).limit(1);
         }
 
         @ParameterizedTest
-        @MethodSource("getPublisherDTO")
+        @MethodSource("publisherAndDTO")
         @DisplayName("Accept valid DTO")
-        void acceptValidDTO(PublisherDTO customerDTO) throws Exception {
-            when(publisherRepository.isEmailExists(customerDTO.email())).thenReturn(false);
-            when(publisherRepository.isPhoneExists(customerDTO.phone())).thenReturn(false);
+        void acceptValidDTO(Publisher publisher, PublisherDTO publisherDTO) throws Exception {
+            when(mockRepo.savePublisher(publisher)).thenReturn(Result.success(publisher));
+            when(mockMapper.publisherFromDTO(publisherDTO)).thenReturn(publisher);
 
-            mockMvc.perform(post("/library/publisher/savePublisher")
+            mockMvc.perform(post(SAVE_PUBLISHER)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(customerDTO)))
+                            .content(objectMapper.writeValueAsString(publisherDTO)))
                     .andExpect(status().isCreated())
+                    .andExpect(content().string("Successfully saved publisher"))
                     .andExpect(header().exists("Location"));
         }
 
         @ParameterizedTest
-        @MethodSource("getPublisherDTO")
-        @DisplayName("reject existing email")
-        void rejectExistingEmail(PublisherDTO customerDTO) {
-            when(publisherRepository.isEmailExists(customerDTO.email())).thenReturn(true);
+        @MethodSource("publisherAndDTO")
+        @DisplayName("reject existing publisher")
+        void rejectExistingPublisher(Publisher publisher, PublisherDTO publisherDTO) throws Exception {
+            when(mockRepo.savePublisher(publisher))
+                    .thenReturn(Result.failure(new IllegalArgumentException("Publisher already exists")));
+            when(mockMapper.publisherFromDTO(publisherDTO)).thenReturn(publisher);
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(post("/library/publisher/savePublisher")
+            mockMvc.perform(post(SAVE_PUBLISHER)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(customerDTO))))
-                    .hasMessageContaining("This email is used.");
+                            .content(objectMapper.writeValueAsString(publisherDTO)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Publisher already exists");
+                    });
         }
 
         @ParameterizedTest
-        @MethodSource("getPublisherDTO")
-        @DisplayName("reject existing phone number")
-        void rejectExistingPhoneNumber(PublisherDTO customerDTO) {
-            when(publisherRepository.isPhoneExists(customerDTO.phone())).thenReturn(true);
+        @MethodSource("publisherAndDTO")
+        @DisplayName("reject existing email")
+        void rejectExistingEmail(Publisher publisher, PublisherDTO publisherDTO) throws Exception {
+            when(mockRepo.savePublisher(publisher))
+                    .thenReturn(Result.failure(new IllegalArgumentException("Email already exists")));
+            when(mockMapper.publisherFromDTO(publisherDTO)).thenReturn(publisher);
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(post("/library/publisher/savePublisher")
+            mockMvc.perform(post(SAVE_PUBLISHER)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(customerDTO))))
-                    .hasMessageContaining("This phone is used.");
+                            .content(objectMapper.writeValueAsString(publisherDTO)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Email already exists");
+                    });
+        }
+
+        @ParameterizedTest
+        @MethodSource("publisherAndDTO")
+        @DisplayName("reject existing phone number")
+        void rejectExistingPhoneNumber(Publisher publisher, PublisherDTO publisherDTO) throws Exception {
+            when(mockRepo.savePublisher(publisher))
+                    .thenReturn(Result.failure(new IllegalArgumentException("Phone already exists")));
+            when(mockMapper.publisherFromDTO(publisherDTO)).thenReturn(publisher);
+
+            mockMvc.perform(post(SAVE_PUBLISHER)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(publisherDTO)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(result -> {
+                        String error = result.getResolvedException().getMessage();
+                        assertThat(error).contains("Phone already exists");
+                    });
         }
     }
 }

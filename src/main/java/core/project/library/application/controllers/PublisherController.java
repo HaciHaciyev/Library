@@ -4,6 +4,7 @@ import core.project.library.application.model.PublisherDTO;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.Result;
 import core.project.library.infrastructure.mappers.PublisherMapper;
 import core.project.library.infrastructure.repository.PublisherRepository;
 import jakarta.validation.Valid;
@@ -11,7 +12,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,45 +33,42 @@ public class PublisherController {
 
     @GetMapping("/findById/{publisherId}")
     final ResponseEntity<PublisherDTO> findById(@PathVariable("publisherId") UUID publisherId) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(publisherMapper.toDTO(
-                        publisherRepository.findById(publisherId).orElseThrow(NotFoundException::new))
-                );
+        var publisher = publisherRepository
+                .findById(publisherId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Publisher not found"));
+
+        return ResponseEntity.ok(publisherMapper.toDTO(publisher));
     }
 
     @GetMapping("/findByName/{publisherName}")
     final ResponseEntity<List<PublisherDTO>> findByName(@PathVariable("publisherName") String publisherName) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(publisherMapper.listOfDTO(publisherRepository
-                        .findByName(publisherName)
-                        .orElseThrow(NotFoundException::new)));
+        var publishers = publisherRepository
+                .findByName(publisherName)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Publisher not found"));
+
+        return ResponseEntity.ok(publisherMapper.listOfDTO(publishers));
     }
 
     @PostMapping("/savePublisher")
-    final ResponseEntity<Void> savePublisher(@RequestBody @Valid PublisherDTO publisherDTO) {
-        if (publisherRepository.isEmailExists(publisherDTO.email())) {
-            throw new IllegalArgumentException("This email is used.");
+    final ResponseEntity<String> savePublisher(@RequestBody @Valid PublisherDTO publisherDTO) {
+        Publisher publisher = publisherMapper.publisherFromDTO(publisherDTO);
+
+        var publisherResult = publisherRepository.savePublisher(publisher);
+
+        publisherResult.ifFailure(this::throwIfFailure);
+
+        Publisher savedPublisher = publisherResult.value();
+
+        return ResponseEntity
+                .created(URI.create("/library/publisher/findById/" + savedPublisher.getId()))
+                .body("Successfully saved publisher");
+    }
+
+    private void throwIfFailure(Exception e) {
+        if (e instanceof IllegalArgumentException) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Couldn't save publisher");
         }
-
-        if (publisherRepository.isPhoneExists(publisherDTO.phone())) {
-            throw new IllegalArgumentException("This phone is used.");
-        }
-
-        Publisher publisher = Publisher.builder()
-                .id(UUID.randomUUID())
-                .publisherName(publisherDTO.publisherName())
-                .address(publisherDTO.address())
-                .phone(publisherDTO.phone())
-                .email(publisherDTO.email())
-                .events(new Events())
-                .build();
-
-        publisherRepository.savePublisher(publisher);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Location", String.format("/library/publisher/findById/%s", publisher.getId().toString()));
-        return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
     }
 }
