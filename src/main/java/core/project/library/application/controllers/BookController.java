@@ -7,6 +7,7 @@ import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
+import core.project.library.domain.value_objects.ISBN;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.mappers.BookMapper;
 import core.project.library.infrastructure.repository.AuthorRepository;
@@ -47,32 +48,28 @@ public class BookController {
                 );
     }
 
-    @GetMapping("/findByTitle/{title}")
-    final ResponseEntity<BookModel> findByName(@PathVariable("title") String title) {
+    @GetMapping("/findByISBN/{isbn}")
+    final ResponseEntity<BookModel> findByISBN(@PathVariable("isbn") String inboundedISBN) {
+        ISBN isbn = new ISBN(inboundedISBN);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(bookMapper.toModel(
-                        bookService.findByTitle(title).orElseThrow(NotFoundException::new)
-                ));
+                        bookService.findByISBN(isbn).orElseThrow(NotFoundException::new))
+                );
     }
 
     @GetMapping("/pageOfBook")
     final ResponseEntity<List<BookModel>> listOfBooks(@RequestParam Integer pageNumber,
                                                       @RequestParam Integer pageSize,
-                                                      @RequestParam(required = false) String category,
-                                                      @RequestParam(required = false) String author) {
+                                                      @RequestParam(required = false) String title,
+                                                      @RequestParam(required = false) String category) {
         Objects.requireNonNull(pageNumber);
         Objects.requireNonNull(pageSize);
-
-        List<Book> books = bookService.listOfBooks(pageNumber, pageSize, category, author);
-
-        if (books.isEmpty()) {
-            throw new NotFoundException("Books not found");
-        }
-
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(bookMapper.listOfModel(books));
+                .body(bookMapper.listOfModel(
+                        bookService.listOfBooks(pageNumber, pageSize, title, category).orElseThrow())
+                );
     }
 
     @PostMapping("/saveBook")
@@ -102,7 +99,7 @@ public class BookController {
                 .authors(authors)
                 .build();
 
-        bookRepository.completelySaveBook(book);
+        bookService.completelySaveBook(book);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Location", String.format("/library/book/findById/%s", book.getId().toString()));
@@ -110,10 +107,10 @@ public class BookController {
     }
 
     @PatchMapping("/patchBook/{bookId}")
-    final ResponseEntity<Void> updateBook(@PathVariable("bookId") UUID bookId,
-                                          @RequestParam(required = false) String description,
-                                          @RequestParam(required = false) Double price,
-                                          @RequestParam(required = false) Integer quantityOnHand) {
+    final ResponseEntity<Void> patchBook(@PathVariable("bookId") UUID bookId,
+                                         @RequestParam(required = false) String description,
+                                         @RequestParam(required = false) Double price,
+                                         @RequestParam(required = false) Integer quantityOnHand) {
         boolean isAllValuesNull = price == null && description == null && quantityOnHand == null;
 
         if (isAllValuesNull) {

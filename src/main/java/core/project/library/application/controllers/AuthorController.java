@@ -39,12 +39,13 @@ public class AuthorController {
 
     @GetMapping("/findByLastName/{authorLastName}")
     final ResponseEntity<List<AuthorDTO>> findByLastName(@PathVariable("authorLastName") String authorLastName) {
-        var authors = authorRepository
-                .findByLastName(authorLastName)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Author's not found"));
-
-        return ResponseEntity.ok(authorMapper.listOfDTO(authors));
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(authorMapper
+                        .listOfDTO(authorRepository
+                        .findByLastName(authorLastName)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Author's not found")))
+                );
     }
 
     @PostMapping("/saveAuthor")

@@ -64,11 +64,7 @@ public class AuthorControllerTest {
         public static final String FIND_BY_ID = "/library/author/findById/";
 
         private static Stream<Arguments> dtoEntity() {
-<<<<<<< Updated upstream
-            Author entity = Bootstrap.authorSupplier().get();
-=======
             Author entity = Bootstrap.authorFactory().get();
->>>>>>> Stashed changes
 
             AuthorDTO authorDTO = new AuthorDTO(
                     entity.getFirstName(),
@@ -190,11 +186,7 @@ public class AuthorControllerTest {
                     Bootstrap.randomEmail(),
                     Bootstrap.randomAddress());
 
-<<<<<<< Updated upstream
-            Supplier<Author> supplier = Bootstrap.authorSupplier();
-=======
             Supplier<Author> supplier = Bootstrap.authorFactory();
->>>>>>> Stashed changes
             return Stream.generate(() -> arguments(authorDTO, supplier.get())).limit(1);
         }
 

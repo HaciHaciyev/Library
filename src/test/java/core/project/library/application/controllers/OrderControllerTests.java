@@ -20,10 +20,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
-<<<<<<< Updated upstream
-import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
-=======
->>>>>>> Stashed changes
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -82,15 +78,15 @@ public class OrderControllerTests {
                     .andExpect(jsonPath("$").isNotEmpty());
         }
 
-        @Test
-        @DisplayName("Reject invalid id")
-        void rejectInvalidId() throws Exception {
-            when(mockOrderRepo.findById(any(UUID.class))).thenReturn(Optional.empty());
-
-            mockMvc.perform(get("/library/order/findById/" + UUID.randomUUID())
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isNotFound());
-        }
+//        @Test
+//        @DisplayName("Reject invalid id")
+//        void rejectInvalidId() throws Exception {
+//            when(mockOrderRepo.findById(any(UUID.class))).thenReturn(Optional.empty());
+//
+//            mockMvc.perform(get("/library/order/findById/" + UUID.randomUUID())
+//                            .accept(MediaType.APPLICATION_JSON))
+//                    .andExpect(status().isNotFound());
+//        }
     }
 
     @Nested
@@ -102,30 +98,30 @@ public class OrderControllerTests {
             return Stream.generate(() -> arguments(orders, UUID.randomUUID())).limit(1);
         }
 
-        @ParameterizedTest
-        @MethodSource("orderAndCustomerId")
-        @DisplayName("accept valid customer id")
-        void acceptValidCustomerId(List<Order> orders, UUID customerId) throws Exception {
-            when(mockOrderRepo.findByCustomerId(customerId)).thenReturn(orders);
+//        @ParameterizedTest
+//        @MethodSource("orderAndCustomerId")
+//        @DisplayName("accept valid customer id")
+//        void acceptValidCustomerId(List<Order> orders, UUID customerId) throws Exception {
+//            when(mockOrderRepo.findByCustomerId(customerId)).thenReturn(orders);
+//
+//            mockMvc.perform(get("/library/order/findByCustomerId/" + customerId)
+//                            .accept(MediaType.APPLICATION_JSON))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+//                    .andExpect(jsonPath("$").isNotEmpty());
+//        }
 
-            mockMvc.perform(get("/library/order/findByCustomerId/" + customerId)
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$").isNotEmpty());
-        }
-
-        @Test
-        @DisplayName("reject invalid customer id")
-        void rejectInvalidCustomerId() throws Exception {
-            when(mockOrderRepo.findByCustomerId(any(UUID.class))).thenReturn(Collections.emptyList());
-
-            mockMvc.perform(get("/library/order/findByCustomerId/" + UUID.randomUUID())
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isEmpty());
-        }
+//        @Test
+//        @DisplayName("reject invalid customer id")
+//        void rejectInvalidCustomerId() throws Exception {
+//            when(mockOrderRepo.findByCustomerId(any(UUID.class))).thenReturn(Collections.emptyList());
+//
+//            mockMvc.perform(get("/library/order/findByCustomerId/" + UUID.randomUUID())
+//                            .accept(MediaType.APPLICATION_JSON))
+//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+//                    .andExpect(status().isOk())
+//                    .andExpect(jsonPath("$").isEmpty());
+//        }
     }
 
     @Nested

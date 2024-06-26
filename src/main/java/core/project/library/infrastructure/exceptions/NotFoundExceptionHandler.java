@@ -14,7 +14,8 @@ public class NotFoundExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = {IllegalArgumentException.class, NotFoundException.class})
     protected ResponseEntity<Object> handleNotFound(RuntimeException ex, WebRequest request) {
         String bodyOfResponse = ex.getMessage();
-        return handleExceptionInternal(ex, bodyOfResponse,
-                                      new HttpHeaders(), HttpStatus.CONFLICT, request);
+        return handleExceptionInternal(
+                ex, bodyOfResponse, new HttpHeaders(), HttpStatus.CONFLICT, request
+        );
     }
 }

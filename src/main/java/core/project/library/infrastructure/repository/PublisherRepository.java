@@ -26,6 +26,26 @@ public class PublisherRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean emailExists(Email email) {
+        String findEmail = "SELECT COUNT(*) FROM Publishers WHERE email = ?";
+        Integer count = jdbcTemplate.queryForObject(
+                findEmail,
+                Integer.class,
+                email.email()
+        );
+        return count != null && count > 0;
+    }
+
+    public boolean phoneExists(Phone phone) {
+        String findPhone = "SELECT COUNT(*) FROM Publishers WHERE phone = ?";
+        Integer count = jdbcTemplate.queryForObject(
+                findPhone,
+                Integer.class,
+                phone.phoneNumber()
+        );
+        return count != null && count > 0;
+    }
+
     public Result<Publisher, Exception> findById(UUID publisherId) {
         try {
             String findById = "SELECT * FROM Publishers WHERE id = ?";
@@ -38,12 +58,12 @@ public class PublisherRepository {
         }
     }
 
-    public Result<List<Publisher>, Exception> findByName(String name) {
+    public Result<List<Publisher>, Exception> findByName(String publisherName) {
         try {
             String findByName = "SELECT * FROM Publishers WHERE publisher_name = ?";
 
             return Result.success(
-                    jdbcTemplate.query(findByName, this::publisherMapper, name)
+                    jdbcTemplate.query(findByName, this::publisherMapper, publisherName)
             );
         } catch (EmptyResultDataAccessException e) {
             return Result.failure(e);
@@ -67,7 +87,7 @@ public class PublisherRepository {
         return Result.success(publisher);
     }
 
-    private Publisher publisherMapper(ResultSet rs, int ignored) throws SQLException {
+    private Publisher publisherMapper(ResultSet rs, int rowNum) throws SQLException {
         Address address = new Address(
                 rs.getString("state"),
                 rs.getString("city"),
@@ -88,36 +108,5 @@ public class PublisherRepository {
                 .email(new Email(rs.getString("email")))
                 .events(events)
                 .build();
-    }
-
-    public boolean publisherExists(UUID id) {
-        String findPublisher = "SELECT COUNT(*) from Publishers WHERE id = ?";
-        Integer count = jdbcTemplate.queryForObject(
-                findPublisher,
-                Integer.class,
-                id.toString()
-        );
-
-        return count != null && count > 0;
-    }
-
-    public boolean emailExists(Email email) {
-        String findEmail = "SELECT COUNT(*) FROM Publishers WHERE email = ?";
-        Integer count = jdbcTemplate.queryForObject(
-                findEmail,
-                Integer.class,
-                email.email()
-        );
-        return count != null && count > 0;
-    }
-
-    public boolean phoneExists(Phone phone) {
-        String findPhone = "SELECT COUNT(*) FROM Publishers WHERE phone = ?";
-        Integer count = jdbcTemplate.queryForObject(
-                findPhone,
-                Integer.class,
-                phone.phoneNumber()
-        );
-        return count != null && count > 0;
     }
 }

@@ -28,12 +28,21 @@ public class AuthorRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean emailExists(Email email) {
+        String findEmail = "SELECT COUNT(*) FROM Authors WHERE email = ?";
+        Integer count = jdbcTemplate.queryForObject(
+                findEmail,
+                Integer.class,
+                email.email());
+        return count != null && count > 0;
+    }
+
     public Result<Author, EmptyResultDataAccessException> findById(UUID authorId) {
         try {
             String findById = "SELECT * FROM Authors WHERE id = ?";
 
             return Result.success(
-                    jdbcTemplate.queryForObject(findById, this::mapAuthor, authorId.toString())
+                    jdbcTemplate.queryForObject(findById, this::authorMapper, authorId.toString())
             );
 
         } catch (EmptyResultDataAccessException e) {
@@ -45,7 +54,9 @@ public class AuthorRepository {
         try {
             String findByLastName = "SELECT * FROM Authors WHERE last_name = ?";
 
-            List<Author> authors = jdbcTemplate.query(findByLastName, this::mapAuthor, lastName);
+            List<Author> authors = jdbcTemplate.query(
+                    findByLastName, this::authorMapper, lastName
+            );
 
             if (authors.isEmpty()) {
                 return Result.failure(new NotFoundException("Authors not found"));
@@ -79,7 +90,7 @@ public class AuthorRepository {
         }
     }
 
-    private Author mapAuthor(ResultSet rs, int rowNum) throws SQLException {
+    private Author authorMapper(ResultSet rs, int rowNum) throws SQLException {
         Address address = new Address(
                 rs.getString("state"),
                 rs.getString("city"),
@@ -100,15 +111,5 @@ public class AuthorRepository {
                 .address(address)
                 .events(events)
                 .build();
-    }
-
-    public boolean emailExists(Email email) {
-        String findEmail = "SELECT COUNT(*) FROM Authors WHERE email = ?";
-        Integer count = jdbcTemplate.queryForObject(
-                findEmail,
-                Integer.class,
-                email.email());
-
-        return count != null && count > 0;
     }
 }

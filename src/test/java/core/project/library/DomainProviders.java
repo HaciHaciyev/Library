@@ -9,6 +9,7 @@ import core.project.library.domain.events.Events;
 import net.datafaker.Faker;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -64,7 +65,7 @@ public class DomainProviders {
                 .totalPrice(Bootstrap.randomTotalPrice())
                 .events(new Events())
                 .customer(Bootstrap.customerFactory().get())
-                .books(books)
+                .books(new LinkedHashMap<>())
                 .build();
     }
 
@@ -77,7 +78,7 @@ public class DomainProviders {
                 .totalPrice(Bootstrap.randomTotalPrice())
                 .events(new Events())
                 .customer(customer)
-                .books(books)
+                .books(new LinkedHashMap<>())
                 .build();
     }
 }

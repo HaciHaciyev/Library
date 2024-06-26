@@ -93,11 +93,11 @@ public class OrderRepository {
 
     public Result<Order, Exception> findById(UUID orderId) {
         try {
-            Order order = jdbcTemplate.query(getStatement(orderId),
-                    this::mapOrder);
+            Order order = jdbcTemplate.query(
+                    preparedStatementFactory(orderId), this::mapOrder
+            );
 
             return Result.success(order);
-
 
         } catch (DataAccessException e) {
             log.error(e.getMessage());
@@ -105,8 +105,7 @@ public class OrderRepository {
         }
     }
 
-    //Constructs scrollable resultSet with given id
-    private PreparedStatementCreator getStatement(UUID id) {
+    private PreparedStatementCreator preparedStatementFactory(UUID id) {
         return connection -> connection.prepareStatement(
                 GET_ORDER_BY_ID.formatted(id.toString()),
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
@@ -127,7 +126,10 @@ public class OrderRepository {
                             customerId.toString())
                     .stream()
                     .distinct()
-                    .map(this::mapUUIDToOrder)
+                    .map(uuid -> jdbcTemplate.query(
+                            preparedStatementFactory(uuid),
+                            this::mapOrder
+                    ))
                     .toList();
 
             return Result.success(orders);
@@ -147,13 +149,14 @@ public class OrderRepository {
                     WHERE Books.id = ?
                     """;
 
-            List<Order> orders = jdbcTemplate.query(
-                            findByBookId,
-                            (rs, _) -> UUID.fromString(rs.getString("id")),
-                            bookId.toString())
-                    .stream()
-                    .distinct()
-                    .map(this::mapUUIDToOrder)
+            List<Order> orders =
+                    jdbcTemplate.query(findByBookId, (rs, _) -> UUID.fromString(rs.getString("id")), bookId.toString())
+                            .stream()
+                            .distinct()
+                            .map(uuid -> jdbcTemplate.query(
+                            preparedStatementFactory(uuid),
+                            this::mapOrder
+                            ))
                     .toList();
 
             return Result.success(orders);
@@ -166,7 +169,7 @@ public class OrderRepository {
 
     private Order mapUUIDToOrder(UUID uuid) throws DataAccessException {
         return jdbcTemplate.query(
-                getStatement(uuid),
+                preparedStatementFactory(uuid),
                 this::mapOrder
         );
     }

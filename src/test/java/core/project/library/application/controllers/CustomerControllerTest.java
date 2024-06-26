@@ -59,11 +59,7 @@ class CustomerControllerTest {
         private static final String FIND_BY_ID = "/library/customer/findById/";
 
         private static Stream<Arguments> dtoEntity() {
-<<<<<<< Updated upstream
-            Customer customer = Bootstrap.customer().get();
-=======
             Customer customer = Bootstrap.customerFactory().get();
->>>>>>> Stashed changes
 
             CustomerDTO dto = new CustomerDTO(
                     customer.getFirstName(),
@@ -187,11 +183,7 @@ class CustomerControllerTest {
     class SaveCustomerTests {
 
         private static Stream<Arguments> customerAndDTO() {
-<<<<<<< Updated upstream
-            Customer customer = Bootstrap.customer().get();
-=======
             Customer customer = Bootstrap.customerFactory().get();
->>>>>>> Stashed changes
 
             CustomerDTO dto = new CustomerDTO(
                     customer.getFirstName(),

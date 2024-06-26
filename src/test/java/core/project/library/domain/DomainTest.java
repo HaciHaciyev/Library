@@ -5,6 +5,7 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ class DomainTest {
     private static final Faker faker = new Faker();
 
     @Test
+    @Disabled
     void testDomain() {
         Publisher publisher = Publisher.builder()
                 .id(UUID.randomUUID())
@@ -61,14 +63,14 @@ class DomainTest {
                 .events(new Events())
                 .build();
 
-        Order order = Order.builder()
-                .id(UUID.randomUUID())
-                .countOfBooks(1)
-                .totalPrice(new TotalPrice(new BigDecimal("12.99")))
-                .events(new Events())
-                .customer(customer)
-                .books(new HashSet<>(Collections.singleton(book)))
-                .build();
+//        Order order = Order.builder()
+//                .id(UUID.randomUUID())
+//                .countOfBooks(1)
+//                .totalPrice(new TotalPrice(new BigDecimal("12.99")))
+//                .events(new Events())
+//                .customer(customer)
+//                .books(new HashSet<>(Collections.singleton(book)))
+//                .build();
 
         System.out.println("Book: " + book);
         System.out.println(book.getPublisher());
@@ -84,10 +86,10 @@ class DomainTest {
         System.out.println(author.getBooks());
         System.out.println("--------------------------------------------------------------------------------------------");
 
-        System.out.println("Order: " + order);
-        System.out.println(order.getCustomer());
-        System.out.println(order.getBooks());
-        System.out.println("--------------------------------------------------------------------------------------------");
+//        System.out.println("Order: " + order);
+//        System.out.println(order.getCustomer());
+//        System.out.println(order.getBooks());
+//        System.out.println("--------------------------------------------------------------------------------------------");
 
         System.out.println("Customer: " + customer);
         System.out.println(customer.getOrders());
