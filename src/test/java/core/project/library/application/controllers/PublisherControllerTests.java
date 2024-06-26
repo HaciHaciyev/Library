@@ -26,7 +26,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static core.project.library.application.bootstrap.Bootstrap.publisher;
+import static core.project.library.application.bootstrap.Bootstrap.publisherFactory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Every.everyItem;
 import static org.hamcrest.core.Is.is;
@@ -58,7 +58,11 @@ public class PublisherControllerTests {
         public static final String FIND_BY_ID = "/library/publisher/findById/";
 
         private static Stream<Arguments> publisherAndDTO() {
+<<<<<<< Updated upstream
             Publisher publisher = publisher().get();
+=======
+            Publisher publisher = publisherFactory().get();
+>>>>>>> Stashed changes
 
             PublisherDTO dto = new PublisherDTO(
                     publisher.getPublisherName(),
@@ -181,7 +185,11 @@ public class PublisherControllerTests {
         public static final String SAVE_PUBLISHER = "/library/publisher/savePublisher";
 
         private static Stream<Arguments> publisherAndDTO() {
+<<<<<<< Updated upstream
             Publisher publisher = publisher().get();
+=======
+            Publisher publisher = publisherFactory().get();
+>>>>>>> Stashed changes
 
             PublisherDTO dto = new PublisherDTO(
                     publisher.getPublisherName(),

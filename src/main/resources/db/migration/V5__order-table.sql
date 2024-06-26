@@ -15,6 +15,7 @@ Create table Orders (
 Create table Book_Order (
   book_id varchar(36) not null,
   order_id varchar(36) not null,
+  book_count integer not null,
   primary key (book_id, order_id),
   constraint book_order_fk
   foreign key (book_id) references Books (id),

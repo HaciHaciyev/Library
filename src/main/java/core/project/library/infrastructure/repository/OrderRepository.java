@@ -5,10 +5,17 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.exceptions.Result;
+<<<<<<< Updated upstream
 import org.springframework.dao.DataAccessException;
+=======
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcOperations;
+>>>>>>> Stashed changes
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -16,6 +23,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 
+@Slf4j
 @Repository
 public class OrderRepository {
 
@@ -45,6 +53,7 @@ public class OrderRepository {
               b.isbn AS book_isbn,
               b.price AS book_price,
               b.quantity_on_hand AS book_quantity,
+              bo.book_count AS book_count,
               b.category AS book_category,
               b.creation_date AS book_creation_date,
               b.last_modified_date AS book_last_modified_date,
@@ -78,6 +87,7 @@ public class OrderRepository {
               INNER JOIN Book_Author ba ON b.id = ba.book_id
               INNER JOIN Authors a ON ba.author_id = a.id
             WHERE o.id = '%s'
+            ORDER BY b.id
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -93,7 +103,14 @@ public class OrderRepository {
 
             return Result.success(order);
 
+<<<<<<< Updated upstream
         } catch (DataAccessException e) {
+=======
+            JDBCop
+
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+>>>>>>> Stashed changes
             return Result.failure(new NotFoundException("Couldn't find order"));
         }
     }
@@ -126,6 +143,10 @@ public class OrderRepository {
             return Result.success(orders);
 
         } catch (DataAccessException e) {
+<<<<<<< Updated upstream
+=======
+            log.error(e.getMessage());
+>>>>>>> Stashed changes
             return Result.failure(new NotFoundException("Couldn't find orders"));
         }
     }
@@ -151,6 +172,10 @@ public class OrderRepository {
             return Result.success(orders);
 
         } catch (DataAccessException e) {
+<<<<<<< Updated upstream
+=======
+            log.error(e.getMessage());
+>>>>>>> Stashed changes
             return Result.failure(new NotFoundException("Couldn't find orders"));
         }
     }
@@ -162,19 +187,28 @@ public class OrderRepository {
         );
     }
 
+<<<<<<< Updated upstream
+=======
+    @Transactional
+>>>>>>> Stashed changes
     public Result<Order, Exception> save(Order order) {
         try {
             jdbcTemplate.update("""
                             INSERT INTO Orders (id, customer_id,
                                             count_of_book, total_price,
                                             creation_date, last_modified_date)
+<<<<<<< Updated upstream
                                             VALUES (?,?,?,?,?,?)
+=======
+                                            VALUES (?, ?, ?, ?, ?, ?)
+>>>>>>> Stashed changes
                             """,
                     order.getId().toString(), order.getCustomer().getId().toString(),
                     order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
                     order.getEvents().creation_date(), order.getEvents().last_update_date()
             );
 
+<<<<<<< Updated upstream
             order.getBooks().forEach(book ->
                     jdbcTemplate.update("""
                                     INSERT INTO Book_Order (book_id, order_id)
@@ -182,15 +216,30 @@ public class OrderRepository {
                                     """,
                             book.getId().toString(),
                             order.getId().toString()
+=======
+            order.getBooks().forEach((book, count) ->
+                    jdbcTemplate.update("""
+                                    INSERT INTO Book_Order (book_id, order_id, book_count)
+                                                VALUES (?, ?, ?)
+                                    """,
+                            book.getId().toString(),
+                            order.getId().toString(),
+                            count
+>>>>>>> Stashed changes
                     ));
 
             return Result.success(order);
         } catch (DataAccessException e) {
+<<<<<<< Updated upstream
+=======
+            log.error(e.getMessage());
+>>>>>>> Stashed changes
             return Result.failure(e);
         }
     }
 
     private Order mapOrder(ResultSet rs) throws SQLException {
+<<<<<<< Updated upstream
 
         //TODO refactor and fix
         rs.first();
@@ -246,6 +295,47 @@ public class OrderRepository {
     }
 
     private Order constructOrder(ResultSet rs, Customer customer, HashSet<Book> listOfBooks) throws SQLException {
+=======
+        Map<Book, Integer> books = new LinkedHashMap<>();
+        String lastBookId = null;
+
+        while (rs.next()) {
+            String currentBookId = rs.getString("book_id");
+
+            // collect book
+            if (!currentBookId.equals(lastBookId)) {
+                Publisher publisher = mapPublisher(rs);
+
+                //collect authors
+                Set<Author> authors = collectAuthors(rs, currentBookId);
+
+                var bookPair = mapBook(rs, publisher, authors);
+                books.put(bookPair.book, bookPair.count);
+
+                lastBookId = currentBookId;
+            }
+        }
+
+        //move cursor one position back from end of RS to map customer
+        rs.previous();
+        Customer customer = mapCustomer(rs);
+        return constructOrder(rs, customer, books);
+    }
+
+    private Set<Author> collectAuthors(ResultSet rs, String bookId) throws SQLException {
+        Set<Author> authors = new LinkedHashSet<>();
+
+        do {
+            authors.add(mapAuthor(rs));
+        } while (rs.next() && bookId.equals(rs.getString("book_id")));
+
+        //return one position back to be able to map book
+        rs.previous();
+        return authors;
+    }
+
+    private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> listOfBooks) throws SQLException {
+>>>>>>> Stashed changes
         Events events = new Events(
                 rs.getObject("order_creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("order_last_modified_date", Timestamp.class).toLocalDateTime()
@@ -285,13 +375,23 @@ public class OrderRepository {
                 .build();
     }
 
+<<<<<<< Updated upstream
     private Book mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
+=======
+    private record BookAndCount(Book book, Integer count) {}
+
+    private BookAndCount mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
+>>>>>>> Stashed changes
         Events events = new Events(
                 rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
         );
 
+<<<<<<< Updated upstream
         return Book.builder()
+=======
+        Book book = Book.builder()
+>>>>>>> Stashed changes
                 .id(UUID.fromString(rs.getString("book_id")))
                 .title(new Title(rs.getString("book_title")))
                 .description(new Description(rs.getString("book_description")))
@@ -303,6 +403,11 @@ public class OrderRepository {
                 .publisher(publisher)
                 .authors(authors)
                 .build();
+<<<<<<< Updated upstream
+=======
+
+        return new BookAndCount(book, rs.getInt("book_count"));
+>>>>>>> Stashed changes
     }
 
     private Author mapAuthor(ResultSet rs) throws SQLException {
@@ -312,6 +417,10 @@ public class OrderRepository {
                 rs.getString("author_street"),
                 rs.getString("author_home")
         );
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         Events events = new Events(
                 rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()

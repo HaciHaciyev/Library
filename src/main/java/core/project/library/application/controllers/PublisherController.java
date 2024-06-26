@@ -8,6 +8,7 @@ import core.project.library.infrastructure.exceptions.Result;
 import core.project.library.infrastructure.mappers.PublisherMapper;
 import core.project.library.infrastructure.repository.PublisherRepository;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,16 +21,12 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/library/publisher")
+@RequiredArgsConstructor
 public class PublisherController {
 
     private final PublisherMapper publisherMapper;
 
     private final PublisherRepository publisherRepository;
-
-    public PublisherController(PublisherMapper publisherMapper, PublisherRepository publisherRepository) {
-        this.publisherMapper = publisherMapper;
-        this.publisherRepository = publisherRepository;
-    }
 
     @GetMapping("/findById/{publisherId}")
     final ResponseEntity<PublisherDTO> findById(@PathVariable("publisherId") UUID publisherId) {
@@ -51,6 +48,7 @@ public class PublisherController {
 
     @PostMapping("/savePublisher")
     final ResponseEntity<String> savePublisher(@RequestBody @Valid PublisherDTO publisherDTO) {
+<<<<<<< Updated upstream
         Publisher publisher = publisherMapper.publisherFromDTO(publisherDTO);
 
         var publisherResult = publisherRepository.savePublisher(publisher);
@@ -70,5 +68,22 @@ public class PublisherController {
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Couldn't save publisher");
         }
+=======
+        if (publisherRepository.emailExists(publisherDTO.email())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
+        if (publisherRepository.phoneExists(publisherDTO.phone())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Phone already exists");
+        }
+
+        Publisher publisher = publisherMapper.publisherFromDTO(publisherDTO);
+
+        var savedPublisher = publisherRepository.savePublisher(publisher)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Couldn't save publisher"));
+
+        return ResponseEntity
+                .created(URI.create("/library/publisher/findById/" + savedPublisher.getId()))
+                .body("Successfully saved publisher");
+>>>>>>> Stashed changes
     }
 }

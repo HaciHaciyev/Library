@@ -7,10 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,7 +19,7 @@ public class Order {
     private final TotalPrice totalPrice;
     private final Events events;
     private final /**@ManyToOne*/ Customer customer;
-    private final /**@ManyToMany*/Set<Book> books;
+    private final /**@ManyToMany*/ Map<Book, Integer> books;
 
     public static Builder builder() {
         return new Builder();
@@ -35,8 +32,8 @@ public class Order {
 
         Order order = (Order) o;
 
-        Set<UUID> ourBooks = books.stream().map(Book::getId).collect(Collectors.toSet());
-        Set<UUID> theirBooks = order.books.stream().map(Book::getId).collect(Collectors.toSet());
+        Set<UUID> ourBooks = books.keySet().stream().map(Book::getId).collect(Collectors.toSet());
+        Set<UUID> theirBooks = order.books.keySet().stream().map(Book::getId).collect(Collectors.toSet());
 
         return Objects.equals(id, order.id) &&
                 Objects.equals(countOfBooks, order.countOfBooks) &&
@@ -76,7 +73,7 @@ public class Order {
         private TotalPrice totalPrice;
         private Events events;
         private /**@ManyToOne*/ Customer customer;
-        private /**@ManyToMany*/ Set<Book> books;
+        private /**@ManyToMany*/ Map<Book, Integer> books;
 
         private Builder() {}
 
@@ -105,7 +102,7 @@ public class Order {
             return this;
         }
 
-        public Builder books(Set<Book> books) {
+        public Builder books(Map<Book, Integer> books) {
             this.books = books;
             return this;
         }
@@ -114,10 +111,10 @@ public class Order {
             validate();
 
             Order order = new Order(id, countOfBooks, totalPrice,
-                    events, customer, Collections.unmodifiableSet(books));
+                    events, customer, Collections.unmodifiableMap(books));
 
             customer.addOrder(order);
-            books.forEach(book -> book.addOrder(order));
+            books.forEach((book, _) -> book.addOrder(order));
             return order;
         }
 

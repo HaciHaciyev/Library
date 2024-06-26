@@ -6,22 +6,20 @@ import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.TotalPrice;
-import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.mappers.OrderMapper;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.CustomerRepository;
 import core.project.library.infrastructure.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/library/order")
@@ -38,13 +36,13 @@ public class OrderController {
 
     @GetMapping("/findById/{orderId}")
     final ResponseEntity<OrderModel> findById(@PathVariable("orderId")UUID orderId) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(mapper.toModel(
-                        orderRepository.findById(orderId).orElseThrow(NotFoundException::new)
-                ));
+        var order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        return ResponseEntity.ok(mapper.toModel(order));
     }
 
+<<<<<<< Updated upstream
 //    @GetMapping("/findByCustomerId/{customerIdForOrders}")
 //    final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
 //        return ResponseEntity
@@ -61,32 +59,77 @@ public class OrderController {
 //                        .findByBookId(bookId)
 //                        .stream().map(mapper::toModel).toList());
 //    }
+=======
+    @GetMapping("/findByCustomerId/{customerIdForOrders}")
+    final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
+        var orders = orderRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Customer either made no orders or he does not exist"));
+
+        return ResponseEntity.ok(mapper.listOfModel(orders));
+    }
+
+    @GetMapping("/findByBookId/{bookIdForOrders}")
+    final ResponseEntity<List<OrderModel>> findByBookId(@PathVariable("bookIdForOrders")UUID bookId) {
+        var orders = orderRepository.findByBookId(bookId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        return ResponseEntity.ok(mapper.listOfModel(orders));
+    }
+>>>>>>> Stashed changes
 
     @PostMapping("/createOrder")
-    final ResponseEntity<Void> createOrder(@RequestParam UUID customerId,
-                                           @RequestParam List<UUID> booksId) {
-        double totalPrice = 0.0;
-        Set<Book> books = new HashSet<>();
-        Customer customer = customerRepository.findById(customerId).orElseThrow(NotFoundException::new);
-        for (UUID bookId : booksId) {
-            Book book = bookRepository.findById(bookId).orElseThrow(NotFoundException::new);
-            books.add(book);
-            totalPrice += book.getPrice().doubleValue();
-        }
+    final ResponseEntity<String> createOrder(@RequestParam UUID customerId,
+                                             @RequestParam List<UUID> booksId) {
 
-        Order order = Order.builder()
+        Order order = mapOrder(customerId, booksId);
+
+        var savedOrder = orderRepository.save(order)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not save order"));
+
+        return ResponseEntity
+                .created(URI.create("/library/order/findById/" + savedOrder.getId()))
+                .body("Succesfully created order");
+    }
+
+    private Order mapOrder(UUID customerId, List<UUID> booksId) {
+
+        Map<Book, Integer> books = booksId.stream()
+                                          .map(this::getBook)
+                                          .collect(Collectors.toMap(book -> book, _ -> 1, Integer::sum));
+
+        Integer countOfBooks = books.values()
+                                    .stream()
+                                    .reduce(0, Integer::sum);
+
+        BigDecimal totalPrice = books.keySet()
+                                     .stream()
+                                     .map(Book::getPrice)
+                                     .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid customer ID"));
+
+        return Order.builder()
                 .id(UUID.randomUUID())
-                .countOfBooks(books.size())
-                .totalPrice(new TotalPrice(BigDecimal.valueOf(totalPrice)))
+                .countOfBooks(countOfBooks)
+                .totalPrice(new TotalPrice(totalPrice))
                 .events(new Events())
                 .customer(customer)
                 .books(books)
                 .build();
+    }
 
+<<<<<<< Updated upstream
         orderRepository.save(order);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Location", String.format("/library/order/findById/%s", order.getId()));
         return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
+=======
+    private Book getBook(UUID uuid) {
+        return bookRepository.findById(uuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid book ID -> " + uuid));
+>>>>>>> Stashed changes
     }
 }

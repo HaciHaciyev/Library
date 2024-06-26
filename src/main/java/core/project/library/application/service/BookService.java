@@ -21,10 +21,6 @@ public class BookService {
 
     private final BookRepository bookRepository;
 
-    private final AuthorRepository authorRepository;
-
-    private final PublisherRepository publisherRepository;
-
     public final Optional<Book> findById(UUID bookId) {
         return bookRepository.findById(bookId);
     }

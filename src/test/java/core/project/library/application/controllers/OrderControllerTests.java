@@ -20,7 +20,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
+<<<<<<< Updated upstream
 import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
+=======
+>>>>>>> Stashed changes
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -164,11 +167,11 @@ public class OrderControllerTests {
 
         private static Stream<Arguments> customerAndBooks() {
             List<Book> books = Stream.generate(DomainProviders.book()).limit(5).toList();
-            return Stream.generate(() -> arguments(Bootstrap.customer().get(), books)).limit(1);
+            return Stream.generate(() -> arguments(Bootstrap.customerFactory().get(), books)).limit(1);
         }
 
         private static Stream<Arguments> getCustomer() {
-            return Stream.of(arguments(Bootstrap.customer().get()));
+            return Stream.of(arguments(Bootstrap.customerFactory().get()));
         }
 
         @ParameterizedTest

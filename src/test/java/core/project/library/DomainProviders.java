@@ -47,7 +47,7 @@ public class DomainProviders {
                     .quantityOnHand(randomQuantity)
                     .events(new Events())
                     .category(Bootstrap.randomCategory())
-                    .publisher(Bootstrap.publisher().get())
+                    .publisher(Bootstrap.publisherFactory().get())
                     .authors(authors)
                     .build();
         };
@@ -63,7 +63,7 @@ public class DomainProviders {
                 .countOfBooks(countOfBooks)
                 .totalPrice(Bootstrap.randomTotalPrice())
                 .events(new Events())
-                .customer(Bootstrap.customer().get())
+                .customer(Bootstrap.customerFactory().get())
                 .books(books)
                 .build();
     }

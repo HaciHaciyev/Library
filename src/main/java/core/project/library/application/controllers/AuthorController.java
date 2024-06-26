@@ -2,7 +2,10 @@ package core.project.library.application.controllers;
 
 import core.project.library.application.model.AuthorDTO;
 import core.project.library.domain.entities.Author;
+<<<<<<< Updated upstream
 import core.project.library.infrastructure.exceptions.Result;
+=======
+>>>>>>> Stashed changes
 import core.project.library.infrastructure.mappers.AuthorMapper;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import jakarta.validation.Valid;
@@ -50,6 +53,7 @@ public class AuthorController {
 
     @PostMapping("/saveAuthor")
     final ResponseEntity<String> saveAuthor(@RequestBody @Valid AuthorDTO authorDTO) {
+<<<<<<< Updated upstream
         Author author = authorMapper.authorFromDTO(authorDTO);
 
         var authorResult = authorRepository.saveAuthor(author);
@@ -69,5 +73,20 @@ public class AuthorController {
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Couldn't save author");
         }
+=======
+        if (authorRepository.emailExists(authorDTO.email())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+        }
+
+        Author author = authorMapper.authorFromDTO(authorDTO);
+
+        var savedAuthor = authorRepository.saveAuthor(author)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Couldn't save author"));
+
+        return ResponseEntity
+                .created(URI.create("/library/author/findById/" + savedAuthor.getId()))
+                .body("Successfully saved author");
+>>>>>>> Stashed changes
     }
+
 }

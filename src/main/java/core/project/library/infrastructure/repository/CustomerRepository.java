@@ -8,23 +8,31 @@ import core.project.library.infrastructure.exceptions.Result;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
+<<<<<<< Updated upstream
+=======
+import java.util.Map;
+>>>>>>> Stashed changes
 import java.util.UUID;
 
 @Repository
 public class CustomerRepository {
 
     private final JdbcTemplate jdbcTemplate;
+    private final JdbcClient jdbcClient;
 
-    public CustomerRepository(JdbcTemplate jdbcTemplate) {
+    public CustomerRepository(JdbcTemplate jdbcTemplate, JdbcClient jdbcClient) {
         this.jdbcTemplate = jdbcTemplate;
+        this.jdbcClient = jdbcClient;
     }
 
+<<<<<<< Updated upstream
     public Result<Customer, EmptyResultDataAccessException> findById(UUID customerId) {
         try {
             String findById = "SELECT * FROM Customers WHERE id=?";
@@ -33,10 +41,66 @@ public class CustomerRepository {
                     jdbcTemplate.queryForObject(findById, this::mapCustomer, customerId.toString())
             );
         } catch (EmptyResultDataAccessException e) {
+=======
+    public Result<Customer, DataAccessException> findById(UUID customerId) {
+        try {
+            String findById = "SELECT * FROM Customers WHERE id=?";
+
+
+            List<Map<String, Object>> rows = jdbcClient.sql(findById)
+                                                       .param(customerId)
+                                                       .query()
+                                                       .listOfRows();
+
+            return Result.success(
+                    jdbcTemplate.queryForObject(findById, this::mapCustomer, customerId.toString())
+            );
+        } catch (DataAccessException e) {
             return Result.failure(e);
         }
     }
 
+    public Result<List<Customer>, Exception> findByLastName(String lastName) {
+        try {
+            String findByLastName = "SELECT * FROM Customers WHERE last_name=?";
+
+            List<Customer> customers = jdbcTemplate.query(findByLastName, this::mapCustomer, lastName);
+
+            if (customers.isEmpty()) {
+                return Result.failure(new NotFoundException("Customer not found"));
+            } else {
+                return Result.success(customers);
+            }
+
+        } catch (DataAccessException e) {
+            return Result.failure(e);
+        }
+    }
+
+    public Result<Customer, Exception> saveCustomer(Customer customer) {
+        try {
+            String saveCustomer = """
+                    INSERT INTO Customers (id, first_name, last_name, email, password,
+                                  state, city, street, home,
+                                  creation_date, last_modified_date)
+                                  VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                    """;
+
+            jdbcTemplate.update(saveCustomer,
+                    customer.getId().toString(), customer.getFirstName().firstName(), customer.getLastName().lastName(),
+                    customer.getEmail().email(), customer.getPassword().password(), customer.getAddress().state(),
+                    customer.getAddress().city(), customer.getAddress().street(), customer.getAddress().home(),
+                    customer.getEvents().creation_date(), customer.getEvents().last_update_date()
+            );
+
+            return Result.success(customer);
+        } catch (DataAccessException e) {
+>>>>>>> Stashed changes
+            return Result.failure(e);
+        }
+    }
+
+<<<<<<< Updated upstream
     public Result<List<Customer>, Exception> findByLastName(String lastName) {
         try {
             String findByLastName = "SELECT * FROM Customers WHERE last_name=?";
@@ -80,6 +144,8 @@ public class CustomerRepository {
         }
     }
 
+=======
+>>>>>>> Stashed changes
     private Customer mapCustomer(ResultSet rs, int ignored) throws SQLException {
         Address address = new Address(
                 rs.getString("state"),
@@ -104,7 +170,11 @@ public class CustomerRepository {
                 .build();
     }
 
+<<<<<<< Updated upstream
     private boolean emailExists(Email email) {
+=======
+    public boolean emailExists(Email email) {
+>>>>>>> Stashed changes
         String findEmail = "SELECT COUNT(*) FROM Customers WHERE email = ?";
         Integer count = jdbcTemplate.queryForObject(
                 findEmail,

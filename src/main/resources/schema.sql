@@ -90,6 +90,7 @@ drop table if exists Book_Order;
 create table Book_Order (
                             book_id varchar(36) not null,
                             order_id varchar(36) not null,
+                            book_count integer not null,
                             primary key (book_id, order_id),
                             constraint book_order_fk foreign key (book_id) references Books (id),
                             constraint order_book_fk foreign key (order_id) references Orders (id)

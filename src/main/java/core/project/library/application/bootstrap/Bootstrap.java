@@ -10,7 +10,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+<<<<<<< Updated upstream
 import java.util.*;
+=======
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+>>>>>>> Stashed changes
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -22,6 +29,7 @@ public class Bootstrap implements CommandLineRunner {
 
     private static final Faker faker = new Faker();
 
+<<<<<<< Updated upstream
     private final int maxNumberOfAuthors = faker.number().numberBetween(5, 15);
     private final int maxNumberOfAuthorsPerBook = faker.number().numberBetween(1, 4);
     private final int maxNumberOfPublishers = faker.number().numberBetween(1, 5);
@@ -29,12 +37,21 @@ public class Bootstrap implements CommandLineRunner {
     private final int maxNumberOfBooks = faker.number().numberBetween(1, 30);
     private final int maxNumberOfOrders = faker.number().numberBetween(1, 15);
     private final int maxCountOfBooksForOrder = faker.number().numberBetween(1, 10);
+=======
+    private static final int MAX_NUMBER_OF_AUTHORS = faker.number().numberBetween(5, 15);
+    private static final int MAX_NUMBER_OF_AUTHORS_PER_BOOK = 4;
+    private static final int MAX_NUMBER_OF_BOOKS = faker.number().numberBetween(5, 30);
+    private static final int MAX_NUMBER_OF_BOOKS_PER_ORDER = faker.number().numberBetween(5, 10);
+    private static final int MAX_NUMBER_OF_CUSTOMERS = faker.number().numberBetween(3, 10);
+    private static final int MAX_NUMBER_OF_ORDERS = faker.number().numberBetween(5, 15);
+    private static final int MAX_NUMBER_OF_PUBLISHERS = faker.number().numberBetween(2, 5);
+>>>>>>> Stashed changes
 
-    private List<Publisher> publishers;
-    private List<Author> authors;
-    private List<Book> books;
-    private List<Customer> customers;
-    private List<Order> orders;
+    private static List<Publisher> publishers;
+    private static List<Author> authors;
+    private static List<Book> books;
+    private static List<Customer> customers;
+    private static List<Order> orders;
 
     private final PublisherRepository publisherRepository;
     private final AuthorRepository authorRepository;
@@ -49,6 +66,7 @@ public class Bootstrap implements CommandLineRunner {
         this.bookRepository = bookRepository;
         this.customerRepository = customerRepository;
         this.orderRepository = orderRepository;
+
         populatePublishers();
         populateAuthors();
         populateBooks();
@@ -56,7 +74,39 @@ public class Bootstrap implements CommandLineRunner {
         populateOrders();
     }
 
-    public static Supplier<Publisher> publisher() {
+    private static void populatePublishers() {
+        publishers = Stream.generate(publisherFactory())
+                .limit(MAX_NUMBER_OF_PUBLISHERS)
+                .toList();
+    }
+
+    private static void populateAuthors() {
+        authors = Stream.generate(authorFactory())
+                .limit(MAX_NUMBER_OF_AUTHORS)
+                .distinct()
+                .toList();
+    }
+
+    private static void populateBooks() {
+        books = Stream.generate(bookFactory())
+                .limit(MAX_NUMBER_OF_BOOKS)
+//                .distinct()
+                .toList();
+    }
+
+    private static void populateCustomers() {
+        customers = Stream.generate(customerFactory())
+                .limit(MAX_NUMBER_OF_CUSTOMERS)
+                .toList();
+    }
+
+    private static void populateOrders() {
+        orders = Stream.generate(orderFactory())
+                .limit(MAX_NUMBER_OF_ORDERS)
+                .toList();
+    }
+
+    public static Supplier<Publisher> publisherFactory() {
         return () -> Publisher.builder()
                 .id(UUID.randomUUID())
                 .publisherName(randomPublisherName())
@@ -67,7 +117,46 @@ public class Bootstrap implements CommandLineRunner {
                 .build();
     }
 
-    public static Supplier<Customer> customer() {
+    public static Supplier<Author> authorFactory() {
+        return () -> Author.builder()
+                .id(UUID.randomUUID())
+                .firstName(randomFirstName())
+                .lastName(randomLastName())
+                .email(randomEmail())
+                .address(randomAddress())
+                .events(new Events())
+                .build();
+    }
+
+    public static Supplier<Book> bookFactory() {
+        return () -> {
+            double randomPrice = faker.number().randomDouble(2, 1, 100);
+            int randomQuantity = faker.number().numberBetween(1, 15);
+            int randomPublisher = faker.number().numberBetween(0, MAX_NUMBER_OF_PUBLISHERS);
+            Set<Author> authorsForBook = getAuthorsForBook();
+
+            return Book.builder()
+                    .id(UUID.randomUUID())
+                    .title(randomTitle())
+                    .description(randomDescription())
+                    .isbn(randomISBN13())
+                    .price(BigDecimal.valueOf(randomPrice))
+                    .quantityOnHand(randomQuantity)
+                    .events(new Events())
+                    .category(randomCategory())
+                    .publisher(publishers.get(randomPublisher))
+                    .authors(authorsForBook)
+                    .build();
+        };
+    }
+
+    private static Set<Author> getAuthorsForBook() {
+        int numberOfAuthors = faker.number().numberBetween(1, MAX_NUMBER_OF_AUTHORS_PER_BOOK);
+
+        return authors.stream().limit(numberOfAuthors).collect(Collectors.toSet());
+    }
+
+    public static Supplier<Customer> customerFactory() {
         return () -> Customer.builder()
                 .id(UUID.randomUUID())
                 .firstName(randomFirstName())
@@ -77,6 +166,31 @@ public class Bootstrap implements CommandLineRunner {
                 .address(randomAddress())
                 .events(new Events())
                 .build();
+    }
+
+    public static Supplier<Order> orderFactory() {
+        return () -> {
+            int randomCustomer = faker.number().numberBetween(0, customers.size());
+            int countOfBooksPerOrder = faker.random().nextInt(1, MAX_NUMBER_OF_BOOKS_PER_ORDER);
+
+            var booksForOrder = getBooksForOrder(countOfBooksPerOrder);
+
+            return Order.builder()
+                    .id(UUID.randomUUID())
+                    .countOfBooks(countOfBooksPerOrder)
+                    .totalPrice(randomTotalPrice())
+                    .events(new Events())
+                    .customer(customers.get(randomCustomer))
+                    .books(booksForOrder)
+                    .build();
+        };
+    }
+
+    private static Map<Book, Integer> getBooksForOrder(int countOfBooks) {
+        return Stream.generate(() -> {
+            int randomBook = faker.number().numberBetween(0, books.size());
+            return books.get(randomBook);
+        }).limit(countOfBooks).collect(Collectors.toMap(book -> book, _ -> 1, Integer::sum));
     }
 
     public static Address randomAddress() {
@@ -196,6 +310,7 @@ public class Bootstrap implements CommandLineRunner {
 
     @Override
     public final void run(String... args) {
+<<<<<<< Updated upstream
 //        if (bookRepository.count() < 1) {
             publishers.forEach(publisherRepository::savePublisher);
             authors.forEach(authorRepository::saveAuthor);
@@ -316,4 +431,15 @@ public class Bootstrap implements CommandLineRunner {
             return authors.get(randomAuthor);
         }).limit(numberOfAuthors).collect(Collectors.toSet());
     }
+=======
+        if (bookRepository.count() < 1) {
+        publishers.forEach(publisherRepository::savePublisher);
+        authors.forEach(authorRepository::saveAuthor);
+        books.forEach(bookRepository::completelySaveBook);
+        customers.forEach(customerRepository::saveCustomer);
+        orders.forEach(orderRepository::save);
+        log.info("Bootstrap is completed basic values in database.");
+        }
+    }
+>>>>>>> Stashed changes
 }
