@@ -42,24 +42,6 @@ public class OrderController {
         return ResponseEntity.ok(mapper.toModel(order));
     }
 
-<<<<<<< Updated upstream
-//    @GetMapping("/findByCustomerId/{customerIdForOrders}")
-//    final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
-//        return ResponseEntity
-//                .status(HttpStatus.OK)
-//                .body(mapper.listOfModel(orderRepository
-//                        .findByCustomerId(customerId)));
-//    }
-
-//    @GetMapping("/findByBookId/{bookIdForOrders}")
-//    final ResponseEntity<List<OrderModel>> findByBookId(@PathVariable("bookIdForOrders")UUID bookId) {
-//        return ResponseEntity
-//                .status(HttpStatus.OK)
-//                .body(orderRepository
-//                        .findByBookId(bookId)
-//                        .stream().map(mapper::toModel).toList());
-//    }
-=======
     @GetMapping("/findByCustomerId/{customerIdForOrders}")
     final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
         var orders = orderRepository.findByCustomerId(customerId)
@@ -76,7 +58,6 @@ public class OrderController {
 
         return ResponseEntity.ok(mapper.listOfModel(orders));
     }
->>>>>>> Stashed changes
 
     @PostMapping("/createOrder")
     final ResponseEntity<String> createOrder(@RequestParam UUID customerId,
@@ -120,16 +101,8 @@ public class OrderController {
                 .build();
     }
 
-<<<<<<< Updated upstream
-        orderRepository.save(order);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Location", String.format("/library/order/findById/%s", order.getId()));
-        return new ResponseEntity<>(httpHeaders, HttpStatus.CREATED);
-=======
     private Book getBook(UUID uuid) {
         return bookRepository.findById(uuid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid book ID -> " + uuid));
->>>>>>> Stashed changes
     }
 }
