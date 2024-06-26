@@ -59,14 +59,6 @@ public class AuthorRepository {
     }
 
     public Result<Author, Exception> saveAuthor(Author author) {
-<<<<<<< Updated upstream
-
-        if (emailExists(author.getEmail())) {
-            return Result.failure(new IllegalArgumentException("Email already exists"));
-        }
-
-=======
->>>>>>> Stashed changes
         try {
             String saveAuthor = """
                     INSERT INTO Authors (id, first_name, last_name, email,
@@ -110,11 +102,7 @@ public class AuthorRepository {
                 .build();
     }
 
-<<<<<<< Updated upstream
-    private boolean emailExists(Email email) {
-=======
     public boolean emailExists(Email email) {
->>>>>>> Stashed changes
         String findEmail = "SELECT COUNT(*) FROM Authors WHERE email = ?";
         Integer count = jdbcTemplate.queryForObject(
                 findEmail,

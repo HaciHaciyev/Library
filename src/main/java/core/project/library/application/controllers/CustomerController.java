@@ -48,27 +48,6 @@ public class CustomerController {
 
     @PostMapping("/saveCustomer")
     final ResponseEntity<String> saveCustomer(@RequestBody @Valid CustomerDTO customerDTO) {
-<<<<<<< Updated upstream
-        Customer customer = customerMapper.customerFromDTO(customerDTO);
-
-        var customerResult = customerRepository.saveCustomer(customer);
-
-        customerResult.ifFailure(this::throwIfFailure);
-
-        Customer savedCustomer = customerResult.value();
-
-        return ResponseEntity
-                .created(URI.create("/library/customer/findById/" + savedCustomer.getId()))
-                .body("Successfully saved customer");
-    }
-
-    private void throwIfFailure(Exception e) {
-        if (e instanceof IllegalArgumentException) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Couldn't save customer");
-        }
-=======
         if (customerRepository.emailExists(customerDTO.email())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
         }
@@ -81,6 +60,5 @@ public class CustomerController {
         return ResponseEntity
                 .created(URI.create("/library/customer/findById/" + savedCustomer.getId()))
                 .body("Successfully saved customer");
->>>>>>> Stashed changes
     }
 }

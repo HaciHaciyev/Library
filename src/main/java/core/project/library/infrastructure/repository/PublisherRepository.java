@@ -9,7 +9,6 @@ import core.project.library.domain.value_objects.PublisherName;
 import core.project.library.infrastructure.exceptions.Result;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCountCallbackHandler;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
@@ -52,21 +51,6 @@ public class PublisherRepository {
     }
 
     public Result<Publisher, Exception> savePublisher(Publisher publisher) {
-<<<<<<< Updated upstream
-        if (publisherExists(publisher.getId())) {
-            return Result.failure(new IllegalArgumentException("Publisher already exists"));
-        }
-
-        if (phoneExists(publisher.getPhone())) {
-            return Result.failure(new IllegalArgumentException("Phone already exists"));
-        }
-
-        if (emailExists(publisher.getEmail())) {
-            return Result.failure(new IllegalArgumentException("Email already exists"));
-        }
-
-=======
->>>>>>> Stashed changes
         String savePublisher = """
                 INSERT INTO Publishers (id, publisher_name, state, city, street, home,
                                phone, email, creation_date, last_modified_date)
@@ -106,7 +90,6 @@ public class PublisherRepository {
                 .build();
     }
 
-<<<<<<< Updated upstream
     public boolean publisherExists(UUID id) {
         String findPublisher = "SELECT COUNT(*) from Publishers WHERE id = ?";
         Integer count = jdbcTemplate.queryForObject(
@@ -117,8 +100,6 @@ public class PublisherRepository {
 
         return count != null && count > 0;
     }
-=======
->>>>>>> Stashed changes
 
     public boolean emailExists(Email email) {
         String findEmail = "SELECT COUNT(*) FROM Publishers WHERE email = ?";

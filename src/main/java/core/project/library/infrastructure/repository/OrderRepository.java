@@ -5,13 +5,8 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.exceptions.Result;
-<<<<<<< Updated upstream
-import org.springframework.dao.DataAccessException;
-=======
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcOperations;
->>>>>>> Stashed changes
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.stereotype.Repository;
@@ -103,14 +98,9 @@ public class OrderRepository {
 
             return Result.success(order);
 
-<<<<<<< Updated upstream
-        } catch (DataAccessException e) {
-=======
-            JDBCop
 
         } catch (DataAccessException e) {
             log.error(e.getMessage());
->>>>>>> Stashed changes
             return Result.failure(new NotFoundException("Couldn't find order"));
         }
     }
@@ -143,10 +133,7 @@ public class OrderRepository {
             return Result.success(orders);
 
         } catch (DataAccessException e) {
-<<<<<<< Updated upstream
-=======
             log.error(e.getMessage());
->>>>>>> Stashed changes
             return Result.failure(new NotFoundException("Couldn't find orders"));
         }
     }
@@ -172,10 +159,7 @@ public class OrderRepository {
             return Result.success(orders);
 
         } catch (DataAccessException e) {
-<<<<<<< Updated upstream
-=======
             log.error(e.getMessage());
->>>>>>> Stashed changes
             return Result.failure(new NotFoundException("Couldn't find orders"));
         }
     }
@@ -187,36 +171,20 @@ public class OrderRepository {
         );
     }
 
-<<<<<<< Updated upstream
-=======
     @Transactional
->>>>>>> Stashed changes
     public Result<Order, Exception> save(Order order) {
         try {
             jdbcTemplate.update("""
                             INSERT INTO Orders (id, customer_id,
                                             count_of_book, total_price,
                                             creation_date, last_modified_date)
-<<<<<<< Updated upstream
-                                            VALUES (?,?,?,?,?,?)
-=======
                                             VALUES (?, ?, ?, ?, ?, ?)
->>>>>>> Stashed changes
                             """,
                     order.getId().toString(), order.getCustomer().getId().toString(),
                     order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
                     order.getEvents().creation_date(), order.getEvents().last_update_date()
             );
 
-<<<<<<< Updated upstream
-            order.getBooks().forEach(book ->
-                    jdbcTemplate.update("""
-                                    INSERT INTO Book_Order (book_id, order_id)
-                                                VALUES (?,?)
-                                    """,
-                            book.getId().toString(),
-                            order.getId().toString()
-=======
             order.getBooks().forEach((book, count) ->
                     jdbcTemplate.update("""
                                     INSERT INTO Book_Order (book_id, order_id, book_count)
@@ -225,77 +193,16 @@ public class OrderRepository {
                             book.getId().toString(),
                             order.getId().toString(),
                             count
->>>>>>> Stashed changes
                     ));
 
             return Result.success(order);
         } catch (DataAccessException e) {
-<<<<<<< Updated upstream
-=======
             log.error(e.getMessage());
->>>>>>> Stashed changes
             return Result.failure(e);
         }
     }
 
     private Order mapOrder(ResultSet rs) throws SQLException {
-<<<<<<< Updated upstream
-
-        //TODO refactor and fix
-        rs.first();
-        var listOfBooks = new HashSet<Book>();
-
-        int countOfRowsScrollForBooksOfOrder = 0;
-        // scroll books
-        do {
-            String bookId = rs.getString("book_id");
-
-            // get publisher for book
-            Publisher publisher = mapPublisher(rs);
-
-            int countOfRowsScrollForBookAuthors = 0;
-            Set<Author> authors = new LinkedHashSet<>();
-
-            // scroll authors
-            if (rs.getRow() == 1) {
-                Author author = mapAuthor(rs);
-                authors.add(author);
-            }
-            do {
-                if (bookId.equals(rs.getString("book_id"))) {
-                    Author author = mapAuthor(rs);
-                    authors.add(author);
-                }
-                countOfRowsScrollForBookAuthors++;
-            } while (rs.next());
-
-            // scroll back from authors
-            while (countOfRowsScrollForBookAuthors != 0) {
-                rs.previous();
-                countOfRowsScrollForBookAuthors--;
-            }
-
-            // construct book
-            Book book = mapBook(rs, publisher, authors);
-
-            listOfBooks.add(book);
-            countOfRowsScrollForBooksOfOrder++;
-        } while (rs.next());
-
-        // scroll back from books
-//        while (countOfRowsScrollForBooksOfOrder != 0) {
-//            rs.previous();
-//            countOfRowsScrollForBooksOfOrder--;
-//        }
-        rs.first();
-
-        Customer customer = mapCustomer(rs);
-
-        return constructOrder(rs, customer, listOfBooks);
-    }
-
-    private Order constructOrder(ResultSet rs, Customer customer, HashSet<Book> listOfBooks) throws SQLException {
-=======
         Map<Book, Integer> books = new LinkedHashMap<>();
         String lastBookId = null;
 
@@ -335,7 +242,6 @@ public class OrderRepository {
     }
 
     private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> listOfBooks) throws SQLException {
->>>>>>> Stashed changes
         Events events = new Events(
                 rs.getObject("order_creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("order_last_modified_date", Timestamp.class).toLocalDateTime()
@@ -375,23 +281,15 @@ public class OrderRepository {
                 .build();
     }
 
-<<<<<<< Updated upstream
-    private Book mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
-=======
     private record BookAndCount(Book book, Integer count) {}
 
     private BookAndCount mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
->>>>>>> Stashed changes
         Events events = new Events(
                 rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
         );
 
-<<<<<<< Updated upstream
-        return Book.builder()
-=======
         Book book = Book.builder()
->>>>>>> Stashed changes
                 .id(UUID.fromString(rs.getString("book_id")))
                 .title(new Title(rs.getString("book_title")))
                 .description(new Description(rs.getString("book_description")))
@@ -403,11 +301,8 @@ public class OrderRepository {
                 .publisher(publisher)
                 .authors(authors)
                 .build();
-<<<<<<< Updated upstream
-=======
 
         return new BookAndCount(book, rs.getInt("book_count"));
->>>>>>> Stashed changes
     }
 
     private Author mapAuthor(ResultSet rs) throws SQLException {
@@ -417,10 +312,7 @@ public class OrderRepository {
                 rs.getString("author_street"),
                 rs.getString("author_home")
         );
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
         Events events = new Events(
                 rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
                 rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()

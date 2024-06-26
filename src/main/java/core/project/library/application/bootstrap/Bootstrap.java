@@ -10,14 +10,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-<<<<<<< Updated upstream
-import java.util.*;
-=======
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
->>>>>>> Stashed changes
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -29,15 +25,6 @@ public class Bootstrap implements CommandLineRunner {
 
     private static final Faker faker = new Faker();
 
-<<<<<<< Updated upstream
-    private final int maxNumberOfAuthors = faker.number().numberBetween(5, 15);
-    private final int maxNumberOfAuthorsPerBook = faker.number().numberBetween(1, 4);
-    private final int maxNumberOfPublishers = faker.number().numberBetween(1, 5);
-    private final int maxNumberOfCustomers = faker.number().numberBetween(1, 10);
-    private final int maxNumberOfBooks = faker.number().numberBetween(1, 30);
-    private final int maxNumberOfOrders = faker.number().numberBetween(1, 15);
-    private final int maxCountOfBooksForOrder = faker.number().numberBetween(1, 10);
-=======
     private static final int MAX_NUMBER_OF_AUTHORS = faker.number().numberBetween(5, 15);
     private static final int MAX_NUMBER_OF_AUTHORS_PER_BOOK = 4;
     private static final int MAX_NUMBER_OF_BOOKS = faker.number().numberBetween(5, 30);
@@ -45,7 +32,6 @@ public class Bootstrap implements CommandLineRunner {
     private static final int MAX_NUMBER_OF_CUSTOMERS = faker.number().numberBetween(3, 10);
     private static final int MAX_NUMBER_OF_ORDERS = faker.number().numberBetween(5, 15);
     private static final int MAX_NUMBER_OF_PUBLISHERS = faker.number().numberBetween(2, 5);
->>>>>>> Stashed changes
 
     private static List<Publisher> publishers;
     private static List<Author> authors;
@@ -310,128 +296,6 @@ public class Bootstrap implements CommandLineRunner {
 
     @Override
     public final void run(String... args) {
-<<<<<<< Updated upstream
-//        if (bookRepository.count() < 1) {
-            publishers.forEach(publisherRepository::savePublisher);
-            authors.forEach(authorRepository::saveAuthor);
-            books.forEach(bookRepository::completelySaveBook);
-            customers.forEach(customerRepository::saveCustomer);
-            orders.forEach(orderRepository::save);
-            log.info("Bootstrap is completed basic values in database.");
-//        }
-    }
-
-    private Supplier<Book> bookSupplier() {
-        return () -> {
-            double randomPrice = faker.number().randomDouble(2, 1, 100);
-            int randomQuantity = faker.number().numberBetween(1, 15);
-            int randomPublisher = faker.number().numberBetween(0, maxNumberOfPublishers);
-            Set<Author> authorsForBook = getAuthorsForBook();
-
-            return Book.builder()
-                    .id(UUID.randomUUID())
-                    .title(randomTitle())
-                    .description(randomDescription())
-                    .isbn(randomISBN13())
-                    .price(BigDecimal.valueOf(randomPrice))
-                    .quantityOnHand(randomQuantity)
-                    .events(new Events())
-                    .category(randomCategory())
-                    .publisher(publishers.get(randomPublisher))
-                    .authors(authorsForBook)
-                    .build();
-        };
-    }
-
-    private Supplier<Order> orderSupplier() {
-        return () -> {
-            int randomCustomer = faker.number().numberBetween(0, customers.size());
-            int countOfBooks = 1;
-
-            if (maxCountOfBooksForOrder > 1) {
-                countOfBooks = faker.number().numberBetween(1, maxCountOfBooksForOrder);
-            }
-            // TODO possible issue with set
-            Set<Book> books = getBooksForOrder(countOfBooks);
-
-            return Order.builder()
-                    .id(UUID.randomUUID())
-                    .countOfBooks(countOfBooks)
-                    .totalPrice(randomTotalPrice())
-                    .events(new Events())
-                    .customer(customers.get(randomCustomer))
-                    .books(books)
-                    .build();
-        };
-    }
-
-    private void populatePublishers() {
-        publishers = Stream.generate(publisher())
-                .limit(maxNumberOfPublishers)
-                .toList();
-    }
-
-    private void populateAuthors() {
-        authors = Stream.generate(authorSupplier())
-                .limit(maxNumberOfAuthors)
-                .toList();
-    }
-
-    public static Supplier<Author> authorSupplier() {
-        return () -> Author.builder()
-                .id(UUID.randomUUID())
-                .firstName(randomFirstName())
-                .lastName(randomLastName())
-                .email(randomEmail())
-                .address(randomAddress())
-                .events(new Events())
-                .build();
-    }
-
-    private void populateBooks() {
-        var bookSupplier = bookSupplier();
-        books = Stream.generate(bookSupplier)
-                .distinct()
-                .limit(maxNumberOfBooks)
-                .toList();
-    }
-
-    private void populateCustomers() {
-        var customerSupplier = customer();
-        customers = Stream.generate(customerSupplier)
-                .limit(maxNumberOfCustomers)
-                .toList();
-    }
-
-    private void populateOrders() {
-        var orderSupplier = orderSupplier();
-        orders = Stream.generate(orderSupplier)
-                .limit(maxNumberOfOrders)
-                .toList();
-    }
-
-    private Set<Book> getBooksForOrder(int countOfBooks) {
-//        List<Book> booksForOrder = books.stream().distinct().toList();
-
-        return Stream.generate(() -> {
-            int randomBook = faker.number().numberBetween(0, maxNumberOfBooks);
-            return books.get(randomBook);
-        }).limit(countOfBooks).collect(Collectors.toSet());
-    }
-
-    private Set<Author> getAuthorsForBook() {
-        int numberOfAuthors = 1;
-
-        if (maxNumberOfAuthorsPerBook > 1) {
-            numberOfAuthors = faker.number().numberBetween(1, maxNumberOfAuthorsPerBook);
-        }
-
-        return Stream.generate(() -> {
-            int randomAuthor = faker.number().numberBetween(0, maxNumberOfAuthors);
-            return authors.get(randomAuthor);
-        }).limit(numberOfAuthors).collect(Collectors.toSet());
-    }
-=======
         if (bookRepository.count() < 1) {
         publishers.forEach(publisherRepository::savePublisher);
         authors.forEach(authorRepository::saveAuthor);
@@ -441,5 +305,4 @@ public class Bootstrap implements CommandLineRunner {
         log.info("Bootstrap is completed basic values in database.");
         }
     }
->>>>>>> Stashed changes
 }
