@@ -22,7 +22,7 @@ public class Order {
     private final PaidAmount paidAmount;
     private final ChangeOfOrder changeOfOrder;
     private final CreditCard creditCard;
-    private final LocalDateTime creationTime;
+    private final LocalDateTime creationDate;
     private final /**@ManyToOne*/ Customer customer;
     private final /**@ManyToMany*/ Map<Book, Integer> books;
 
@@ -46,7 +46,7 @@ public class Order {
                 Objects.equals(paidAmount, order.paidAmount) &&
                 Objects.equals(changeOfOrder, order.changeOfOrder) &&
                 Objects.equals(creditCard, order.creditCard) &&
-                Objects.equals(creationTime, order.creationTime) &&
+                Objects.equals(creationDate, order.creationDate) &&
                 Objects.equals(customer, order.customer) &&
                 Objects.equals(ourBooks, theirBooks);
     }
@@ -59,7 +59,7 @@ public class Order {
         result = 31 * result + Objects.hashCode(paidAmount);
         result = 31 * result + Objects.hashCode(changeOfOrder);
         result = 31 * result + Objects.hashCode(creditCard);
-        result = 31 * result + Objects.hashCode(creationTime);
+        result = 31 * result + Objects.hashCode(creationDate);
         result = 31 * result + Objects.hashCode(customer);
         return result;
     }
@@ -78,7 +78,7 @@ public class Order {
                 """,
                 id.toString(), countOfBooks,
                 totalPrice.totalPrice(), paidAmount.paidAmount(),
-                changeOfOrder.changeOfOrder(), creationTime.toString()
+                changeOfOrder.changeOfOrder(), creationDate.toString()
         );
     }
 
@@ -87,7 +87,7 @@ public class Order {
         private Integer countOfBooks;
         private PaidAmount paidAmount;
         private CreditCard creditCard;
-        private LocalDateTime creationTime;
+        private LocalDateTime creationDate;
         private /**@ManyToOne*/ Customer customer;
         private /**@ManyToMany*/ Map<Book, Integer> books;
 
@@ -103,18 +103,18 @@ public class Order {
             return this;
         }
 
-        public Builder setPaidAmount(final PaidAmount paidAmount) {
+        public Builder paidAmount(final PaidAmount paidAmount) {
             this.paidAmount = paidAmount;
             return this;
         }
 
-        public Builder setCreditCard(final CreditCard creditCard) {
+        public Builder creditCard(final CreditCard creditCard) {
             this.creditCard = creditCard;
             return this;
         }
 
-        public Builder setCreationTime(LocalDateTime creationTime) {
-            this.creationTime = creationTime;
+        public Builder creationDate(LocalDateTime creationDate) {
+            this.creationDate = creationDate;
             return this;
         }
 
@@ -136,7 +136,7 @@ public class Order {
             validateQuantityOnHandOfBooksAndChangeIt(books);
 
             Order order = new Order(id, countOfBooks, totalPrice, paidAmount, changeOfOrder,
-                    creditCard, creationTime, customer, Collections.unmodifiableMap(books));
+                    creditCard, creationDate, customer, Collections.unmodifiableMap(books));
 
             customer.addOrder(order);
             books.forEach((book, _) -> book.addOrder(order));
@@ -149,7 +149,7 @@ public class Order {
             Objects.requireNonNull(totalPrice, "totalPrice can`t be null");
             Objects.requireNonNull(changeOfOrder, "changeOfOrder can`t be null");
             Objects.requireNonNull(creditCard, "credit card can`t be null");
-            Objects.requireNonNull(creationTime, "creation time can`t be null");
+            Objects.requireNonNull(creationDate, "creation time can`t be null");
             Objects.requireNonNull(customer, "customer can`t be null");
             Objects.requireNonNull(books, "books can`t be null");
 

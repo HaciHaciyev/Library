@@ -9,11 +9,9 @@ import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -24,6 +22,7 @@ import java.util.stream.Stream;
 public class Bootstrap implements CommandLineRunner {
 
     private static final Faker faker = new Faker();
+    private static final Random random = new Random(System.currentTimeMillis());
 
     private static final int MAX_NUMBER_OF_AUTHORS = faker.number().numberBetween(5, 15);
     private static final int MAX_NUMBER_OF_AUTHORS_PER_BOOK = 4;
@@ -60,6 +59,18 @@ public class Bootstrap implements CommandLineRunner {
         populateOrders();
     }
 
+    @Override
+    public final void run(String... args) {
+        if (bookRepository.count() < 1) {
+            publishers.forEach(publisherRepository::savePublisher);
+            authors.forEach(authorRepository::saveAuthor);
+            books.forEach(bookRepository::completelySaveBook);
+            customers.forEach(customerRepository::saveCustomer);
+            orders.forEach(orderRepository::save);
+            log.info("Bootstrap is completed basic values in database.");
+        }
+    }
+
     private static void populatePublishers() {
         publishers = Stream.generate(publisherFactory())
                 .limit(MAX_NUMBER_OF_PUBLISHERS)
@@ -76,7 +87,6 @@ public class Bootstrap implements CommandLineRunner {
     private static void populateBooks() {
         books = Stream.generate(bookFactory())
                 .limit(MAX_NUMBER_OF_BOOKS)
-//                .distinct()
                 .toList();
     }
 
@@ -126,8 +136,8 @@ public class Bootstrap implements CommandLineRunner {
                     .title(randomTitle())
                     .description(randomDescription())
                     .isbn(randomISBN13())
-                    .price(BigDecimal.valueOf(randomPrice))
-                    .quantityOnHand(randomQuantity)
+                    .price(new Price(randomPrice))
+                    .quantityOnHand(new QuantityOnHand(randomQuantity))
                     .events(new Events())
                     .category(randomCategory())
                     .publisher(publishers.get(randomPublisher))
@@ -164,8 +174,9 @@ public class Bootstrap implements CommandLineRunner {
             return Order.builder()
                     .id(UUID.randomUUID())
                     .countOfBooks(countOfBooksPerOrder)
-                    .totalPrice(randomTotalPrice())
-                    .events(new Events())
+                    .paidAmount(new PaidAmount((double) faker.number().numberBetween(1, 5000)))
+                    .creditCard(randomCreditCard())
+                    .creationDate(LocalDateTime.now())
                     .customer(customers.get(randomCustomer))
                     .books(booksForOrder)
                     .build();
@@ -290,19 +301,50 @@ public class Bootstrap implements CommandLineRunner {
         return new Title(faker.book().title());
     }
 
-    public static TotalPrice randomTotalPrice() {
-        return new TotalPrice(BigDecimal.valueOf(faker.number().numberBetween(1, 5000)));
+    public static CreditCard randomCreditCard() {
+        return new CreditCard(randomCreditCardNumber(), randomDate());
     }
 
-    @Override
-    public final void run(String... args) {
-        if (bookRepository.count() < 1) {
-        publishers.forEach(publisherRepository::savePublisher);
-        authors.forEach(authorRepository::saveAuthor);
-        books.forEach(bookRepository::completelySaveBook);
-        customers.forEach(customerRepository::saveCustomer);
-        orders.forEach(orderRepository::save);
-        log.info("Bootstrap is completed basic values in database.");
+    private static String randomCreditCardNumber() {
+        String bin = "";
+        int length = 16;
+        int randomNumberLength = length - (bin.length() + 1);
+
+        StringBuilder builder = new StringBuilder(bin);
+        for (int i = 0; i < randomNumberLength; i++) {
+            int digit = random.nextInt(10);
+            builder.append(digit);
         }
+
+        int checkDigit = getCheckDigit(builder.toString());
+        builder.append(checkDigit);
+
+        return builder.toString();
+    }
+
+    private static int getCheckDigit(String number) {
+        int sum = 0;
+        for (int i = 0; i < number.length(); i++) {
+
+            int digit = Integer.parseInt(number.substring(i, (i + 1)));
+
+            if ((i % 2) == 0) {
+                digit = digit * 2;
+                if (digit > 9) {
+                    digit = (digit / 10) + (digit % 10);
+                }
+            }
+            sum += digit;
+        }
+
+        int mod = sum % 10;
+        return ((mod == 0) ? 0 : 10 - mod);
+    }
+
+    private static LocalDate randomDate() {
+        long start = LocalDate.of(2021, 1, 1).toEpochDay();
+        long end = LocalDate.of(2027, 12, 31).toEpochDay();
+        long randomDay = ThreadLocalRandom.current().nextLong(start, end);
+        return LocalDate.ofEpochDay(randomDay);
     }
 }
