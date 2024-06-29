@@ -5,8 +5,12 @@ Create table Orders (
   customer_id varchar(36) not null,
   count_of_book int not null,
   total_price decimal(38, 2) not null,
+  paid_amount decimal(38, 2) not null,
+  change_of_order decimal(38, 2) not null,
+  credit_card_number char(16) not null,
+  credit_card_expiration timestamp not null,
+  credit_card_cvv char(3) not null,
   creation_date timestamp not null,
-  last_modified_date timestamp not null,
   Primary key (id),
   constraint customer_order_fk
   foreign key (customer_id) references Customers (id)
@@ -15,7 +19,7 @@ Create table Orders (
 Create table Book_Order (
   book_id varchar(36) not null,
   order_id varchar(36) not null,
-  book_count integer not null,
+  count_of_book_copies integer not null,
   primary key (book_id, order_id),
   constraint book_order_fk
   foreign key (book_id) references Books (id),

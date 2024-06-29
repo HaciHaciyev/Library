@@ -91,6 +91,14 @@ public class OrderRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    private PreparedStatementCreator preparedStatementFactory(UUID id) {
+        return connection -> connection.prepareStatement(
+                GET_ORDER_BY_ID.formatted(id.toString()),
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY
+        );
+    }
+
     public Result<Order, Exception> findById(UUID orderId) {
         try {
             Order order = jdbcTemplate.query(
@@ -98,19 +106,10 @@ public class OrderRepository {
             );
 
             return Result.success(order);
-
         } catch (DataAccessException e) {
             log.error(e.getMessage());
             return Result.failure(new NotFoundException("Couldn't find order"));
         }
-    }
-
-    private PreparedStatementCreator preparedStatementFactory(UUID id) {
-        return connection -> connection.prepareStatement(
-                GET_ORDER_BY_ID.formatted(id.toString()),
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY
-        );
     }
 
     public Result<List<Order>, Exception> findByCustomerId(UUID customerId) {
@@ -123,17 +122,18 @@ public class OrderRepository {
             List<Order> orders = jdbcTemplate.query(
                             findByCustomerId,
                             (rs, _) -> UUID.fromString(rs.getString("id")),
-                            customerId.toString())
-                    .stream()
+                            customerId.toString()
+                    ).stream()
                     .distinct()
-                    .map(uuid -> jdbcTemplate.query(
-                            preparedStatementFactory(uuid),
-                            this::mapOrder
-                    ))
+                    .map(uuid ->
+                            jdbcTemplate.query(
+                                    preparedStatementFactory(uuid),
+                                    this::mapOrder
+                            )
+                    )
                     .toList();
 
             return Result.success(orders);
-
         } catch (DataAccessException e) {
             log.error(e.getMessage());
             return Result.failure(new NotFoundException("Couldn't find orders"));
@@ -160,18 +160,10 @@ public class OrderRepository {
                     .toList();
 
             return Result.success(orders);
-
         } catch (DataAccessException e) {
             log.error(e.getMessage());
             return Result.failure(new NotFoundException("Couldn't find orders"));
         }
-    }
-
-    private Order mapUUIDToOrder(UUID uuid) throws DataAccessException {
-        return jdbcTemplate.query(
-                preparedStatementFactory(uuid),
-                this::mapOrder
-        );
     }
 
     @Transactional
@@ -196,7 +188,8 @@ public class OrderRepository {
                             book.getId().toString(),
                             order.getId().toString(),
                             count
-                    ));
+                    )
+            );
 
             return Result.success(order);
         } catch (DataAccessException e) {

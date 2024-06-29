@@ -1,14 +1,16 @@
 package core.project.library.domain.entities;
 
-import core.project.library.domain.events.Events;
+import core.project.library.domain.value_objects.ChangeOfOrder;
+import core.project.library.domain.value_objects.CreditCard;
+import core.project.library.domain.value_objects.PaidAmount;
 import core.project.library.domain.value_objects.TotalPrice;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -17,7 +19,10 @@ public class Order {
     private final UUID id;
     private final Integer countOfBooks;
     private final TotalPrice totalPrice;
-    private final Events events;
+    private final PaidAmount paidAmount;
+    private final ChangeOfOrder changeOfOrder;
+    private final CreditCard creditCard;
+    private final LocalDateTime creationTime;
     private final /**@ManyToOne*/ Customer customer;
     private final /**@ManyToMany*/ Map<Book, Integer> books;
 
@@ -32,13 +37,16 @@ public class Order {
 
         Order order = (Order) o;
 
-        Set<UUID> ourBooks = books.keySet().stream().map(Book::getId).collect(Collectors.toSet());
-        Set<UUID> theirBooks = order.books.keySet().stream().map(Book::getId).collect(Collectors.toSet());
+        List<UUID> ourBooks = books.keySet().stream().map(Book::getId).toList();
+        List<UUID> theirBooks = order.books.keySet().stream().map(Book::getId).toList();
 
         return Objects.equals(id, order.id) &&
                 Objects.equals(countOfBooks, order.countOfBooks) &&
                 Objects.equals(totalPrice, order.totalPrice) &&
-                Objects.equals(events, order.events) &&
+                Objects.equals(paidAmount, order.paidAmount) &&
+                Objects.equals(changeOfOrder, order.changeOfOrder) &&
+                Objects.equals(creditCard, order.creditCard) &&
+                Objects.equals(creationTime, order.creationTime) &&
                 Objects.equals(customer, order.customer) &&
                 Objects.equals(ourBooks, theirBooks);
     }
@@ -48,7 +56,10 @@ public class Order {
         int result = Objects.hashCode(id);
         result = 31 * result + Objects.hashCode(countOfBooks);
         result = 31 * result + Objects.hashCode(totalPrice);
-        result = 31 * result + Objects.hashCode(events);
+        result = 31 * result + Objects.hashCode(paidAmount);
+        result = 31 * result + Objects.hashCode(changeOfOrder);
+        result = 31 * result + Objects.hashCode(creditCard);
+        result = 31 * result + Objects.hashCode(creationTime);
         result = 31 * result + Objects.hashCode(customer);
         return result;
     }
@@ -60,18 +71,23 @@ public class Order {
                 id = %s,
                 count_of_books = %d,
                 total_price = %f,
+                paid_amount = %f,
+                change_of_order = %f,
                 creation_date = %s,
-                last_modified_date = %s
                 }
-                """, id.toString(), countOfBooks, totalPrice.totalPrice(),
-                events.creation_date().toString(), events.last_update_date().toString());
+                """,
+                id.toString(), countOfBooks,
+                totalPrice.totalPrice(), paidAmount.paidAmount(),
+                changeOfOrder.changeOfOrder(), creationTime.toString()
+        );
     }
 
     public static class Builder {
         private UUID id;
         private Integer countOfBooks;
-        private TotalPrice totalPrice;
-        private Events events;
+        private PaidAmount paidAmount;
+        private CreditCard creditCard;
+        private LocalDateTime creationTime;
         private /**@ManyToOne*/ Customer customer;
         private /**@ManyToMany*/ Map<Book, Integer> books;
 
@@ -87,13 +103,18 @@ public class Order {
             return this;
         }
 
-        public Builder totalPrice(final TotalPrice totalPrice) {
-            this.totalPrice = totalPrice;
+        public Builder setPaidAmount(final PaidAmount paidAmount) {
+            this.paidAmount = paidAmount;
             return this;
         }
 
-        public Builder events(final Events events) {
-            this.events = events;
+        public Builder setCreditCard(final CreditCard creditCard) {
+            this.creditCard = creditCard;
+            return this;
+        }
+
+        public Builder setCreationTime(LocalDateTime creationTime) {
+            this.creationTime = creationTime;
             return this;
         }
 
@@ -108,32 +129,54 @@ public class Order {
         }
 
         public final Order build() {
-            validate();
+            TotalPrice totalPrice = calculateTotalPrice(books);
 
-            Order order = new Order(id, countOfBooks, totalPrice,
-                    events, customer, Collections.unmodifiableMap(books));
+            validate(totalPrice);
+
+            ChangeOfOrder changeOfOrder =
+                    new ChangeOfOrder(paidAmount.paidAmount() - totalPrice.totalPrice());
+
+            Order order = new Order(id, countOfBooks, totalPrice, paidAmount, changeOfOrder,
+                    creditCard, creationTime, customer, Collections.unmodifiableMap(books));
 
             customer.addOrder(order);
             books.forEach((book, _) -> book.addOrder(order));
             return order;
         }
 
-        private void validate() {
+        private void validate(TotalPrice totalPrice) {
             Objects.requireNonNull(countOfBooks, "countOfBooks can`t be null");
+            Objects.requireNonNull(paidAmount, "paid amount can`t be null");
             Objects.requireNonNull(totalPrice, "totalPrice can`t be null");
-            Objects.requireNonNull(events, "events can`t be null");
+            Objects.requireNonNull(creditCard, "credit card can`t be null");
+            Objects.requireNonNull(creationTime, "creation time can`t be null");
             Objects.requireNonNull(customer, "customer can`t be null");
             Objects.requireNonNull(books, "books can`t be null");
+
+            boolean isPaidAmountEnough = paidAmount.paidAmount() > totalPrice.totalPrice();
 
             if (countOfBooks < 0) {
                 throw new IllegalArgumentException("Count of books can`t be negative");
             }
-            if (totalPrice.totalPrice().doubleValue() < 0) {
-                throw new IllegalArgumentException("Total price can`t be negative");
+            if (paidAmount.paidAmount() < 0 && !isPaidAmountEnough) {
+                throw new IllegalArgumentException("Paid amount can`t be negative or smaller than total price if order");
             }
             if (books.isEmpty()) {
                 throw new IllegalArgumentException("Books can`t be empty");
             }
+        }
+
+        private TotalPrice calculateTotalPrice(Map<Book, Integer> books) {
+            double totalPrice = 0.0;
+
+            for (Map.Entry<Book, Integer> pair : books.entrySet()) {
+                double priceOfBookInOneCopy = pair.getKey().getPrice().price();
+                double currentPairPrice = priceOfBookInOneCopy * pair.getValue();
+
+                totalPrice += currentPairPrice;
+            }
+
+            return new TotalPrice(totalPrice);
         }
     }
 }

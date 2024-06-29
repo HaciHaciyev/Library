@@ -34,14 +34,15 @@ public class BookRepository {
         return jdbcTemplate.queryForObject("Select COUNT(id) from Books", Integer.class);
     }
 
-    public boolean isIsbnExists(ISBN verifiableIsbn) {
+    public boolean isbnExists(ISBN verifiableIsbn) {
         try {
-            ISBN isbn = jdbcTemplate.queryForObject(
-                    "Select isbn from Books where isbn = ?",
-                    (rs, rowNum) -> new ISBN(rs.getString("isbn")),
+            String findISBN = "Select COUNT(*) from Books where isbn = ?";
+            Integer count = jdbcTemplate.queryForObject(
+                    findISBN,
+                    Integer.class,
                     verifiableIsbn.isbn()
             );
-            return isbn != null;
+            return count != null && count >  0;
         } catch (EmptyResultDataAccessException e) {
             return false;
         }
@@ -86,16 +87,16 @@ public class BookRepository {
             final int limit = buildLimit(pageSize);
             final int offSet = buildOffSet(limit, pageNumber);
 
-            log.info("Limit: {}", limit);
-            log.info("Offset: {}", offSet);
+            String sqlForGetListOfBooks = String.format(SQL_FOR_GET_LIST_OF_BOOKS, limit, offSet);
+            log.info(sqlForGetListOfBooks);
 
             List<Book> listOfBooks = jdbcTemplate.query(
                     connection -> connection.prepareStatement(
-                            String.format(SQL_FOR_GET_LIST_OF_BOOKS, limit, offSet),
+                            sqlForGetListOfBooks,
                             ResultSet.TYPE_SCROLL_INSENSITIVE,
                             ResultSet.CONCUR_READ_ONLY
                     ),
-                    new RowToListOfBooks()
+                    new ResultSetToListOfBooks()
             );
 
             if (listOfBooks == null || listOfBooks.isEmpty()) {
@@ -225,7 +226,6 @@ public class BookRepository {
         public Book extractData(ResultSet rs) throws SQLException {
             try {
                 rs.first();
-                UUID currentBookID = UUID.fromString(rs.getString("book_id"));
 
                 Publisher publisher = Publisher.builder()
                         .id(UUID.fromString(rs.getString("publisher_id")))
@@ -270,11 +270,10 @@ public class BookRepository {
                             .build();
                     authors.add(author);
                 } while (rs.next());
-
                 rs.previous();
 
                 return Book.builder()
-                        .id(currentBookID)
+                        .id(UUID.fromString(rs.getString("book_id")))
                         .title(new Title(rs.getString("book_title")))
                         .description(new Description(rs.getString("book_description")))
                         .isbn(new ISBN(rs.getString("book_isbn")))
@@ -295,7 +294,7 @@ public class BookRepository {
         }
     }
 
-    private static final class RowToListOfBooks implements ResultSetExtractor<List<Book>> {
+    private static final class ResultSetToListOfBooks implements ResultSetExtractor<List<Book>> {
         @Override
         public List<Book> extractData(ResultSet rs) throws SQLException, DataAccessException {
             try {
@@ -346,8 +345,9 @@ public class BookRepository {
                                 )
                                 .build();
                         authors.add(author);
-                    } while (rs.next() && UUID.fromString(rs.getString("book_id")).equals(currentBookID));
-
+                    } while (
+                            rs.next() && UUID.fromString(rs.getString("book_id")).equals(currentBookID)
+                    );
                     rs.previous();
 
                     Book book = Book.builder()

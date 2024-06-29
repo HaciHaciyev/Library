@@ -1,15 +1,11 @@
 package core.project.library.domain.entities;
 
 import core.project.library.domain.events.Events;
-import core.project.library.domain.value_objects.Category;
-import core.project.library.domain.value_objects.Description;
-import core.project.library.domain.value_objects.ISBN;
-import core.project.library.domain.value_objects.Title;
+import core.project.library.domain.value_objects.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,8 +16,8 @@ public class Book {
     private final Title title;
     private Description description;
     private final ISBN isbn;
-    private BigDecimal price;
-    private Integer quantityOnHand;
+    private Price price;
+    private QuantityOnHand quantityOnHand;
     private final Category category;
     private final Events events;
     private final /**@ManyToOne*/ Publisher publisher;
@@ -40,28 +36,28 @@ public class Book {
         return new Description(description.description());
     }
 
-    public BigDecimal getPrice() {
-        return BigDecimal.valueOf(price.doubleValue());
+    public Price getPrice() {
+        return new Price(price.price());
     }
 
-    public Integer getQuantityOnHand() {
-        return quantityOnHand;
+    public QuantityOnHand getQuantityOnHand() {
+        return new QuantityOnHand(quantityOnHand.quantityOnHand());
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public void changeDescription(Description description) {
-        this.description = description;
+    public void changeDescription(String description) {
+        this.description = new Description(description);
     }
 
     public void changePrice(Double price) {
-        this.price = BigDecimal.valueOf(price);
+        this.price = new Price(price);
     }
 
     public void changeQuantityOnHand(Integer quantityOnHand) {
-        this.quantityOnHand = quantityOnHand;
+        this.quantityOnHand = new QuantityOnHand(quantityOnHand);
     }
 
     @Override
@@ -118,7 +114,7 @@ public class Book {
                 last_modified_date = %s
                 }
                 """, id.toString(), title.title(), description.description(),
-                isbn.isbn(), category.toString(), price, quantityOnHand,
+                isbn.isbn(), category.toString(), price.price(), quantityOnHand.quantityOnHand(),
                 events.creation_date().toString(), events.last_update_date().toString());
     }
 
@@ -127,8 +123,8 @@ public class Book {
         private Title title;
         private Description description;
         private ISBN isbn;
-        private BigDecimal price;
-        private Integer quantityOnHand;
+        private Price price;
+        private QuantityOnHand quantityOnHand;
         private Category category;
         private Events events;
         private /**@ManyToOne*/ Publisher publisher;
@@ -156,12 +152,12 @@ public class Book {
             return this;
         }
 
-        public Builder price(final BigDecimal price) {
+        public Builder price(final Price price) {
             this.price = price;
             return this;
         }
 
-        public Builder quantityOnHand(final Integer quantityOnHand) {
+        public Builder quantityOnHand(final QuantityOnHand quantityOnHand) {
             this.quantityOnHand = quantityOnHand;
             return this;
         }
@@ -208,10 +204,10 @@ public class Book {
             Objects.requireNonNull(publisher, "Publisher can`t be null");
             Objects.requireNonNull(authors, "Authors can`t be null");
 
-            if (price.doubleValue() < 0) {
+            if (price.price() < 0) {
                 throw new IllegalArgumentException("Price can`t be negative");
             }
-            if (quantityOnHand < 0) {
+            if (quantityOnHand.quantityOnHand() < 0) {
                 throw new IllegalArgumentException("Quantity can`t be negative");
             }
         }

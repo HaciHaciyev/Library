@@ -58,7 +58,6 @@ public class CustomerRepository {
             } else {
                 return Result.success(customers);
             }
-
         } catch (DataAccessException e) {
             return Result.failure(e);
         }

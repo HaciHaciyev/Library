@@ -76,6 +76,7 @@ public class PublisherRepository {
                                phone, email, creation_date, last_modified_date)
                                VALUES (?,?,?,?,?,?,?,?,?,?)
                 """;
+
         jdbcTemplate.update(savePublisher,
                 publisher.getId().toString(), publisher.getPublisherName().publisherName(),
                 publisher.getAddress().state(), publisher.getAddress().city(),

@@ -28,12 +28,12 @@ public class AuthorRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public boolean emailExists(Email email) {
+    public boolean emailExists(Email verifiableEmail) {
         String findEmail = "SELECT COUNT(*) FROM Authors WHERE email = ?";
         Integer count = jdbcTemplate.queryForObject(
                 findEmail,
                 Integer.class,
-                email.email());
+                verifiableEmail.email());
         return count != null && count > 0;
     }
 
@@ -44,7 +44,6 @@ public class AuthorRepository {
             return Result.success(
                     jdbcTemplate.queryForObject(findById, this::authorMapper, authorId.toString())
             );
-
         } catch (EmptyResultDataAccessException e) {
             return Result.failure(e);
         }
@@ -63,7 +62,6 @@ public class AuthorRepository {
             } else {
                 return Result.success(authors);
             }
-
         } catch (EmptyResultDataAccessException e) {
             return Result.failure(e);
         }

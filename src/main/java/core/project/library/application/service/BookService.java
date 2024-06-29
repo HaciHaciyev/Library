@@ -27,7 +27,7 @@ public class BookService {
     private final PublisherRepository publisherRepository;
 
     public boolean isIsbnExists(ISBN isbn) {
-        return bookRepository.isIsbnExists(isbn);
+        return bookRepository.isbnExists(isbn);
     }
 
     public final Optional<Book> findById(UUID bookId) {
