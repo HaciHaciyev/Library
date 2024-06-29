@@ -1,7 +1,6 @@
 package core.project.library.application.service;
 
 import core.project.library.domain.entities.Book;
-import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.exceptions.Result;
@@ -52,7 +51,7 @@ public class BookService {
                           Double price, Integer quantityOnHand) {
         bookRepository.findById(bookId).ifPresentOrElse(foundBook -> {
             if (StringUtils.hasText(description)) {
-                foundBook.changeDescription(new Description(description));
+                foundBook.changeDescription(description);
             }
             if (price != null) {
                 foundBook.changePrice(price);

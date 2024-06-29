@@ -14,7 +14,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -277,8 +276,8 @@ public class BookRepository {
                         .title(new Title(rs.getString("book_title")))
                         .description(new Description(rs.getString("book_description")))
                         .isbn(new ISBN(rs.getString("book_isbn")))
-                        .price(new BigDecimal(rs.getString("book_price")))
-                        .quantityOnHand(rs.getInt("book_quantity"))
+                        .price(new Price(rs.getDouble("book_price")))
+                        .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
                         .category(Category.valueOf(rs.getString("book_category")))
                         .events(new Events(
                                         rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
@@ -355,8 +354,8 @@ public class BookRepository {
                             .title(new Title(rs.getString("book_title")))
                             .description(new Description(rs.getString("book_description")))
                             .isbn(new ISBN(rs.getString("book_isbn")))
-                            .price(new BigDecimal(rs.getString("book_price")))
-                            .quantityOnHand(rs.getInt("book_quantity"))
+                            .price(new Price(rs.getDouble("book_price")))
+                            .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
                             .category(Category.valueOf(rs.getString("book_category")))
                             .events(new Events(
                                             rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),

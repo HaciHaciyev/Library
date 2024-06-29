@@ -133,6 +133,7 @@ public class Order {
             ChangeOfOrder changeOfOrder = calculateChange(totalPrice, paidAmount);
 
             validate(totalPrice, changeOfOrder);
+            validateQuantityOnHandOfBooksAndChangeIt(books);
 
             Order order = new Order(id, countOfBooks, totalPrice, paidAmount, changeOfOrder,
                     creditCard, creationTime, customer, Collections.unmodifiableMap(books));
@@ -165,14 +166,29 @@ public class Order {
             }
         }
 
+        private void validateQuantityOnHandOfBooksAndChangeIt(Map<Book, Integer> books) {
+            for (Map.Entry<Book, Integer> pair : books.entrySet()) {
+                Book book = pair.getKey();
+                int requiredQuantityForOneCopyOfBook = pair.getValue();
+                int existedQuantityOnHand = book.getQuantityOnHand().quantityOnHand();
+
+                boolean isQuantityOnHandEnough = existedQuantityOnHand >= requiredQuantityForOneCopyOfBook;
+                if (!isQuantityOnHandEnough) {
+                    throw new IllegalArgumentException("We do not have enough books for this order.");
+                }
+
+                book.changeQuantityOnHand(existedQuantityOnHand - requiredQuantityForOneCopyOfBook);
+            }
+        }
+
         private TotalPrice calculateTotalPrice(Map<Book, Integer> books) {
             double totalPrice = 0.0;
 
             for (Map.Entry<Book, Integer> pair : books.entrySet()) {
                 double priceOfBookInOneCopy = pair.getKey().getPrice().price();
-                double currentPairPrice = priceOfBookInOneCopy * pair.getValue();
+                double priceOfAllCopyOfBook = priceOfBookInOneCopy * pair.getValue();
 
-                totalPrice += currentPairPrice;
+                totalPrice += priceOfAllCopyOfBook;
             }
 
             return new TotalPrice(totalPrice);
