@@ -24,6 +24,10 @@ public class Book {
     private final /**@ManyToMany*/ Set<Author> authors;
     private final /**@ManyToMany*/ Set<Order> orders;
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     void addOrder(Order order) {
         this.orders.add(order);
     }
@@ -42,10 +46,6 @@ public class Book {
 
     public QuantityOnHand getQuantityOnHand() {
         return new QuantityOnHand(quantityOnHand.quantityOnHand());
-    }
-
-    public static Builder builder() {
-        return new Builder();
     }
 
     public void changeDescription(String description) {

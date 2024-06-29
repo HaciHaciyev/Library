@@ -130,11 +130,9 @@ public class Order {
 
         public final Order build() {
             TotalPrice totalPrice = calculateTotalPrice(books);
+            ChangeOfOrder changeOfOrder = calculateChange(totalPrice, paidAmount);
 
-            validate(totalPrice);
-
-            ChangeOfOrder changeOfOrder =
-                    new ChangeOfOrder(paidAmount.paidAmount() - totalPrice.totalPrice());
+            validate(totalPrice, changeOfOrder);
 
             Order order = new Order(id, countOfBooks, totalPrice, paidAmount, changeOfOrder,
                     creditCard, creationTime, customer, Collections.unmodifiableMap(books));
@@ -144,10 +142,11 @@ public class Order {
             return order;
         }
 
-        private void validate(TotalPrice totalPrice) {
+        private void validate(TotalPrice totalPrice, ChangeOfOrder changeOfOrder) {
             Objects.requireNonNull(countOfBooks, "countOfBooks can`t be null");
             Objects.requireNonNull(paidAmount, "paid amount can`t be null");
             Objects.requireNonNull(totalPrice, "totalPrice can`t be null");
+            Objects.requireNonNull(changeOfOrder, "changeOfOrder can`t be null");
             Objects.requireNonNull(creditCard, "credit card can`t be null");
             Objects.requireNonNull(creationTime, "creation time can`t be null");
             Objects.requireNonNull(customer, "customer can`t be null");
@@ -159,7 +158,7 @@ public class Order {
                 throw new IllegalArgumentException("Count of books can`t be negative");
             }
             if (paidAmount.paidAmount() < 0 && !isPaidAmountEnough) {
-                throw new IllegalArgumentException("Paid amount can`t be negative or smaller than total price if order");
+                throw new IllegalArgumentException("Paid amount can`t be negative or smaller than total price in order");
             }
             if (books.isEmpty()) {
                 throw new IllegalArgumentException("Books can`t be empty");
@@ -177,6 +176,10 @@ public class Order {
             }
 
             return new TotalPrice(totalPrice);
+        }
+
+        private ChangeOfOrder calculateChange(TotalPrice totalPrice, PaidAmount paidAmount) {
+            return new ChangeOfOrder(paidAmount.paidAmount() - totalPrice.totalPrice());
         }
     }
 }

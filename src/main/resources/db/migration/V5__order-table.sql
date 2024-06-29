@@ -8,8 +8,7 @@ Create table Orders (
   paid_amount decimal(38, 2) not null,
   change_of_order decimal(38, 2) not null,
   credit_card_number char(16) not null,
-  credit_card_expiration timestamp not null,
-  credit_card_cvv char(3) not null,
+  credit_card_expiration char(10) not null,
   creation_date timestamp not null,
   Primary key (id),
   constraint customer_order_fk
