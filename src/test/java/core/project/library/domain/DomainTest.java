@@ -67,7 +67,6 @@ class DomainTest {
 
         Order order = Order.builder()
                 .id(UUID.randomUUID())
-                .countOfBooks(1)
                 .paidAmount(new PaidAmount((double) faker.number().numberBetween(1, 5000)))
                 .creditCard(randomCreditCard())
                 .creationDate(LocalDateTime.now())

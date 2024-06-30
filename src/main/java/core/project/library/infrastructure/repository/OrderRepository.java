@@ -250,7 +250,6 @@ public class OrderRepository {
     private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> listOfBooks) throws SQLException {
         return Order.builder()
                 .id(UUID.fromString(rs.getString("order_id")))
-                .countOfBooks(rs.getInt("order_count_of_book"))
                 .paidAmount(new PaidAmount(rs.getDouble("paid_amount")))
                 .creditCard(new CreditCard(
                         rs.getString("credit_card_number"),

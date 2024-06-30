@@ -72,7 +72,6 @@ public class OrderController {
 
         Order order = Order.builder()
                 .id(UUID.randomUUID())
-                .countOfBooks(inboundOrderDTO.countOfBooks())
                 .paidAmount(inboundOrderDTO.paidAmount())
                 .creditCard(inboundOrderDTO.creditCard())
                 .creationDate(LocalDateTime.now())

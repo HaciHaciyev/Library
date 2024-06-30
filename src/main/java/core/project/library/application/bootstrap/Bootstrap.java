@@ -51,16 +51,16 @@ public class Bootstrap implements CommandLineRunner {
         this.bookRepository = bookRepository;
         this.customerRepository = customerRepository;
         this.orderRepository = orderRepository;
+    }
 
+    @Override
+    public final void run(String... args) {
         populatePublishers();
         populateAuthors();
         populateBooks();
         populateCustomers();
         populateOrders();
-    }
 
-    @Override
-    public final void run(String... args) {
         if (bookRepository.count() < 1) {
             publishers.forEach(publisherRepository::savePublisher);
             authors.forEach(authorRepository::saveAuthor);
@@ -173,7 +173,6 @@ public class Bootstrap implements CommandLineRunner {
 
             return Order.builder()
                     .id(UUID.randomUUID())
-                    .countOfBooks(countOfBooksPerOrder)
                     .paidAmount(new PaidAmount((double) faker.number().numberBetween(1, 5000)))
                     .creditCard(randomCreditCard())
                     .creationDate(LocalDateTime.now())

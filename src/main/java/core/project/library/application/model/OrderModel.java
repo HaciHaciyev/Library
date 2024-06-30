@@ -9,8 +9,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.Map;
 
-public record OrderModel(@NotNull Integer countOfBooks,
-                         @NotNull @Valid TotalPrice totalPrice,
+public record OrderModel(@NotNull @Valid TotalPrice totalPrice,
                          @NotNull @Valid PaidAmount paidAmount,
                          @NotNull @Valid ChangeOfOrder changeOfOrder,
                          @NotNull @Valid CreditCard creditCard,

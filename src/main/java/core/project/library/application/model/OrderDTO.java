@@ -7,8 +7,7 @@ import core.project.library.domain.value_objects.TotalPrice;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-public record OrderDTO(@NotNull Integer countOfBooks,
-                       @NotNull @Valid TotalPrice totalPrice,
+public record OrderDTO(@NotNull @Valid TotalPrice totalPrice,
                        @NotNull @Valid PaidAmount paidAmount,
                        @NotNull @Valid ChangeOfOrder changeOfOrder,
                        @NotNull @Valid CreditCard creditCard) {

@@ -84,7 +84,6 @@ public class Order {
 
     public static class Builder {
         private UUID id;
-        private Integer countOfBooks;
         private PaidAmount paidAmount;
         private CreditCard creditCard;
         private LocalDateTime creationDate;
@@ -95,11 +94,6 @@ public class Order {
 
         public Builder id(final UUID id) {
             this.id = id;
-            return this;
-        }
-
-        public Builder countOfBooks(final Integer countOfBooks) {
-            this.countOfBooks = countOfBooks;
             return this;
         }
 
@@ -129,10 +123,11 @@ public class Order {
         }
 
         public final Order build() {
+            Integer countOfBooks = calculateCountOfBooks(books);
             TotalPrice totalPrice = calculateTotalPrice(books);
             ChangeOfOrder changeOfOrder = calculateChange(totalPrice, paidAmount);
 
-            validate(totalPrice, changeOfOrder);
+            validate(countOfBooks, totalPrice, changeOfOrder);
             validateQuantityOnHandOfBooksAndChangeIt(books);
 
             Order order = new Order(id, countOfBooks, totalPrice, paidAmount, changeOfOrder,
@@ -143,7 +138,7 @@ public class Order {
             return order;
         }
 
-        private void validate(TotalPrice totalPrice, ChangeOfOrder changeOfOrder) {
+        private void validate(Integer countOfBooks, TotalPrice totalPrice, ChangeOfOrder changeOfOrder) {
             Objects.requireNonNull(countOfBooks, "countOfBooks can`t be null");
             Objects.requireNonNull(paidAmount, "paid amount can`t be null");
             Objects.requireNonNull(totalPrice, "totalPrice can`t be null");
@@ -179,6 +174,14 @@ public class Order {
 
                 book.changeQuantityOnHand(existedQuantityOnHand - requiredQuantityForOneCopyOfBook);
             }
+        }
+
+        private Integer calculateCountOfBooks(Map<Book, Integer> books) {
+            int countOfBooks = 0;
+            for (Integer count : books.values()) {
+                countOfBooks += count;
+            }
+            return countOfBooks;
         }
 
         private TotalPrice calculateTotalPrice(Map<Book, Integer> books) {

@@ -8,8 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-public record InboundOrderDTO(@NotNull Integer countOfBooks,
-                              @NotNull @Valid PaidAmount paidAmount,
+public record InboundOrderDTO(@NotNull @Valid PaidAmount paidAmount,
                               @NotNull @Valid CreditCard creditCard,
                               @NotNull UUID customerId,
                               @NotNull List<UUID> booksId) {
