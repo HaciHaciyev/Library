@@ -206,11 +206,7 @@ public class Bootstrap implements CommandLineRunner {
 
     public static Description randomDescription() {
         return new Description(faker.text().text(
-                15,
-                255,
-                true,
-                true,
-                true)
+                15, 255, true, true, true)
         );
     }
 
