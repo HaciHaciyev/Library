@@ -8,6 +8,7 @@ import core.project.library.infrastructure.exceptions.Result;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -63,6 +64,7 @@ public class CustomerRepository {
         }
     }
 
+    @Transactional
     public Result<Customer, Exception> saveCustomer(Customer customer) {
         try {
             String saveCustomer = """

@@ -10,6 +10,7 @@ import core.project.library.infrastructure.exceptions.Result;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -70,6 +71,7 @@ public class PublisherRepository {
         }
     }
 
+    @Transactional
     public Result<Publisher, Exception> savePublisher(Publisher publisher) {
         String savePublisher = """
                 INSERT INTO Publishers (id, publisher_name, state, city, street, home,

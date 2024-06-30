@@ -13,6 +13,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -108,6 +109,7 @@ public class BookRepository {
         }
     }
 
+    @Transactional
     public void completelySaveBook(Book book) {
         jdbcTemplate.update("""
                         Insert into Books (id, publisher_id, title, description, isbn, price,
@@ -137,6 +139,7 @@ public class BookRepository {
         }
     }
 
+    @Transactional
     public void patchBook(Book foundBook) {
         jdbcTemplate.update("""
             Update Books Set

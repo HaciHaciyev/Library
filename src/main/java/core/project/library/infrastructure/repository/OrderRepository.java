@@ -12,7 +12,6 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -172,23 +171,34 @@ public class OrderRepository {
             jdbcTemplate.update("""
                             INSERT INTO Orders (id, customer_id,
                                             count_of_book, total_price,
-                                            creation_date, last_modified_date)
-                                            VALUES (?, ?, ?, ?, ?, ?)
+                                            paid_amount, change_of_order,
+                                            credit_card_number, credit_card_expiration, creation_date)
+                                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                     order.getId().toString(), order.getCustomer().getId().toString(),
-                    order.getCountOfBooks(), order.getTotalPrice().totalPrice(),
-                    order.getEvents().creation_date(), order.getEvents().last_update_date()
+                    order.getCountOfBooks(), order.getTotalPrice().totalPrice(), order.getPaidAmount().paidAmount(),
+                    order.getChangeOfOrder().changeOfOrder(), order.getCreditCard().creditCardNumber(),
+                    order.getCreditCard().creditCardExpiration(), order.getCreationDate()
             );
 
-            order.getBooks().forEach((book, count) ->
+            order.getBooks().forEach((book, countCopyOfBooks) ->
                     jdbcTemplate.update("""
-                                    INSERT INTO Book_Order (book_id, order_id, book_count)
+                                    INSERT INTO Book_Order (book_id, order_id, count_of_book_copies)
                                                 VALUES (?, ?, ?)
                                     """,
                             book.getId().toString(),
                             order.getId().toString(),
-                            count
+                            countCopyOfBooks
                     )
+            );
+
+            order.getBooks().forEach((book, _) ->
+                    jdbcTemplate.update("""
+                    UPDATE Books SET quantity_on_hand = ?
+                    WHERE id = ?
+                    """,
+                            book.getId().toString(),
+                            book.getDescription().description())
             );
 
             return Result.success(order);
@@ -238,16 +248,16 @@ public class OrderRepository {
     }
 
     private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> listOfBooks) throws SQLException {
-        Events events = new Events(
-                rs.getObject("order_creation_date", Timestamp.class).toLocalDateTime(),
-                rs.getObject("order_last_modified_date", Timestamp.class).toLocalDateTime()
-        );
-
         return Order.builder()
                 .id(UUID.fromString(rs.getString("order_id")))
                 .countOfBooks(rs.getInt("order_count_of_book"))
-                .totalPrice(new TotalPrice(new BigDecimal(rs.getString("order_total_price"))))
-                .events(events)
+                .paidAmount(new PaidAmount(rs.getDouble("paid_amount")))
+                .creditCard(new CreditCard(
+                        rs.getString("credit_card_number"),
+                        rs.getObject("credit_card_expiration", Timestamp.class).toLocalDateTime().toLocalDate()
+                        )
+                )
+                .creationDate(rs.getObject("creation_date", Timestamp.class).toLocalDateTime())
                 .customer(customer)
                 .books(listOfBooks)
                 .build();
@@ -290,8 +300,8 @@ public class OrderRepository {
                 .title(new Title(rs.getString("book_title")))
                 .description(new Description(rs.getString("book_description")))
                 .isbn(new ISBN(rs.getString("book_isbn")))
-                .price(new BigDecimal(rs.getString("book_price")))
-                .quantityOnHand(rs.getInt("book_quantity"))
+                .price(new Price(rs.getDouble("book_price")))
+                .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
                 .category(Category.valueOf(rs.getString("book_category")))
                 .events(events)
                 .publisher(publisher)
