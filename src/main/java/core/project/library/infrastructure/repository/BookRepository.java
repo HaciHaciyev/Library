@@ -233,19 +233,17 @@ public class BookRepository {
                         .id(UUID.fromString(rs.getString("publisher_id")))
                         .publisherName(new PublisherName(rs.getString("publisher_name")))
                         .address(new Address(
-                                rs.getString("publisher_state"),
-                                rs.getString("publisher_city"),
-                                rs.getString("publisher_street"),
-                                rs.getString("publisher_home")
+                                    rs.getString("publisher_state"),
+                                    rs.getString("publisher_city"),
+                                    rs.getString("publisher_street"),
+                                    rs.getString("publisher_home")
                                 )
                         )
                         .phone(new Phone(rs.getString("publisher_phone")))
                         .email(new Email(rs.getString("publisher_email")))
                         .events(new Events(
-                                        rs.getObject("publisher_creation_date",
-                                                Timestamp.class).toLocalDateTime(),
-                                        rs.getObject("publisher_last_modified_date",
-                                                Timestamp.class).toLocalDateTime()
+                                        rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
+                                        rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
                                 )
                         )
                         .build();
@@ -258,15 +256,15 @@ public class BookRepository {
                             .lastName(new LastName(rs.getString("author_last_name")))
                             .email(new Email(rs.getString("author_email")))
                             .address(new Address(
-                                    rs.getString("author_state"),
-                                    rs.getString("author_city"),
-                                    rs.getString("author_street"),
-                                    rs.getString("author_home")
+                                        rs.getString("author_state"),
+                                        rs.getString("author_city"),
+                                        rs.getString("author_street"),
+                                        rs.getString("author_home")
                                     )
                             )
                             .events(new Events(
-                                    rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
-                                    rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
+                                        rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
+                                        rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
                                     )
                             )
                             .build();
@@ -283,8 +281,8 @@ public class BookRepository {
                         .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
                         .category(Category.valueOf(rs.getString("book_category")))
                         .events(new Events(
-                                        rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
-                                        rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
+                                    rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
+                                    rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
                                 )
                         )
                         .publisher(publisher)

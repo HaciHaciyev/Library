@@ -181,25 +181,27 @@ public class OrderRepository {
                     order.getCreditCard().creditCardExpiration(), order.getCreationDate()
             );
 
-            order.getBooks().forEach((book, countCopyOfBooks) ->
-                    jdbcTemplate.update("""
+            for (Map.Entry<Book, Integer> pair : order.getBooks().entrySet()) {
+                Book book = pair.getKey();
+                int countOfBooks = pair.getValue();
+
+                jdbcTemplate.update("""
                                     INSERT INTO Book_Order (book_id, order_id, count_of_book_copies)
                                                 VALUES (?, ?, ?)
                                     """,
-                            book.getId().toString(),
-                            order.getId().toString(),
-                            countCopyOfBooks
-                    )
-            );
+                        book.getId().toString(),
+                        order.getId().toString(),
+                        countOfBooks
+                );
 
-            order.getBooks().forEach((book, _) ->
-                    jdbcTemplate.update("""
+                jdbcTemplate.update("""
                     UPDATE Books SET quantity_on_hand = ?
                     WHERE id = ?
                     """,
-                            book.getId().toString(),
-                            book.getDescription().description())
-            );
+                        book.getId().toString(),
+                        book.getDescription().description()
+                );
+            }
 
             return Result.success(order);
         } catch (DataAccessException e) {

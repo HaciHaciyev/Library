@@ -6,15 +6,19 @@ import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
 import core.project.library.domain.events.Events;
+import core.project.library.domain.value_objects.PaidAmount;
 import net.datafaker.Faker;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static core.project.library.application.bootstrap.Bootstrap.randomCreditCard;
 
 public class DomainProviders {
 
@@ -61,9 +65,9 @@ public class DomainProviders {
 
         return () -> Order.builder()
                 .id(UUID.randomUUID())
-                .countOfBooks(countOfBooks)
-                .totalPrice(Bootstrap.randomTotalPrice())
-                .events(new Events())
+                .paidAmount(new PaidAmount((double) faker.number().numberBetween(1, 5000)))
+                .creditCard(randomCreditCard())
+                .creationDate(LocalDateTime.now())
                 .customer(Bootstrap.customerFactory().get())
                 .books(new LinkedHashMap<>())
                 .build();
@@ -74,9 +78,9 @@ public class DomainProviders {
 
         return () -> Order.builder()
                 .id(UUID.randomUUID())
-                .countOfBooks(countOfBooks)
-                .totalPrice(Bootstrap.randomTotalPrice())
-                .events(new Events())
+                .paidAmount(new PaidAmount((double) faker.number().numberBetween(1, 5000)))
+                .creditCard(randomCreditCard())
+                .creationDate(LocalDateTime.now())
                 .customer(customer)
                 .books(new LinkedHashMap<>())
                 .build();
