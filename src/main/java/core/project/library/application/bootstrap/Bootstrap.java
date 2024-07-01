@@ -55,7 +55,7 @@ public class Bootstrap implements CommandLineRunner {
 
     @Override
     public final void run(String... args) {
-//        if (bookRepository.count() < 1) {
+        if (bookRepository.count() < 1) {
 
             populatePublishers();
             populateAuthors();
@@ -69,7 +69,7 @@ public class Bootstrap implements CommandLineRunner {
             customers.forEach(customerRepository::saveCustomer);
             orders.forEach(orderRepository::save);
             log.info("Bootstrap is completed basic values in database.");
-//        }
+        }
     }
 
     private static void populatePublishers() {
