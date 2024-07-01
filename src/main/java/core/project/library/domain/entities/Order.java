@@ -139,6 +139,7 @@ public class Order {
         }
 
         private void validate(Integer countOfBooks, TotalPrice totalPrice, ChangeOfOrder changeOfOrder) {
+            Objects.requireNonNull(id, "id can`t be null");
             Objects.requireNonNull(countOfBooks, "countOfBooks can`t be null");
             Objects.requireNonNull(paidAmount, "paid amount can`t be null");
             Objects.requireNonNull(totalPrice, "totalPrice can`t be null");
@@ -150,10 +151,13 @@ public class Order {
 
             boolean isPaidAmountEnough = paidAmount.paidAmount() > totalPrice.totalPrice();
 
-            if (countOfBooks < 0) {
-                throw new IllegalArgumentException("Count of books can`t be negative");
+            if (countOfBooks <= 0) {
+                throw new IllegalArgumentException("Count of books can`t be negative or zero");
             }
-            if (paidAmount.paidAmount() < 0 && !isPaidAmountEnough) {
+            if (totalPrice.totalPrice() < 0.0) {
+                throw new IllegalArgumentException("Total price can`t be negative");
+            }
+            if (paidAmount.paidAmount() < 0.0 && !isPaidAmountEnough) {
                 throw new IllegalArgumentException("Paid amount can`t be negative or smaller than total price in order");
             }
             if (books.isEmpty()) {
@@ -188,8 +192,9 @@ public class Order {
             double totalPrice = 0.0;
 
             for (Map.Entry<Book, Integer> pair : books.entrySet()) {
+                int countOfBookCopies = pair.getValue();
                 double priceOfBookInOneCopy = pair.getKey().getPrice().price();
-                double priceOfAllCopyOfBook = priceOfBookInOneCopy * pair.getValue();
+                double priceOfAllCopyOfBook = priceOfBookInOneCopy * countOfBookCopies;
 
                 totalPrice += priceOfAllCopyOfBook;
             }

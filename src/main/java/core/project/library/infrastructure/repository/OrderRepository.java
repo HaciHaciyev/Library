@@ -107,7 +107,7 @@ public class OrderRepository {
     public Result<Order, Exception> findById(UUID orderId) {
         try {
             Order order = jdbcTemplate.query(
-                    preparedStatementFactory(orderId), new MapOrder()
+                    preparedStatementFactory(orderId), new OrderMapper()
             );
 
             return Result.success(order);
@@ -133,7 +133,7 @@ public class OrderRepository {
                     .map(uuid ->
                             jdbcTemplate.query(
                                     preparedStatementFactory(uuid),
-                                    new MapOrder()
+                                    new OrderMapper()
                             )
                     )
                     .toList();
@@ -160,7 +160,7 @@ public class OrderRepository {
                             .distinct()
                             .map(uuid -> jdbcTemplate.query(
                             preparedStatementFactory(uuid),
-                            new MapOrder()
+                            new OrderMapper()
                             ))
                     .toList();
 
@@ -201,8 +201,8 @@ public class OrderRepository {
                     UPDATE Books SET quantity_on_hand = ?
                     WHERE id = ?
                     """,
-                        book.getId().toString(),
-                        book.getDescription().description()
+                        book.getQuantityOnHand().quantityOnHand(),
+                        book.getId().toString()
                 );
             });
 
@@ -213,7 +213,8 @@ public class OrderRepository {
         }
     }
 
-    private static class MapOrder implements ResultSetExtractor<Order> {
+    private static class OrderMapper implements ResultSetExtractor<Order> {
+        private record BookAndCount(Book book, Integer count) {}
 
         @Override
         public Order extractData(ResultSet rs) throws SQLException, DataAccessException {
@@ -223,11 +224,8 @@ public class OrderRepository {
             while (rs.next()) {
                 String currentBookId = rs.getString("book_id");
 
-                // collect book
                 if (!currentBookId.equals(lastBookId)) {
                     Publisher publisher = mapPublisher(rs);
-
-                    //collect authors
                     Set<Author> authors = collectAuthors(rs, currentBookId);
 
                     var bookPair = mapBook(rs, publisher, authors);
@@ -237,7 +235,6 @@ public class OrderRepository {
                 }
             }
 
-            //move cursor one position back from end of RS to map customer
             rs.previous();
             Customer customer = mapCustomer(rs);
             return constructOrder(rs, customer, books);
@@ -250,7 +247,6 @@ public class OrderRepository {
                 authors.add(mapAuthor(rs));
             } while (rs.next() && bookId.equals(rs.getString("book_id")));
 
-            //return one position back to be able to map book
             rs.previous();
             return authors;
         }
@@ -294,8 +290,6 @@ public class OrderRepository {
                     .events(events)
                     .build();
         }
-
-        private record BookAndCount(Book book, Integer count) {}
 
         private BookAndCount mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
             Events events = new Events(
