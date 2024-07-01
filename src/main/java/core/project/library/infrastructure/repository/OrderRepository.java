@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,7 +107,7 @@ public class OrderRepository {
     public Result<Order, Exception> findById(UUID orderId) {
         try {
             Order order = jdbcTemplate.query(
-                    preparedStatementFactory(orderId), this::mapOrder
+                    preparedStatementFactory(orderId), new MapOrder()
             );
 
             return Result.success(order);
@@ -132,7 +133,7 @@ public class OrderRepository {
                     .map(uuid ->
                             jdbcTemplate.query(
                                     preparedStatementFactory(uuid),
-                                    this::mapOrder
+                                    new MapOrder()
                             )
                     )
                     .toList();
@@ -159,7 +160,7 @@ public class OrderRepository {
                             .distinct()
                             .map(uuid -> jdbcTemplate.query(
                             preparedStatementFactory(uuid),
-                            this::mapOrder
+                            new MapOrder()
                             ))
                     .toList();
 
@@ -186,10 +187,7 @@ public class OrderRepository {
                     order.getCreditCard().creditCardExpiration(), order.getCreationDate()
             );
 
-            for (Map.Entry<Book, Integer> pair : order.getBooks().entrySet()) {
-                Book book = pair.getKey();
-                int countOfBooks = pair.getValue();
-
+            order.getBooks().forEach((book, countOfBooks) -> {
                 jdbcTemplate.update("""
                                     INSERT INTO Book_Order (book_id, order_id, count_of_book_copies)
                                                 VALUES (?, ?, ?)
@@ -206,7 +204,7 @@ public class OrderRepository {
                         book.getId().toString(),
                         book.getDescription().description()
                 );
-            }
+            });
 
             return Result.success(order);
         } catch (DataAccessException e) {
@@ -215,152 +213,156 @@ public class OrderRepository {
         }
     }
 
-    private Order mapOrder(ResultSet rs) throws SQLException {
-        Map<Book, Integer> books = new LinkedHashMap<>();
-        String lastBookId = null;
+    private static class MapOrder implements ResultSetExtractor<Order> {
 
-        while (rs.next()) {
-            String currentBookId = rs.getString("book_id");
+        @Override
+        public Order extractData(ResultSet rs) throws SQLException, DataAccessException {
+            Map<Book, Integer> books = new LinkedHashMap<>();
+            String lastBookId = null;
 
-            // collect book
-            if (!currentBookId.equals(lastBookId)) {
-                Publisher publisher = mapPublisher(rs);
+            while (rs.next()) {
+                String currentBookId = rs.getString("book_id");
 
-                //collect authors
-                Set<Author> authors = collectAuthors(rs, currentBookId);
+                // collect book
+                if (!currentBookId.equals(lastBookId)) {
+                    Publisher publisher = mapPublisher(rs);
 
-                var bookPair = mapBook(rs, publisher, authors);
-                books.put(bookPair.book, bookPair.count);
+                    //collect authors
+                    Set<Author> authors = collectAuthors(rs, currentBookId);
 
-                lastBookId = currentBookId;
+                    var bookPair = mapBook(rs, publisher, authors);
+                    books.put(bookPair.book, bookPair.count);
+
+                    lastBookId = currentBookId;
+                }
             }
+
+            //move cursor one position back from end of RS to map customer
+            rs.previous();
+            Customer customer = mapCustomer(rs);
+            return constructOrder(rs, customer, books);
         }
 
-        //move cursor one position back from end of RS to map customer
-        rs.previous();
-        Customer customer = mapCustomer(rs);
-        return constructOrder(rs, customer, books);
-    }
+        private Set<Author> collectAuthors(ResultSet rs, String bookId) throws SQLException {
+            Set<Author> authors = new LinkedHashSet<>();
 
-    private Set<Author> collectAuthors(ResultSet rs, String bookId) throws SQLException {
-        Set<Author> authors = new LinkedHashSet<>();
+            do {
+                authors.add(mapAuthor(rs));
+            } while (rs.next() && bookId.equals(rs.getString("book_id")));
 
-        do {
-            authors.add(mapAuthor(rs));
-        } while (rs.next() && bookId.equals(rs.getString("book_id")));
+            //return one position back to be able to map book
+            rs.previous();
+            return authors;
+        }
 
-        //return one position back to be able to map book
-        rs.previous();
-        return authors;
-    }
+        private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> books) throws SQLException {
+            CreditCard creditCard = new CreditCard(
+                    rs.getString("order_credit_card_number"),
+                    LocalDate.parse(rs.getString("order_credit_card_expiration"))
+            );
 
-    private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> books) throws SQLException {
-        CreditCard creditCard = new CreditCard(
-                rs.getString("order_credit_card_number"),
-                LocalDate.parse(rs.getString("order_credit_card_expiration"))
-        );
+            return Order.builder()
+                    .id(UUID.fromString(rs.getString("order_id")))
+                    .paidAmount(new PaidAmount(rs.getDouble("order_paid_amount")))
+                    .creditCard(creditCard)
+                    .creationDate(LocalDateTime.parse(rs.getString("order_creation_date")))
+                    .books(books)
+                    .customer(customer)
+                    .build();
+        }
 
-        return Order.builder()
-                .id(UUID.fromString(rs.getString("order_id")))
-                .paidAmount(new PaidAmount(rs.getDouble("order_paid_amount")))
-                .creditCard(creditCard)
-                .creationDate(LocalDateTime.parse(rs.getString("order_creation_date")))
-                .books(books)
-                .customer(customer)
-                .build();
-    }
+        private Customer mapCustomer(ResultSet rs) throws SQLException {
+            Address address = new Address(
+                    rs.getString("customer_state"),
+                    rs.getString("customer_city"),
+                    rs.getString("customer_street"),
+                    rs.getString("customer_home")
+            );
 
-    private Customer mapCustomer(ResultSet rs) throws SQLException {
-        Address address = new Address(
-                rs.getString("customer_state"),
-                rs.getString("customer_city"),
-                rs.getString("customer_street"),
-                rs.getString("customer_home")
-        );
+            Events events = new Events(
+                    rs.getObject("customer_creation_date", Timestamp.class).toLocalDateTime(),
+                    rs.getObject("customer_last_modified_date", Timestamp.class).toLocalDateTime()
+            );
 
-        Events events = new Events(
-                rs.getObject("customer_creation_date", Timestamp.class).toLocalDateTime(),
-                rs.getObject("customer_last_modified_date", Timestamp.class).toLocalDateTime()
-        );
+            return Customer.builder()
+                    .id(UUID.fromString(rs.getString("customer_id")))
+                    .firstName(new FirstName(rs.getString("customer_first_name")))
+                    .lastName(new LastName(rs.getString("customer_last_name")))
+                    .password(new Password(rs.getString("customer_password")))
+                    .email(new Email(rs.getString("customer_email")))
+                    .address(address)
+                    .events(events)
+                    .build();
+        }
 
-        return Customer.builder()
-                .id(UUID.fromString(rs.getString("customer_id")))
-                .firstName(new FirstName(rs.getString("customer_first_name")))
-                .lastName(new LastName(rs.getString("customer_last_name")))
-                .password(new Password(rs.getString("customer_password")))
-                .email(new Email(rs.getString("customer_email")))
-                .address(address)
-                .events(events)
-                .build();
-    }
+        private record BookAndCount(Book book, Integer count) {}
 
-    private record BookAndCount(Book book, Integer count) {}
+        private BookAndCount mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
+            Events events = new Events(
+                    rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
+                    rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
+            );
 
-    private BookAndCount mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
-        Events events = new Events(
-                rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
-                rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
-        );
+            Book book = Book.builder()
+                    .id(UUID.fromString(rs.getString("book_id")))
+                    .title(new Title(rs.getString("book_title")))
+                    .description(new Description(rs.getString("book_description")))
+                    .isbn(new ISBN(rs.getString("book_isbn")))
+                    .price(new Price(rs.getDouble("book_price")))
+                    .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
+                    .category(Category.valueOf(rs.getString("book_category")))
+                    .events(events)
+                    .publisher(publisher)
+                    .authors(authors)
+                    .build();
 
-        Book book = Book.builder()
-                .id(UUID.fromString(rs.getString("book_id")))
-                .title(new Title(rs.getString("book_title")))
-                .description(new Description(rs.getString("book_description")))
-                .isbn(new ISBN(rs.getString("book_isbn")))
-                .price(new Price(rs.getDouble("book_price")))
-                .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
-                .category(Category.valueOf(rs.getString("book_category")))
-                .events(events)
-                .publisher(publisher)
-                .authors(authors)
-                .build();
+            return new BookAndCount(book, rs.getInt("book_count"));
+        }
 
-        return new BookAndCount(book, rs.getInt("book_count"));
-    }
+        private Author mapAuthor(ResultSet rs) throws SQLException {
+            Address address = new Address(
+                    rs.getString("author_state"),
+                    rs.getString("author_city"),
+                    rs.getString("author_street"),
+                    rs.getString("author_home")
+            );
 
-    private Author mapAuthor(ResultSet rs) throws SQLException {
-        Address address = new Address(
-                rs.getString("author_state"),
-                rs.getString("author_city"),
-                rs.getString("author_street"),
-                rs.getString("author_home")
-        );
+            Events events = new Events(
+                    rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
+                    rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
+            );
 
-        Events events = new Events(
-                rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
-                rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
-        );
+            return Author.builder()
+                    .id(UUID.fromString(rs.getString("author_id")))
+                    .firstName(new FirstName(rs.getString("author_first_name")))
+                    .lastName(new LastName(rs.getString("author_last_name")))
+                    .email(new Email(rs.getString("author_email")))
+                    .address(address)
+                    .events(events)
+                    .build();
+        }
 
-        return Author.builder()
-                .id(UUID.fromString(rs.getString("author_id")))
-                .firstName(new FirstName(rs.getString("author_first_name")))
-                .lastName(new LastName(rs.getString("author_last_name")))
-                .email(new Email(rs.getString("author_email")))
-                .address(address)
-                .events(events)
-                .build();
-    }
+        private Publisher mapPublisher(ResultSet rs) throws SQLException {
+            Address address = new Address(
+                    rs.getString("publisher_state"),
+                    rs.getString("publisher_city"),
+                    rs.getString("publisher_street"),
+                    rs.getString("publisher_home")
+            );
 
-    private Publisher mapPublisher(ResultSet rs) throws SQLException {
-        Address address = new Address(
-                rs.getString("publisher_state"),
-                rs.getString("publisher_city"),
-                rs.getString("publisher_street"),
-                rs.getString("publisher_home")
-        );
+            Events events = new Events(
+                    rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
+                    rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
+            );
 
-        Events events = new Events(
-                rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
-                rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
-        );
-
-        return Publisher.builder()
-                .id(UUID.fromString(rs.getString("publisher_id")))
-                .publisherName(new PublisherName(rs.getString("publisher_name")))
-                .address(address)
-                .phone(new Phone(rs.getString("publisher_phone")))
-                .email(new Email(rs.getString("publisher_email")))
-                .events(events)
-                .build();
+            return Publisher.builder()
+                    .id(UUID.fromString(rs.getString("publisher_id")))
+                    .publisherName(new PublisherName(rs.getString("publisher_name")))
+                    .address(address)
+                    .phone(new Phone(rs.getString("publisher_phone")))
+                    .email(new Email(rs.getString("publisher_email")))
+                    .events(events)
+                    .build();
+        }
     }
 }
