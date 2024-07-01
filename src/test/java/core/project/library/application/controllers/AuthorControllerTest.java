@@ -209,7 +209,7 @@ public class AuthorControllerTest {
         @MethodSource("authorDTO")
         @DisplayName("reject DTO with existing email")
         void rejectDTOWithExistingEmail(AuthorDTO authorDTO, Author author) throws Exception {
-            when(mockRepo.saveAuthor(author)).thenReturn(Result.failure(new IllegalArgumentException("Email already exists")));
+            when(mockRepo.emailExists(any())).thenReturn(true);
             when(mockMapper.authorFromDTO(authorDTO)).thenReturn(author);
 
             mockMvc.perform(post(SAVE_AUTHOR)

@@ -5,7 +5,6 @@ import core.project.library.infrastructure.repository.OrderRepository;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @SpringBootApplication
@@ -41,14 +40,4 @@ class ControllerConfig {
         return new PublisherMapperImpl();
     }
 
-    @Bean
-    @Primary
-    OrderRepository orderRepositoryActual(JdbcTemplate jdbcTemplate) {
-        return new OrderRepository(jdbcTemplate);
-    }
-
-    @Bean
-    OrderRepository orderRepositoryMock(JdbcTemplate jdbcTemplate) {
-        return new OrderRepository(jdbcTemplate);
-    }
 }

@@ -63,14 +63,14 @@ public class OrderControllerTests {
     class FindByIdEndpointTest {
 
         private static Stream<Arguments> getOrder() {
-            return Stream.generate(() -> arguments(DomainProviders.order().get())).limit(1);
+            return Stream.generate(() -> arguments(Bootstrap.orderFactory().get())).limit(1);
         }
 
         @ParameterizedTest
         @MethodSource("getOrder")
         @DisplayName("Accept valid uuid")
         void acceptValidUuid(Order order) throws Exception {
-//            when(mockOrderRepo.findById(order.getId())).thenReturn(Optional.of(order));
+            when(mockOrderRepo.findById(order.getId())).thenReturn(Result.success(order));
 
             mockMvc.perform(get("/library/order/findById/" + "cc44dcec-1a4f-472e-aa01-4cbc9b50bba4")
                             .accept(MediaType.APPLICATION_JSON))
@@ -78,15 +78,15 @@ public class OrderControllerTests {
                     .andExpect(jsonPath("$").isNotEmpty());
         }
 
-//        @Test
-//        @DisplayName("Reject invalid id")
-//        void rejectInvalidId() throws Exception {
-//            when(mockOrderRepo.findById(any(UUID.class))).thenReturn(Optional.empty());
-//
-//            mockMvc.perform(get("/library/order/findById/" + UUID.randomUUID())
-//                            .accept(MediaType.APPLICATION_JSON))
-//                    .andExpect(status().isNotFound());
-//        }
+        @Test
+        @DisplayName("Reject invalid id")
+        void rejectInvalidId() throws Exception {
+            when(mockOrderRepo.findById(any(UUID.class))).thenReturn(Result.failure(null));
+
+            mockMvc.perform(get("/library/order/findById/" + UUID.randomUUID())
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+        }
     }
 
     @Nested
@@ -94,34 +94,34 @@ public class OrderControllerTests {
     class FindByCustomerIdEndpointTest {
 
         private static Stream<Arguments> orderAndCustomerId() {
-            List<Order> orders = Stream.generate(() -> DomainProviders.order().get()).limit(5).toList();
+            List<Order> orders = Stream.generate(() -> Bootstrap.orderFactory().get()).limit(5).toList();
             return Stream.generate(() -> arguments(orders, UUID.randomUUID())).limit(1);
         }
 
-//        @ParameterizedTest
-//        @MethodSource("orderAndCustomerId")
-//        @DisplayName("accept valid customer id")
-//        void acceptValidCustomerId(List<Order> orders, UUID customerId) throws Exception {
-//            when(mockOrderRepo.findByCustomerId(customerId)).thenReturn(orders);
-//
-//            mockMvc.perform(get("/library/order/findByCustomerId/" + customerId)
-//                            .accept(MediaType.APPLICATION_JSON))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                    .andExpect(jsonPath("$").isNotEmpty());
-//        }
+        @ParameterizedTest
+        @MethodSource("orderAndCustomerId")
+        @DisplayName("accept valid customer id")
+        void acceptValidCustomerId(List<Order> orders, UUID customerId) throws Exception {
+            when(mockOrderRepo.findByCustomerId(customerId)).thenReturn(Result.success(orders));
 
-//        @Test
-//        @DisplayName("reject invalid customer id")
-//        void rejectInvalidCustomerId() throws Exception {
-//            when(mockOrderRepo.findByCustomerId(any(UUID.class))).thenReturn(Collections.emptyList());
-//
-//            mockMvc.perform(get("/library/order/findByCustomerId/" + UUID.randomUUID())
-//                            .accept(MediaType.APPLICATION_JSON))
-//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                    .andExpect(status().isOk())
-//                    .andExpect(jsonPath("$").isEmpty());
-//        }
+            mockMvc.perform(get("/library/order/findByCustomerId/" + customerId)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$").isNotEmpty());
+        }
+
+        @Test
+        @DisplayName("reject invalid customer id")
+        void rejectInvalidCustomerId() throws Exception {
+            when(mockOrderRepo.findByCustomerId(any(UUID.class))).thenReturn(Result.failure(null));
+
+            mockMvc.perform(get("/library/order/findByCustomerId/" + UUID.randomUUID())
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$").isEmpty());
+        }
     }
 
     @Nested
@@ -129,7 +129,7 @@ public class OrderControllerTests {
     class FindByBookIdEndpointTest {
 
         private static Stream<Arguments> orderAndBookId() {
-            List<Order> orders = Stream.generate(() -> DomainProviders.order().get()).limit(5).toList();
+            List<Order> orders = Stream.generate(() -> Bootstrap.orderFactory().get()).limit(5).toList();
             return Stream.generate(() -> arguments(orders, UUID.randomUUID())).limit(1);
         }
 
@@ -169,7 +169,7 @@ public class OrderControllerTests {
         private static Stream<Arguments> getCustomer() {
             return Stream.of(arguments(Bootstrap.customerFactory().get()));
         }
-
+        //todo
         @ParameterizedTest
         @MethodSource("customerAndBooks")
         @DisplayName("Accept valid customer and book ids")
@@ -192,22 +192,7 @@ public class OrderControllerTests {
         @ParameterizedTest
         @MethodSource("getCustomer")
         @DisplayName("reject when customer does not exist")
-        void rejectInvalidCustomerId(Customer customer) {
-            MvcResult mvcResult = mockMvc.perform(post("/library/order/createOrder")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(customer))
-                            .param("customerId", UUID.randomUUID().toString())
-                            .param("booksId", UUID.randomUUID().toString()))
-                    .andReturn();
-
-            assertThat(mvcResult.getResolvedException()).isInstanceOf(NotFoundException.class);
-        }
-
-        @SneakyThrows
-        @ParameterizedTest
-        @MethodSource("getCustomer")
-        @DisplayName("reject when book does not exist")
-        void rejectInvalidBookId(Customer customer) {
+        void rejectInvalidCustomerAndBookId(Customer customer) {
             MvcResult mvcResult = mockMvc.perform(post("/library/order/createOrder")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(customer))

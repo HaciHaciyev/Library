@@ -9,7 +9,6 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.PaidAmount;
 import net.datafaker.Faker;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -48,8 +47,8 @@ public class DomainProviders {
                     .title(Bootstrap.randomTitle())
                     .description(Bootstrap.randomDescription())
                     .isbn(Bootstrap.randomISBN13())
-                    .price(BigDecimal.valueOf(randomPrice))
-                    .quantityOnHand(randomQuantity)
+                    .price(Bootstrap.randomPrice())
+                    .quantityOnHand(Bootstrap.randomQuantityOnHand())
                     .events(new Events())
                     .category(Bootstrap.randomCategory())
                     .publisher(Bootstrap.publisherFactory().get())

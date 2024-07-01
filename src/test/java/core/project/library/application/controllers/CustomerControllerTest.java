@@ -215,8 +215,7 @@ class CustomerControllerTest {
         @MethodSource("customerAndDTO")
         @DisplayName("reject if email exists")
         void rejectInvalidEmail(Customer customer, CustomerDTO customerDTO) throws Exception {
-            when(mockRepo.saveCustomer(customer))
-                    .thenReturn(Result.failure(new IllegalArgumentException("Email already exists")));
+            when(mockRepo.emailExists(any())).thenReturn(true);
             when(mockMapper.customerFromDTO(customerDTO)).thenReturn(customer);
 
             mockMvc.perform(post("/library/customer/saveCustomer")
