@@ -34,7 +34,7 @@ public class Bootstrap implements CommandLineRunner {
 
     private static List<Publisher> publishers;
     private static List<Author> authors;
-    private static Map<Book, Integer> books;
+    private static List<Book> books;
     private static List<Customer> customers;
     private static List<Order> orders;
 
@@ -55,24 +55,26 @@ public class Bootstrap implements CommandLineRunner {
 
     @Override
     public final void run(String... args) {
-        populatePublishers();
-        populateAuthors();
-        populateBooks();
-        populateCustomers();
-        populateOrders();
+//        if (bookRepository.count() < 1) {
 
-        if (bookRepository.count() < 1) {
+            populatePublishers();
+            populateAuthors();
+            populateBooks();
+            populateCustomers();
+            populateOrders();
+
             publishers.forEach(publisherRepository::savePublisher);
             authors.forEach(authorRepository::saveAuthor);
-            books.keySet().forEach(bookRepository::completelySaveBook);
+            books.forEach(bookRepository::completelySaveBook);
             customers.forEach(customerRepository::saveCustomer);
             orders.forEach(orderRepository::save);
             log.info("Bootstrap is completed basic values in database.");
-        }
+//        }
     }
 
     private static void populatePublishers() {
         publishers = Stream.generate(publisherFactory())
+                .distinct()
                 .limit(MAX_NUMBER_OF_PUBLISHERS)
                 .toList();
     }
@@ -87,7 +89,7 @@ public class Bootstrap implements CommandLineRunner {
     private static void populateBooks() {
         books = Stream.generate(bookFactory())
                 .limit(MAX_NUMBER_OF_BOOKS)
-                .collect(Collectors.toMap(book -> book, _ -> faker.number().numberBetween(1, 20)));
+                .toList();
     }
 
     private static void populateCustomers() {
@@ -170,9 +172,15 @@ public class Bootstrap implements CommandLineRunner {
 
             var booksForOrder = getBooksForOrder(countOfBooksPerOrder);
 
+            int minPaidAmount = booksForOrder.keySet()
+                    .stream()
+                    .map(book -> book.getPrice().price())
+                    .reduce(0.0, Double::sum)
+                    .intValue();
+
             return Order.builder()
                     .id(UUID.randomUUID())
-                    .paidAmount(new PaidAmount((double) faker.number().numberBetween(1, 5000)))
+                    .paidAmount(new PaidAmount((double) faker.number().numberBetween(minPaidAmount, 5000)))
                     .creditCard(randomCreditCard())
                     .creationDate(LocalDateTime.now())
                     .customer(customers.get(randomCustomer))
@@ -182,19 +190,46 @@ public class Bootstrap implements CommandLineRunner {
     }
 
     private static Map<Book, Integer> getBooksForOrder(int countOfBooks) {
-        List<Book> bookList = books.keySet().stream().toList();
+        List<Book> bookList = new ArrayList<>(books);
+        Map<Book, Integer> bookMap = new HashMap<>();
 
-        return Stream.generate(() -> {
-            int randomBook = faker.number().numberBetween(0, bookList.size());
+        for (int i = 0; i < countOfBooks; i++) {
+            int randomBook = faker.number().numberBetween(0, bookList.size() - 1);
+            Book selectedBook = bookList.get(randomBook);
 
-            Book book = bookList.get(randomBook);
+            Book updatedBook = Book.builder()
+                    .id(selectedBook.getId())
+                    .title(selectedBook.getTitle())
+                    .description(selectedBook.getDescription())
+                    .isbn(selectedBook.getIsbn())
+                    .price(selectedBook.getPrice())
+                    .quantityOnHand(new QuantityOnHand(selectedBook.getQuantityOnHand().quantityOnHand() - 1))
+                    .category(selectedBook.getCategory())
+                    .events(selectedBook.getEvents())
+                    .publisher(selectedBook.getPublisher())
+                    .authors(selectedBook.getAuthors())
+                    .build();
 
-            books.computeIfPresent(book, (_, count) -> count - 1);
 
-            return book;
-        }).filter(book -> books.get(book) > 0)
-                .limit(countOfBooks)
-                .collect(Collectors.toMap(book -> book, _ -> 1, Integer::sum));
+            if (updatedBook.getQuantityOnHand().quantityOnHand() < 1) {
+                bookList.remove(selectedBook);
+            } else {
+                bookList.set(randomBook, updatedBook);
+            }
+
+            Optional<Book> first = bookMap.keySet()
+                    .stream()
+                    .filter(book -> book.getId().equals(updatedBook.getId()))
+                    .findFirst();
+
+            if (first.isPresent()) {
+                bookMap.put(selectedBook, bookMap.remove(first.get()));
+            }
+
+            bookMap.merge(selectedBook, 1, Integer::sum);
+        }
+
+        return bookMap;
     }
 
     public static Address randomAddress() {
@@ -426,7 +461,7 @@ public class Bootstrap implements CommandLineRunner {
     }
 
     public static LocalDate randomDate() {
-        long start = LocalDate.of(2021, 1, 1).toEpochDay();
+        long start = LocalDate.now().plusDays(1).toEpochDay();
         long end = LocalDate.of(2027, 12, 31).toEpochDay();
         long randomDay = ThreadLocalRandom.current().nextLong(start, end);
         return LocalDate.ofEpochDay(randomDay);

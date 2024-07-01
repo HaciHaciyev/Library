@@ -121,8 +121,8 @@ public class BookRepository {
                 book.getTitle().title(),
                 book.getDescription().description(),
                 book.getIsbn().isbn(),
-                book.getPrice(),
-                book.getQuantityOnHand(),
+                book.getPrice().price(),
+                book.getQuantityOnHand().quantityOnHand(),
                 book.getCategory().toString(),
                 book.getEvents().creation_date(),
                 book.getEvents().last_update_date()
