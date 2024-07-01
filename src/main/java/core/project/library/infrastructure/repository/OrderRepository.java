@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -26,8 +28,11 @@ public class OrderRepository {
               o.id AS order_id,
               o.count_of_book AS order_count_of_book,
               o.total_price AS order_total_price,
+              o.paid_amount AS order_paid_amount,
+              o.change_of_order AS order_change_of_order,
+              o.credit_card_number AS credit_card_number,
+              o.credit_card_expiration AS credit_card_expiration,
               o.creation_date AS order_creation_date,
-              o.last_modified_date AS order_last_modified_date,
             
               c.id AS customer_id,
               c.first_name AS customer_first_name,
@@ -47,7 +52,7 @@ public class OrderRepository {
               b.isbn AS book_isbn,
               b.price AS book_price,
               b.quantity_on_hand AS book_quantity,
-              bo.book_count AS book_count,
+              bo.count_of_book_copies AS book_count_of_copies,
               b.category AS book_category,
               b.creation_date AS book_creation_date,
               b.last_modified_date AS book_last_modified_date,
@@ -249,18 +254,19 @@ public class OrderRepository {
         return authors;
     }
 
-    private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> listOfBooks) throws SQLException {
+    private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> books) throws SQLException {
+        CreditCard creditCard = new CreditCard(
+                rs.getString("order_credit_card_number"),
+                LocalDate.parse(rs.getString("order_credit_card_expiration"))
+        );
+
         return Order.builder()
                 .id(UUID.fromString(rs.getString("order_id")))
-                .paidAmount(new PaidAmount(rs.getDouble("paid_amount")))
-                .creditCard(new CreditCard(
-                        rs.getString("credit_card_number"),
-                        rs.getObject("credit_card_expiration", Timestamp.class).toLocalDateTime().toLocalDate()
-                        )
-                )
-                .creationDate(rs.getObject("creation_date", Timestamp.class).toLocalDateTime())
+                .paidAmount(new PaidAmount(rs.getDouble("order_paid_amount")))
+                .creditCard(creditCard)
+                .creationDate(LocalDateTime.parse(rs.getString("order_creation_date")))
+                .books(books)
                 .customer(customer)
-                .books(listOfBooks)
                 .build();
     }
 
