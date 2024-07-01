@@ -1,16 +1,18 @@
 package core.project.library.domain.value_objects;
 
+import core.project.library.infrastructure.exceptions.NegativeValueException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.Objects;
 
 public record ChangeOfOrder(@NotNull Double changeOfOrder) {
 
     public ChangeOfOrder {
-        Objects.requireNonNull(changeOfOrder);
+        if (changeOfOrder == null) {
+            throw new NullValueException("Change can`t be null");
+        }
 
-        if (changeOfOrder < 0) {
-            throw new IllegalArgumentException("Change of order cannot be negative");
+        if (changeOfOrder < 0.0) {
+            throw new NegativeValueException("Change of order cannot be negative");
         }
     }
 }

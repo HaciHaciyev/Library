@@ -1,5 +1,8 @@
 package core.project.library.domain.value_objects;
 
+import core.project.library.infrastructure.exceptions.BlankValueException;
+import core.project.library.infrastructure.exceptions.InvalidSizeException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -7,14 +10,13 @@ public record PublisherName(@NotBlank @Size(min = 4, max = 50) String publisherN
 
      public PublisherName {
          if (publisherName == null) {
-             throw new IllegalArgumentException("Publisher name cannot be null");
+             throw new NullValueException("Publisher name can`t be null");
          }
          if (publisherName.isBlank()) {
-             throw new IllegalArgumentException("Publisher name should`t be blank.");
+             throw new BlankValueException("Publisher name should`t be blank.");
          }
          if (publisherName.length() < 4 || publisherName.length() > 50) {
-             throw new IllegalArgumentException("Publisher name should`t be longer than 50 characters and shorter than 4 characters." +
-                     "\n Publisher name: " + publisherName);
+             throw new InvalidSizeException("Publisher name should`t be longer than 50 characters and shorter than 4 characters.");
          }
      }
 }

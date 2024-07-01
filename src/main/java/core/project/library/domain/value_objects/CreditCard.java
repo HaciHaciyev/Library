@@ -1,27 +1,30 @@
 package core.project.library.domain.value_objects;
 
+import core.project.library.infrastructure.exceptions.CreditCardExpirationException;
+import core.project.library.infrastructure.exceptions.LuhnAlgorithmException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.CreditCardNumber;
 
 import java.time.LocalDate;
-import java.util.Objects;
 
 public record CreditCard(@NotNull @CreditCardNumber String creditCardNumber,
                          @NotNull LocalDate creditCardExpiration) {
 
     public CreditCard {
-        Objects.requireNonNull(creditCardNumber);
-        Objects.requireNonNull(creditCardExpiration);
+        if (creditCardNumber == null || creditCardExpiration == null) {
+            throw new NullValueException("Credit card number or expiration cannot be null.");
+        }
 
         boolean isNotExpired = LocalDate.now().isBefore(creditCardExpiration);
 
         if (!isNotExpired) {
-            throw new IllegalArgumentException("The credit card was expired");
+            throw new CreditCardExpirationException("Credit card has expired.");
         }
 
         boolean isValidLuhn = luhnAlgorithmValidation(creditCardNumber);
         if (!isValidLuhn) {
-            throw new IllegalArgumentException("Invalid credit card number");
+            throw new LuhnAlgorithmException("Invalid credit card number");
         }
     }
 

@@ -5,6 +5,7 @@ import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.FirstName;
 import core.project.library.domain.value_objects.LastName;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -134,13 +135,26 @@ public class Author {
             return new Author(id, firstName, lastName,
                     email, address, events, new HashSet<>());
         }
+
         private void validate() {
-            Objects.requireNonNull(id, "id can`t be null");
-            Objects.requireNonNull(firstName, "firstName can`t be null");
-            Objects.requireNonNull(lastName, "lastName can`t be null");
-            Objects.requireNonNull(email, "email can`t be null");
-            Objects.requireNonNull(address, "address can`t be null");
-            Objects.requireNonNull(events, "events can`t be null");
+            if (Objects.isNull(id)) {
+                throw new NullValueException("Author id can`t be null");
+            }
+            if (Objects.isNull(firstName)) {
+                throw new NullValueException("Author firstName can`t be null");
+            }
+            if (Objects.isNull(lastName)) {
+                throw new NullValueException("Author lastName can`t be null");
+            }
+            if (Objects.isNull(email)) {
+                throw new NullValueException("Author email can`t be null");
+            }
+            if (Objects.isNull(address)) {
+                throw new NullValueException("Author address can`t be null");
+            }
+            if (Objects.isNull(events)) {
+                throw new NullValueException("Author events can`t be null");
+            }
         }
     }
 }

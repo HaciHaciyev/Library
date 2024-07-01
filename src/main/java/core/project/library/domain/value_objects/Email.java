@@ -1,5 +1,8 @@
 package core.project.library.domain.value_objects;
 
+import core.project.library.infrastructure.exceptions.BlankValueException;
+import core.project.library.infrastructure.exceptions.InvalidSizeException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.regex.Matcher;
@@ -11,18 +14,17 @@ public record Email(@NotBlank
 
     public Email {
         if (email == null) {
-            throw new IllegalArgumentException("Email cannot be null");
+            throw new NullValueException("Email can`t be null");
         }
         if (email.isBlank()) {
-            throw new IllegalArgumentException("Email should`t be blank.");
+            throw new BlankValueException("Email should`t be blank.");
         }
 
         String emailRegex = "^(\\S+)@(\\S+)$";
         Pattern pattern = Pattern.compile(emailRegex);
         Matcher matcher = pattern.matcher(email);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid email." +
-                    "\n Email: " + email);
+            throw new InvalidSizeException(String.format("Invalid email format: %s", email));
         }
     }
 }

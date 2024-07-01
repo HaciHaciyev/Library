@@ -3,7 +3,7 @@ package core.project.library.application.service;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.value_objects.ISBN;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.exceptions.Result;
+import core.project.library.infrastructure.exceptions.handlers.Result;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.PublisherRepository;

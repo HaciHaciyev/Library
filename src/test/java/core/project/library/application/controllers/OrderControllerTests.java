@@ -7,7 +7,7 @@ import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.exceptions.Result;
+import core.project.library.infrastructure.exceptions.handlers.Result;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.CustomerRepository;
 import core.project.library.infrastructure.repository.OrderRepository;
@@ -26,7 +26,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;

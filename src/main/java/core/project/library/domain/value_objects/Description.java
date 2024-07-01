@@ -1,5 +1,8 @@
 package core.project.library.domain.value_objects;
 
+import core.project.library.infrastructure.exceptions.BlankValueException;
+import core.project.library.infrastructure.exceptions.InvalidSizeException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -7,14 +10,13 @@ public record Description(@NotBlank @Size(min = 10, max = 255) String descriptio
 
     public Description {
         if (description == null) {
-            throw new IllegalArgumentException("Description cannot be null");
+            throw new NullValueException("Description cannot be null");
         }
         if (description.isBlank()) {
-            throw new IllegalArgumentException("Description should`t be blank.");
+            throw new BlankValueException("Description should`t be blank.");
         }
         if (description.length() < 5 || description.length() > 255) {
-            throw new IllegalArgumentException("Description should be greater than 5 and shorter than 255 characters." +
-                    "\n Description: " + description);
+            throw new InvalidSizeException("Description should be greater than 5 and shorter than 255 characters.");
         }
     }
 }

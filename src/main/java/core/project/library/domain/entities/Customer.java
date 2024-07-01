@@ -2,6 +2,7 @@ package core.project.library.domain.entities;
 
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -135,14 +136,29 @@ public class Customer {
             return new Customer(id, firstName, lastName, password,
                     email, address, events, new HashSet<>());
         }
+
         private void validate() {
-            Objects.requireNonNull(id, "id can`t be null");
-            Objects.requireNonNull(firstName, "firstName can`t be null");
-            Objects.requireNonNull(lastName, "lastName can`t be null");
-            Objects.requireNonNull(password, "password can`t be null");
-            Objects.requireNonNull(email, "email can`t be null");
-            Objects.requireNonNull(address, "address can`t be null");
-            Objects.requireNonNull(events, "events can`t be null");
+            if (Objects.isNull(id)) {
+                throw new NullValueException("Customer id can`t be null");
+            }
+            if (Objects.isNull(firstName)) {
+                throw new NullValueException("Customer first name can`t be null");
+            }
+            if (Objects.isNull(lastName)) {
+                throw new NullValueException("Customer last name can`t be null");
+            }
+            if (Objects.isNull(password)) {
+                throw new NullValueException("Customer password can`t be null");
+            }
+            if (Objects.isNull(email)) {
+                throw new NullValueException("Customer email can`t be null");
+            }
+            if (Objects.isNull(address)) {
+                throw new NullValueException("Customer address can`t be null");
+            }
+            if (Objects.isNull(events)) {
+                throw new NullValueException("Customer events can`t be null");
+            }
         }
     }
 }

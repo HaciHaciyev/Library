@@ -5,6 +5,7 @@ import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.Phone;
 import core.project.library.domain.value_objects.PublisherName;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -135,12 +136,24 @@ public class Publisher {
         }
 
         private void validate() {
-            Objects.requireNonNull(id, "Id can`t be null");
-            Objects.requireNonNull(publisherName, "Publisher name can`t be null");
-            Objects.requireNonNull(address, "Address can`t be null");
-            Objects.requireNonNull(phone, "Phone can`t be null");
-            Objects.requireNonNull(email, "Email can`t be null");
-            Objects.requireNonNull(events, "Events can`t be null");
+            if (Objects.isNull(id)) {
+                throw new NullValueException("Publisher id can`t be null");
+            }
+            if (Objects.isNull(publisherName)) {
+                throw new NullValueException("Publisher name can`t be null");
+            }
+            if (Objects.isNull(address)) {
+                throw new NullValueException("Publisher address can`t be null");
+            }
+            if (Objects.isNull(phone)) {
+                throw new NullValueException("Publisher phone can`t be null");
+            }
+            if (Objects.isNull(email)) {
+                throw new NullValueException("Publisher email can`t be null");
+            }
+            if (Objects.isNull(events)) {
+                throw new NullValueException("Publisher events can`t be null");
+            }
         }
     }
 }

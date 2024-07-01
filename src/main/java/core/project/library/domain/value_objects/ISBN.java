@@ -1,5 +1,8 @@
 package core.project.library.domain.value_objects;
 
+import core.project.library.infrastructure.exceptions.BlankValueException;
+import core.project.library.infrastructure.exceptions.InvalidIsbnException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import jakarta.validation.constraints.NotBlank;
 
 public record ISBN(@org.hibernate.validator.constraints.ISBN
@@ -8,14 +11,13 @@ public record ISBN(@org.hibernate.validator.constraints.ISBN
 
     public ISBN {
         if (isbn == null) {
-            throw new IllegalArgumentException("ISBN is missing");
+            throw new NullValueException("ISBN can`t be null");
         }
         if (isbn.isBlank()) {
-            throw new IllegalArgumentException("ISBN should`t be blank.");
+            throw new BlankValueException("ISBN should`t be blank.");
         }
         if (!isIsbn13Valid(isbn)) {
-            throw new IllegalArgumentException("Invalid ISBN number." +
-                    "\n ISBN: " + isbn);
+            throw new InvalidIsbnException("Invalid ISBN number.");
         }
     }
 

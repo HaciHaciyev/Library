@@ -2,6 +2,8 @@ package core.project.library.domain.entities;
 
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
+import core.project.library.infrastructure.exceptions.NegativeValueException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -194,21 +196,42 @@ public class Book {
         }
 
         private void validate() {
-            Objects.requireNonNull(title, "Title can`t be null");
-            Objects.requireNonNull(description, "Description can`t be null");
-            Objects.requireNonNull(isbn, "ISBN can`t be null");
-            Objects.requireNonNull(price, "Price can`t be null");
-            Objects.requireNonNull(quantityOnHand, "QuantityOnHand can`t be null");
-            Objects.requireNonNull(category, "Category can`t be null");
-            Objects.requireNonNull(events, "Events can`t be null");
-            Objects.requireNonNull(publisher, "Publisher can`t be null");
-            Objects.requireNonNull(authors, "Authors can`t be null");
+            if (Objects.isNull(id)) {
+                throw new NullValueException("Book id can`t be null");
+            }
+            if (Objects.isNull(title)) {
+                throw new NullValueException("Book title can`t be null");
+            }
+            if (Objects.isNull(description)) {
+                throw new NullValueException("Book description can`t be null");
+            }
+            if (Objects.isNull(isbn)) {
+                throw new NullValueException("Book isbn can`t be null");
+            }
+            if (Objects.isNull(price)) {
+                throw new NullValueException("Book price can`t be null");
+            }
+            if (Objects.isNull(quantityOnHand)) {
+                throw new NullValueException("Book quantityOnHand can`t be null");
+            }
+            if (Objects.isNull(category)) {
+                throw new NullValueException("Book category can`t be null");
+            }
+            if (Objects.isNull(events)) {
+                throw new NullValueException("Book events can`t be null");
+            }
+            if (Objects.isNull(publisher)) {
+                throw new NullValueException("Book publisher can`t be null");
+            }
+            if (Objects.isNull(authors)) {
+                throw new NullValueException("Book authors can`t be null");
+            }
 
-            if (price.price() < 0) {
-                throw new IllegalArgumentException("Price can`t be negative");
+            if (price.price() < 0.0) {
+                throw new NegativeValueException("Price can`t be negative");
             }
             if (quantityOnHand.quantityOnHand() < 0) {
-                throw new IllegalArgumentException("Quantity can`t be negative");
+                throw new NegativeValueException("Quantity can`t be negative");
             }
         }
     }

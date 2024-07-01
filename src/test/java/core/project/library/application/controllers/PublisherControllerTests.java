@@ -6,7 +6,7 @@ import core.project.library.application.model.PublisherDTO;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.PublisherName;
-import core.project.library.infrastructure.exceptions.Result;
+import core.project.library.infrastructure.exceptions.handlers.Result;
 import core.project.library.infrastructure.mappers.PublisherMapper;
 import core.project.library.infrastructure.repository.PublisherRepository;
 import org.junit.jupiter.api.DisplayName;

@@ -1,4 +1,4 @@
-package core.project.library.infrastructure.exceptions;
+package core.project.library.infrastructure.exceptions.handlers;
 
 import java.util.Optional;
 import java.util.function.Consumer;

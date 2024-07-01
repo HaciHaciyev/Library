@@ -6,7 +6,7 @@ import core.project.library.application.model.CustomerDTO;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.LastName;
-import core.project.library.infrastructure.exceptions.Result;
+import core.project.library.infrastructure.exceptions.handlers.Result;
 import core.project.library.infrastructure.mappers.CustomerMapper;
 import core.project.library.infrastructure.repository.CustomerRepository;
 import net.datafaker.Faker;

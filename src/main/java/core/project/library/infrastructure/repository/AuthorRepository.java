@@ -7,7 +7,7 @@ import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.FirstName;
 import core.project.library.domain.value_objects.LastName;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.exceptions.Result;
+import core.project.library.infrastructure.exceptions.handlers.Result;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;

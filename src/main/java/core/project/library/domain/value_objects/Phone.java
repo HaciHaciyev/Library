@@ -1,5 +1,8 @@
 package core.project.library.domain.value_objects;
 
+import core.project.library.infrastructure.exceptions.BlankValueException;
+import core.project.library.infrastructure.exceptions.InvalidPhoneException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.regex.Matcher;
@@ -9,10 +12,10 @@ public record Phone(@NotBlank String phoneNumber) {
 
     public Phone {
         if (phoneNumber == null) {
-            throw new IllegalArgumentException("Phone number cannot be null");
+            throw new NullValueException("Phone number can`t be null");
         }
         if (phoneNumber.isBlank()) {
-            throw new IllegalArgumentException("Phone number should`t be blank.");
+            throw new BlankValueException("Phone number should`t be blank.");
         }
 
         String patternForAzerbaijaniPhone = "^(\\+\\d{1,3}( )(\\d{2}[- ]?)(\\d{3}[- ]?)(\\d{2}[- ]?)(\\d{2}))$";
@@ -20,7 +23,7 @@ public record Phone(@NotBlank String phoneNumber) {
         Pattern pattern = Pattern.compile(patternForAzerbaijaniPhone);
         Matcher matcher = pattern.matcher(phoneNumber);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid phone number.\n Phone number: " + phoneNumber);
+            throw new InvalidPhoneException("Invalid phone number.\n Phone number: " + phoneNumber);
         }
     }
 }
