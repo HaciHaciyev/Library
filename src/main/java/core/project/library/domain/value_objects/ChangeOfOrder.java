@@ -12,7 +12,7 @@ public record ChangeOfOrder(@NotNull Double changeOfOrder) {
         }
 
         if (changeOfOrder < 0.0) {
-            throw new NegativeValueException("Change of order cannot be negative");
+            throw new NegativeValueException("Paid amount cannot be lower than total price of books");
         }
     }
 }
