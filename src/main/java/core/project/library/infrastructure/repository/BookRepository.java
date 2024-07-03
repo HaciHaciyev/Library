@@ -8,10 +8,11 @@ import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.utilities.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +37,7 @@ public class BookRepository {
 
     public boolean isbnExists(ISBN verifiableIsbn) {
         try {
-            String findISBN = "Select COUNT(*) from Books where isbn = ?";
+            String findISBN = "Select COUNT(isbn) from Books where isbn = ?";
             Integer count = jdbcTemplate.queryForObject(
                     findISBN,
                     Integer.class,
@@ -48,65 +49,33 @@ public class BookRepository {
         }
     }
 
-    public Optional<Book> findById(UUID bookId) {
-        try {
-            return Optional.ofNullable(
-                    jdbcTemplate.query(
-                            connection -> connection.prepareStatement(
-                                String.format(SQL_FOR_GET_BOOK_BY_ID, bookId.toString()),
-                                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                ResultSet.CONCUR_READ_ONLY
-                            ),
-                            new RowToBook()
-                    )
-            );
-        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
-            return Optional.empty();
-        }
+    public Result<Book, NotFoundException> findById(UUID bookId) {
+        String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ID, bookId);
+
+        return jdbcTemplate.query(
+                preparedStatementFactory(sqlQuery), this::extractDataToBook
+        );
     }
 
-    public Optional<Book> findByISBN(ISBN isbn) {
-        try {
-            return Optional.ofNullable(
-                    jdbcTemplate.query(
-                            connection -> connection.prepareStatement(
-                                    String.format(SQL_FOR_GET_BOOK_BY_ISBN, isbn.isbn()),
-                                    ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                    ResultSet.CONCUR_READ_ONLY
-                            ),
-                            new RowToBook()
-                    )
-            );
-        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
-            return Optional.empty();
-        }
+    public Result<Book, NotFoundException> findByISBN(ISBN isbn) {
+        String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ISBN, isbn.isbn());
+
+        return jdbcTemplate.query(
+                preparedStatementFactory(sqlQuery), this::extractDataToBook
+        );
     }
 
-    public Result<List<Book>, NotFoundException> listOfBooks(Integer pageNumber, Integer pageSize) {
-        try {
-            final int limit = buildLimit(pageSize);
-            final int offSet = buildOffSet(limit, pageNumber);
+    public Result<List<Book>, NotFoundException> listOfBooks(
+            Integer pageNumber, Integer pageSize, String title, String category
+    ) {
+        final int limit = buildLimit(pageSize);
+        final int offSet = buildOffSet(limit, pageNumber);
+        String sqlQuery = buildQueryForListOfBooks(limit, offSet, title, category);
+        log.info(sqlQuery);
 
-            String sqlForGetListOfBooks = String.format(SQL_FOR_GET_LIST_OF_BOOKS, limit, offSet);
-            log.info(sqlForGetListOfBooks);
-
-            List<Book> listOfBooks = jdbcTemplate.query(
-                    connection -> connection.prepareStatement(
-                            sqlForGetListOfBooks,
-                            ResultSet.TYPE_SCROLL_INSENSITIVE,
-                            ResultSet.CONCUR_READ_ONLY
-                    ),
-                    new ResultSetToListOfBooks()
-            );
-
-            if (listOfBooks == null || listOfBooks.isEmpty()) {
-                return Result.failure(new NotFoundException("Books was not found"));
-            } else {
-                return Result.success(listOfBooks);
-            }
-        } catch (EmptyResultDataAccessException | NoSuchElementException e) {
-            return Result.failure(new NotFoundException("Books was not found"));
-        }
+        return jdbcTemplate.query(
+                preparedStatementFactory(sqlQuery), this::extractDataToListOfBooks
+        );
     }
 
     @Transactional
@@ -155,6 +124,8 @@ public class BookRepository {
         );
     }
 
+    /**Below this are the auxiliary methods & fields.*/
+
     public static int buildLimit(Integer pageSize) {
         int limit;
         if (pageSize > 0 && pageSize <= 25) {
@@ -175,7 +146,27 @@ public class BookRepository {
         return offSet;
     }
 
-    private static final String SQL_FOR_GET_BOOK_BY_ID = """
+    private String buildQueryForListOfBooks(int limit, int offSet, String title, String category) {
+        String limitAndOffset = "LIMIT %s OFFSET %s";
+        StringBuilder sqlQuery = new StringBuilder(
+                SQL_FOR_GET_BOOK_BY_ID.replace("WHERE b.id = '%s'", "")
+        );
+
+        if (title != null && category != null) {
+            sqlQuery.append("WHERE b.title = '%s' AND b.category = '%s'").append(limitAndOffset);
+            return String.format(sqlQuery.toString(), title, category, limit, offSet);
+        } else if (title != null) {
+            sqlQuery.append("WHERE b.title = '%s'").append(limitAndOffset);
+            return String.format(sqlQuery.toString(), title, limit, offSet);
+        } else if (category != null) {
+            sqlQuery.append("WHERE b.category = '%s'").append(limitAndOffset);
+            return String.format(sqlQuery.toString(), category, limit, offSet);
+        }
+
+        return String.format(sqlQuery.append(limitAndOffset).toString(), limit, offSet);
+    }
+
+    public static final String SQL_FOR_GET_BOOK_BY_ID = """
                 SELECT
                     b.id AS book_id,
                     b.title AS book_title,
@@ -215,164 +206,124 @@ public class BookRepository {
                 WHERE b.id = '%s'
                 """;
 
-    private static final String SQL_FOR_GET_BOOK_BY_ISBN = SQL_FOR_GET_BOOK_BY_ID.replace(
+    public static final String SQL_FOR_GET_BOOK_BY_ISBN = SQL_FOR_GET_BOOK_BY_ID.replace(
             "WHERE b.id = '%s'", "WHERE b.isbn = '%s'"
     );
 
-    private static final String SQL_FOR_GET_LIST_OF_BOOKS = SQL_FOR_GET_BOOK_BY_ID.replace(
-            "WHERE b.id = '%s'", "LIMIT %s OFFSET %s"
-    );
+    private PreparedStatementCreator preparedStatementFactory(String sqlQuery) {
+        return connection -> connection.prepareStatement(
+                sqlQuery, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
+        );
+    }
 
-    private static final class RowToBook implements ResultSetExtractor<Book> {
-        @Override
-        public Book extractData(ResultSet rs) throws SQLException {
-            try {
-                rs.first();
+    public Result<Book, NotFoundException> extractDataToBook(ResultSet rs) throws SQLException {
+        try {
+            rs.first();
 
-                Publisher publisher = Publisher.builder()
-                        .id(UUID.fromString(rs.getString("publisher_id")))
-                        .publisherName(new PublisherName(rs.getString("publisher_name")))
-                        .address(new Address(
-                                    rs.getString("publisher_state"),
-                                    rs.getString("publisher_city"),
-                                    rs.getString("publisher_street"),
-                                    rs.getString("publisher_home")
-                                )
-                        )
-                        .phone(new Phone(rs.getString("publisher_phone")))
-                        .email(new Email(rs.getString("publisher_email")))
-                        .events(new Events(
-                                        rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
-                                        rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
-                                )
-                        )
-                        .build();
+            UUID currentBookId = currentBookId(rs);
+            Publisher publisher = extractDataToPublisherOfBook(rs);
+            Set<Author> authors = extractDataToListOfAuthorsOfBook(rs, currentBookId);
 
-                Set<Author> authors = new LinkedHashSet<>();
-                do {
-                    Author author = Author.builder()
-                            .id(UUID.fromString(rs.getString("author_id")))
-                            .firstName(new FirstName(rs.getString("author_first_name")))
-                            .lastName(new LastName(rs.getString("author_last_name")))
-                            .email(new Email(rs.getString("author_email")))
-                            .address(new Address(
-                                        rs.getString("author_state"),
-                                        rs.getString("author_city"),
-                                        rs.getString("author_street"),
-                                        rs.getString("author_home")
-                                    )
-                            )
-                            .events(new Events(
-                                        rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
-                                        rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
-                                    )
-                            )
-                            .build();
-                    authors.add(author);
-                } while (rs.next());
-                rs.previous();
-
-                return Book.builder()
-                        .id(UUID.fromString(rs.getString("book_id")))
-                        .title(new Title(rs.getString("book_title")))
-                        .description(new Description(rs.getString("book_description")))
-                        .isbn(new ISBN(rs.getString("book_isbn")))
-                        .price(new Price(rs.getDouble("book_price")))
-                        .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
-                        .category(Category.valueOf(rs.getString("book_category")))
-                        .events(new Events(
-                                    rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
-                                    rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
-                                )
-                        )
-                        .publisher(publisher)
-                        .authors(authors)
-                        .build();
-            } catch (EmptyResultDataAccessException e) {
-                return null;
-            }
+            return Result.success(
+                    extractDataAndCompletelyConstructTheBook(rs, currentBookId, publisher, authors)
+            );
+        } catch (DataAccessException | PSQLException e) {
+            return Result.failure(new NotFoundException("Could`t found the book."));
         }
     }
 
-    private static final class ResultSetToListOfBooks implements ResultSetExtractor<List<Book>> {
-        @Override
-        public List<Book> extractData(ResultSet rs) throws SQLException, DataAccessException {
-            try {
-                rs.first();
-                var listOfBooks = new ArrayList<Book>();
-                do {
-                    UUID currentBookID = UUID.fromString(rs.getString("book_id"));
+    public Result<List<Book>, NotFoundException> extractDataToListOfBooks(ResultSet rs) throws SQLException {
+        try {
+            rs.first();
+            var listOfBooks = new ArrayList<Book>();
 
-                    Publisher publisher = Publisher.builder()
-                            .id(UUID.fromString(rs.getString("publisher_id")))
-                            .publisherName(new PublisherName(rs.getString("publisher_name")))
-                            .address(new Address(
-                                            rs.getString("publisher_state"),
-                                            rs.getString("publisher_city"),
-                                            rs.getString("publisher_street"),
-                                            rs.getString("publisher_home")
-                                    )
-                            )
-                            .phone(new Phone(rs.getString("publisher_phone")))
-                            .email(new Email(rs.getString("publisher_email")))
-                            .events(new Events(
-                                            rs.getObject("publisher_creation_date",
-                                                    Timestamp.class).toLocalDateTime(),
-                                            rs.getObject("publisher_last_modified_date",
-                                                    Timestamp.class).toLocalDateTime()
-                                    )
-                            )
-                            .build();
+            do {
+                UUID currentBookId = currentBookId(rs);
+                Publisher publisher = extractDataToPublisherOfBook(rs);
+                Set<Author> authors = extractDataToListOfAuthorsOfBook(rs, currentBookId);
+                Book book = extractDataAndCompletelyConstructTheBook(rs, currentBookId, publisher, authors);
 
-                    Set<Author> authors = new LinkedHashSet<>();
-                    do {
-                        Author author = Author.builder()
-                                .id(UUID.fromString(rs.getString("author_id")))
-                                .firstName(new FirstName(rs.getString("author_first_name")))
-                                .lastName(new LastName(rs.getString("author_last_name")))
-                                .email(new Email(rs.getString("author_email")))
-                                .address(new Address(
-                                                rs.getString("author_state"),
-                                                rs.getString("author_city"),
-                                                rs.getString("author_street"),
-                                                rs.getString("author_home")
-                                        )
-                                )
-                                .events(new Events(
-                                                rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
-                                                rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
-                                        )
-                                )
-                                .build();
-                        authors.add(author);
-                    } while (
-                            rs.next() && UUID.fromString(rs.getString("book_id")).equals(currentBookID)
-                    );
-                    rs.previous();
+                listOfBooks.add(book);
+            } while (rs.next());
 
-                    Book book = Book.builder()
-                            .id(currentBookID)
-                            .title(new Title(rs.getString("book_title")))
-                            .description(new Description(rs.getString("book_description")))
-                            .isbn(new ISBN(rs.getString("book_isbn")))
-                            .price(new Price(rs.getDouble("book_price")))
-                            .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
-                            .category(Category.valueOf(rs.getString("book_category")))
-                            .events(new Events(
-                                            rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
-                                            rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
-                                    )
-                            )
-                            .publisher(publisher)
-                            .authors(authors)
-                            .build();
-
-                    listOfBooks.add(book);
-                } while (rs.next());
-                return listOfBooks;
-            } catch (EmptyResultDataAccessException e) {
-                return null;
-            }
+            return Result.success(listOfBooks);
+        } catch (DataAccessException | PSQLException e) {
+            return Result.failure(new NotFoundException("Could`t found the books."));
         }
+    }
+
+    private UUID currentBookId(ResultSet rs) throws SQLException {
+        return UUID.fromString(rs.getString("book_id"));
+    }
+
+    private Publisher extractDataToPublisherOfBook(ResultSet rs) throws SQLException {
+        return Publisher.builder()
+                .id(UUID.fromString(rs.getString("publisher_id")))
+                .publisherName(new PublisherName(rs.getString("publisher_name")))
+                .address(new Address(
+                                rs.getString("publisher_state"),
+                                rs.getString("publisher_city"),
+                                rs.getString("publisher_street"),
+                                rs.getString("publisher_home")
+                        )
+                )
+                .phone(new Phone(rs.getString("publisher_phone")))
+                .email(new Email(rs.getString("publisher_email")))
+                .events(new Events(
+                                rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
+                                rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
+                        )
+                )
+                .build();
+    }
+
+    private Set<Author> extractDataToListOfAuthorsOfBook(ResultSet rs, UUID currentBookID) throws SQLException {
+        Set<Author> authors = new LinkedHashSet<>();
+        do {
+            Author author = Author.builder()
+                    .id(UUID.fromString(rs.getString("author_id")))
+                    .firstName(new FirstName(rs.getString("author_first_name")))
+                    .lastName(new LastName(rs.getString("author_last_name")))
+                    .email(new Email(rs.getString("author_email")))
+                    .address(new Address(
+                                    rs.getString("author_state"),
+                                    rs.getString("author_city"),
+                                    rs.getString("author_street"),
+                                    rs.getString("author_home")
+                            )
+                    )
+                    .events(new Events(
+                                    rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
+                                    rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
+                            )
+                    )
+                    .build();
+            authors.add(author);
+        } while (
+                rs.next() && UUID.fromString(rs.getString("book_id")).equals(currentBookID)
+        );
+        rs.previous();
+        return authors;
+    }
+
+    private Book extractDataAndCompletelyConstructTheBook(
+            ResultSet rs, UUID currentBookId, Publisher publisher, Set<Author> authors
+    ) throws SQLException {
+        return Book.builder()
+                .id(currentBookId)
+                .title(new Title(rs.getString("book_title")))
+                .description(new Description(rs.getString("book_description")))
+                .isbn(new ISBN(rs.getString("book_isbn")))
+                .price(new Price(rs.getDouble("book_price")))
+                .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
+                .category(Category.valueOf(rs.getString("book_category")))
+                .events(new Events(
+                                rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
+                                rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
+                        )
+                )
+                .publisher(publisher)
+                .authors(authors)
+                .build();
     }
 }

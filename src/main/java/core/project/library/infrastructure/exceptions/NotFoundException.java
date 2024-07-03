@@ -3,7 +3,11 @@ package core.project.library.infrastructure.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Value Not Found")
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = """
+            No data was found.
+            Make sure the fields you indicate are correct.
+            Otherwise, unfortunately we do not have such data.
+            """)
 public class NotFoundException extends RuntimeException {
 
     public NotFoundException() {}

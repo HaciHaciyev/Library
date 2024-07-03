@@ -1,7 +1,10 @@
 package core.project.library.application.service;
 
 import core.project.library.domain.entities.Book;
+import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
+import core.project.library.domain.value_objects.Price;
+import core.project.library.domain.value_objects.QuantityOnHand;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import core.project.library.infrastructure.repository.BookRepository;
@@ -12,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,39 +31,38 @@ public class BookService {
         return bookRepository.isbnExists(isbn);
     }
 
-    public final Optional<Book> findById(UUID bookId) {
+    public final Result<Book, NotFoundException> findById(UUID bookId) {
         return bookRepository.findById(bookId);
     }
 
-    public final Optional<Book> findByISBN(ISBN isbn) {
+    public final Result<Book, NotFoundException> findByISBN(ISBN isbn) {
         return bookRepository.findByISBN(isbn);
     }
 
     public final Result<List<Book>, NotFoundException> listOfBooks(
-            Integer pageNumber, Integer pageSize, String category, String author
+            Integer pageNumber, Integer pageSize, String title, String category
     ) {
-        return bookRepository.listOfBooks(pageNumber, pageSize);
+        return bookRepository.listOfBooks(pageNumber, pageSize, title, category);
     }
 
     public void completelySaveBook(Book book) {
         bookRepository.completelySaveBook(book);
     }
 
-    public void patchBook(UUID bookId, String description,
-                          Double price, Integer quantityOnHand) {
-        bookRepository.findById(bookId).ifPresentOrElse(foundBook -> {
-            if (StringUtils.hasText(description)) {
-                foundBook.changeDescription(description);
+    public void patchBook(UUID bookId, Description description,
+                          Price price, QuantityOnHand quantityOnHand) {
+        bookRepository.findById(bookId).mapSuccess(foundBook ->  {
+            if (StringUtils.hasText(description.description())) {
+                foundBook.changeDescription(description.description());
             }
             if (price != null) {
-                foundBook.changePrice(price);
+                foundBook.changePrice(price.price());
             }
             if (quantityOnHand != null) {
-                foundBook.changeQuantityOnHand(quantityOnHand);
+                foundBook.changeQuantityOnHand(quantityOnHand.quantityOnHand());
             }
             bookRepository.patchBook(foundBook);
-        }, () -> {
-            throw new NotFoundException("Book was`t found for patch");
+            return foundBook;
         });
     }
 }

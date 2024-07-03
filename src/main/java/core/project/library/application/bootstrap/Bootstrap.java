@@ -46,13 +46,28 @@ public class Bootstrap implements CommandLineRunner {
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
 
-    public Bootstrap(PublisherRepository publisherRepository, AuthorRepository authorRepository,
-                     BookRepository bookRepository, CustomerRepository customerRepository, OrderRepository orderRepository) {
-        this.publisherRepository = publisherRepository;
-        this.authorRepository = authorRepository;
-        this.bookRepository = bookRepository;
-        this.customerRepository = customerRepository;
-        this.orderRepository = orderRepository;
+    @Override
+    @Transactional
+    public void run(String... args) {
+        if (bookRepository.count() < 1) {
+
+            populatePublishers();
+            publishers.forEach(publisherRepository::savePublisher);
+
+            populateAuthors();
+            authors.forEach(authorRepository::saveAuthor);
+
+            populateBooks();
+            books.forEach(bookRepository::completelySaveBook);
+
+            populateCustomers();
+            customers.forEach(customerRepository::saveCustomer);
+
+            populateOrders();
+            orders.forEach(orderRepository::save);
+
+            log.info("Bootstrap is completed basic values in database.");
+        }
     }
 
     private static void populatePublishers() {
@@ -467,29 +482,5 @@ public class Bootstrap implements CommandLineRunner {
         return new QuantityOnHand(
                 ThreadLocalRandom.current().nextInt(1, 15)
         );
-    }
-
-    @Override
-    @Transactional
-    public void run(String... args) {
-        if (bookRepository.count() < 1) {
-
-            populatePublishers();
-            publishers.forEach(publisherRepository::savePublisher);
-
-            populateAuthors();
-            authors.forEach(authorRepository::saveAuthor);
-
-            populateBooks();
-            books.forEach(bookRepository::completelySaveBook);
-
-            populateCustomers();
-            customers.forEach(customerRepository::saveCustomer);
-
-            populateOrders();
-            orders.forEach(orderRepository::save);
-
-            log.info("Bootstrap is completed basic values in database.");
-        }
     }
 }

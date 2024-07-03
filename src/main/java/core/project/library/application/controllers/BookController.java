@@ -7,7 +7,10 @@ import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
+import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
+import core.project.library.domain.value_objects.Price;
+import core.project.library.domain.value_objects.QuantityOnHand;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.mappers.BookMapper;
 import core.project.library.infrastructure.repository.AuthorRepository;
@@ -68,7 +71,7 @@ public class BookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(bookMapper.listOfModel(
-                        bookService.listOfBooks(pageNumber, pageSize, title, category).orElseThrow())
+                        bookService.listOfBooks(pageNumber, pageSize, title, category).orElseThrow(NotFoundException::new))
                 );
     }
 
@@ -108,16 +111,19 @@ public class BookController {
 
     @PatchMapping("/patchBook/{bookId}")
     final ResponseEntity<Void> patchBook(@PathVariable("bookId") UUID bookId,
-                                         @RequestParam(required = false) String description,
-                                         @RequestParam(required = false) Double price,
-                                         @RequestParam(required = false) Integer quantityOnHand) {
-        boolean isAllValuesNull = price == null && description == null && quantityOnHand == null;
-
+                                         @RequestParam(required = false) String inboundDescription,
+                                         @RequestParam(required = false) Double inboundPrice,
+                                         @RequestParam(required = false) Integer inboundQuantityOnHand) {
+        boolean isAllValuesNull = inboundPrice == null && inboundDescription == null && inboundQuantityOnHand == null;
         if (isAllValuesNull) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } else {
-            bookService.patchBook(bookId, description, price, quantityOnHand);
         }
+
+        Description description = new Description(inboundDescription);
+        Price price = new Price(inboundPrice);
+        QuantityOnHand quantityOnHand = new QuantityOnHand(inboundQuantityOnHand);
+
+        bookService.patchBook(bookId, description, price, quantityOnHand);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
