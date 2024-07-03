@@ -58,22 +58,22 @@ public class Bootstrap implements CommandLineRunner {
     public void run(String... args) {
         if (bookRepository.count() < 1) {
 
-        populatePublishers();
-        publishers.forEach(publisherRepository::savePublisher);
+            populatePublishers();
+            publishers.forEach(publisherRepository::savePublisher);
 
-        populateAuthors();
-        authors.forEach(authorRepository::saveAuthor);
+            populateAuthors();
+            authors.forEach(authorRepository::saveAuthor);
 
-        populateBooks();
-        books.forEach(bookRepository::completelySaveBook);
+            populateBooks();
+            books.forEach(bookRepository::completelySaveBook);
 
-        populateCustomers();
-        customers.forEach(customerRepository::saveCustomer);
+            populateCustomers();
+            customers.forEach(customerRepository::saveCustomer);
 
-        populateOrders();
-        orders.forEach(orderRepository::save);
+            populateOrders();
+            orders.forEach(orderRepository::save);
 
-        log.info("Bootstrap is completed basic values in database.");
+            log.info("Bootstrap is completed basic values in database.");
         }
     }
 

@@ -2,95 +2,97 @@ package core.project.library.infrastructure.exceptions.handlers;
 
 import core.project.library.infrastructure.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(BlankValueException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleBlankValueException(HttpServletRequest request, BlankValueException e) {
-        System.out.println(request.toString());
+        log.info("BlankValueException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(CreditCardExpirationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleCreditCardExpirationException(HttpServletRequest request, CreditCardExpirationException e) {
-        System.out.println(request.toString());
+        log.info("CreditCardException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InsufficientPaymentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleInsufficientPaymentException(HttpServletRequest request, InsufficientPaymentException e) {
-        System.out.println(request.toString());
+        log.info("InsufficientPaymentException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InvalidEmailException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleInvalidEmailException(HttpServletRequest request, InvalidEmailException e) {
-        System.out.println(request.toString());
+        log.info("InvalidEmailException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InvalidIsbnException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleInvalidIsbnException(HttpServletRequest request, InvalidIsbnException e) {
-        System.out.println(request.toString());
+        log.info("InvalidIsbnException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InvalidPhoneException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleInvalidPhoneException(HttpServletRequest request, InvalidPhoneException e) {
-        System.out.println(request.toString());
+        log.info("InvalidPhoneException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InvalidSizeException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleInvalidSizeException(HttpServletRequest request, InvalidSizeException e) {
-        System.out.println(request.toString());
+        log.info("InvalidSizeException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(LuhnAlgorithmException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleLuhnAlgorithmException(HttpServletRequest request, LuhnAlgorithmException e) {
-        System.out.println(request.toString());
+        log.info("luhnAlgorithmException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(NegativeValueException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleUnknownException(HttpServletRequest request, NegativeValueException e) {
-        System.out.println(request.toString());
+        log.info("NegativeValueException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleUnknownException(HttpServletRequest request, NotFoundException e) {
-        System.out.println(request.toString());
+        log.info("NotFoundException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(NullValueException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleNullValueException(HttpServletRequest request, NullValueException e) {
-        System.out.println(request.toString());
+        log.info("NullValueException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
-    @ExceptionHandler(QuantityOnHandException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(QuantityOnHandException.class)
     public String handleQuantityOnHandException(HttpServletRequest request, QuantityOnHandException e) {
-        System.out.println(request.toString());
+        log.info("QuantityOnHandException: {}. In the request: {}", e.getMessage(), request.toString());
         return e.getMessage();
     }
 
