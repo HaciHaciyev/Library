@@ -4,7 +4,7 @@ import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.exceptions.handlers.Result;
+import core.project.library.infrastructure.utilities.Result;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;

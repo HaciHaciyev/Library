@@ -6,7 +6,7 @@ import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.exceptions.handlers.Result;
+import core.project.library.infrastructure.utilities.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;

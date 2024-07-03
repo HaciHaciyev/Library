@@ -1,4 +1,4 @@
-package core.project.library.infrastructure.exceptions.handlers;
+package core.project.library.application.controllers;
 
 import core.project.library.infrastructure.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;

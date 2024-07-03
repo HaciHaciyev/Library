@@ -4,6 +4,7 @@ import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.repository.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
@@ -20,6 +21,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class Bootstrap implements CommandLineRunner {
 
     private static final Faker faker = new Faker();
@@ -43,15 +45,6 @@ public class Bootstrap implements CommandLineRunner {
     private final BookRepository bookRepository;
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
-
-    public Bootstrap(PublisherRepository publisherRepository, AuthorRepository authorRepository,
-                     BookRepository bookRepository, CustomerRepository customerRepository, OrderRepository orderRepository) {
-        this.publisherRepository = publisherRepository;
-        this.authorRepository = authorRepository;
-        this.bookRepository = bookRepository;
-        this.customerRepository = customerRepository;
-        this.orderRepository = orderRepository;
-    }
 
     @Override
     @Transactional
