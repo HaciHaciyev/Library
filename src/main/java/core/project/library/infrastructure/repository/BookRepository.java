@@ -8,8 +8,6 @@ import core.project.library.domain.value_objects.*;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.utilities.Result;
 import lombok.extern.slf4j.Slf4j;
-import org.postgresql.util.PSQLException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
@@ -43,38 +41,53 @@ public class BookRepository {
                     Integer.class,
                     verifiableIsbn.isbn()
             );
-            return count != null && count >  0;
+            return count != null && count > 0;
         } catch (EmptyResultDataAccessException e) {
             return false;
         }
     }
 
     public Result<Book, NotFoundException> findById(UUID bookId) {
-        String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ID, bookId);
+        try {
+            String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ID, bookId);
 
-        return jdbcTemplate.query(
-                preparedStatementFactory(sqlQuery), this::extractDataToBook
-        );
+            return Result.success(
+                    jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToBook)
+            );
+        } catch (EmptyResultDataAccessException e) {
+            log.info("BookRepository findById(...): {}", e.getMessage());
+            return Result.failure(new NotFoundException("Could`t found the book."));
+        }
     }
 
     public Result<Book, NotFoundException> findByISBN(ISBN isbn) {
-        String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ISBN, isbn.isbn());
+        try {
+            String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ISBN, isbn.isbn());
 
-        return jdbcTemplate.query(
-                preparedStatementFactory(sqlQuery), this::extractDataToBook
-        );
+            return Result.success(
+                    jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToBook)
+            );
+        } catch (EmptyResultDataAccessException e) {
+            log.info("BookRepository findByISBN(...): {}", e.getMessage());
+            return Result.failure(new NotFoundException("Could`t found the book."));
+        }
     }
 
     public Result<List<Book>, NotFoundException> listOfBooks(
             Integer pageNumber, Integer pageSize, String title, String category
     ) {
-        final int limit = buildLimit(pageSize);
-        final int offSet = buildOffSet(limit, pageNumber);
-        String sqlQuery = buildQueryForListOfBooks(limit, offSet, title, category);
+        try {
+            final int limit = buildLimit(pageSize);
+            final int offSet = buildOffSet(limit, pageNumber);
+            String sqlQuery = buildQueryForListOfBooks(limit, offSet, title, category);
 
-        return jdbcTemplate.query(
-                preparedStatementFactory(sqlQuery), this::extractDataToListOfBooks
-        );
+            return Result.success(
+                    jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToListOfBooks)
+            );
+        } catch (EmptyResultDataAccessException e) {
+            log.info("BookRepository listOfBooks(...): {}", e.getMessage());
+            return Result.failure(new NotFoundException("Could`t found the list of books."));
+        }
     }
 
     @Transactional
@@ -215,40 +228,28 @@ public class BookRepository {
         );
     }
 
-    public Result<Book, NotFoundException> extractDataToBook(ResultSet rs) throws SQLException {
-        try {
-            rs.first();
+    public Book extractDataToBook(ResultSet rs) throws SQLException {
+        rs.first();
+        UUID currentBookId = currentBookId(rs);
+        Publisher publisher = extractDataToPublisherOfBook(rs);
+        Set<Author> authors = extractDataToListOfAuthorsOfBook(rs, currentBookId);
 
+        return extractDataAndCompletelyConstructTheBook(rs, currentBookId, publisher, authors);
+    }
+
+    public List<Book> extractDataToListOfBooks(ResultSet rs) throws SQLException {
+        rs.first();
+        var listOfBooks = new ArrayList<Book>();
+
+        do {
             UUID currentBookId = currentBookId(rs);
             Publisher publisher = extractDataToPublisherOfBook(rs);
             Set<Author> authors = extractDataToListOfAuthorsOfBook(rs, currentBookId);
+            Book book = extractDataAndCompletelyConstructTheBook(rs, currentBookId, publisher, authors);
+            listOfBooks.add(book);
+        } while (rs.next());
 
-            return Result.success(
-                    extractDataAndCompletelyConstructTheBook(rs, currentBookId, publisher, authors)
-            );
-        } catch (DataAccessException | PSQLException e) {
-            return Result.failure(new NotFoundException("Could`t found the book."));
-        }
-    }
-
-    public Result<List<Book>, NotFoundException> extractDataToListOfBooks(ResultSet rs) throws SQLException {
-        try {
-            rs.first();
-            var listOfBooks = new ArrayList<Book>();
-
-            do {
-                UUID currentBookId = currentBookId(rs);
-                Publisher publisher = extractDataToPublisherOfBook(rs);
-                Set<Author> authors = extractDataToListOfAuthorsOfBook(rs, currentBookId);
-                Book book = extractDataAndCompletelyConstructTheBook(rs, currentBookId, publisher, authors);
-
-                listOfBooks.add(book);
-            } while (rs.next());
-
-            return Result.success(listOfBooks);
-        } catch (DataAccessException | PSQLException e) {
-            return Result.failure(new NotFoundException("Could`t found the books."));
-        }
+        return listOfBooks;
     }
 
     private UUID currentBookId(ResultSet rs) throws SQLException {
