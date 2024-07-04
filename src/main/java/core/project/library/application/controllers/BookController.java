@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -44,7 +45,12 @@ public class BookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(bookMapper.toModel(
-                        bookService.findById(bookId).orElseThrow(NotFoundException::new))
+                        bookService.findById(bookId)
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, """
+                                Book was not found.
+                                Make sure the fields you indicate are correct.
+                                Otherwise, unfortunately we do not have such data."""))
+                        )
                 );
     }
 
@@ -54,7 +60,12 @@ public class BookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(bookMapper.toModel(
-                        bookService.findByISBN(isbn).orElseThrow(NotFoundException::new))
+                        bookService.findByISBN(isbn)
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, """
+                                Book was not found.
+                                Make sure the fields you indicate are correct.
+                                Otherwise, unfortunately we do not have such data."""))
+                        )
                 );
     }
 
@@ -68,7 +79,12 @@ public class BookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(bookMapper.listOfModel(
-                        bookService.listOfBooks(pageNumber, pageSize, title, category).orElseThrow(NotFoundException::new))
+                        bookService.listOfBooks(pageNumber, pageSize, title, category)
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, """
+                                We were unable to compile a list of books based on your requests..
+                                Make sure the fields you indicate are correct.
+                                Otherwise, unfortunately we do not have such data."""))
+                        )
                 );
     }
 
@@ -80,10 +96,15 @@ public class BookController {
             throw new IllegalArgumentException("ISBN was be used");
         }
 
-        Publisher publisher = publisherRepository.findById(publisherId).orElseThrow(NotFoundException::new);
+        Publisher publisher = publisherRepository
+                .findById(publisherId)
+                .orElseThrow(() -> new NotFoundException(String.format("Publisher with id %s was not found.", publisherId)));
+
         Set<Author> authors = new HashSet<>();
         for (UUID authorId : authorsId) {
-            authors.add(authorRepository.findById(authorId).orElseThrow(NotFoundException::new));
+            authors.add(authorRepository
+                    .findById(authorId)
+                    .orElseThrow(() -> new NotFoundException(String.format("Author with id %s was not found.", authorId))));
         }
 
         Book book = Book.builder()
