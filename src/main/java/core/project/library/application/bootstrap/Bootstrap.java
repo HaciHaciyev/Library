@@ -49,7 +49,7 @@ public class Bootstrap implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (bookRepository.count() < 1) {
+        if (bookRepository.count() == null || bookRepository.count() < 1) {
 
             populatePublishers();
             publishers.forEach(publisherRepository::savePublisher);
@@ -177,7 +177,7 @@ public class Bootstrap implements CommandLineRunner {
             if (totalNumberOfBooks < 10) {
                 countOfBooksPerOrder = totalNumberOfBooks;
             } else {
-                countOfBooksPerOrder = ThreadLocalRandom.current().nextInt(0, 10);
+                countOfBooksPerOrder = ThreadLocalRandom.current().nextInt(1, 10);
             }
 
             var booksForOrder = getBooksForOrder(countOfBooksPerOrder);
