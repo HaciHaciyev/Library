@@ -8,9 +8,9 @@ import core.project.library.domain.value_objects.FirstName;
 import core.project.library.domain.value_objects.LastName;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.utilities.Result;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,32 +20,39 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Repository
 public class AuthorRepository {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcClient jdbcClient;
 
-    public AuthorRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public AuthorRepository(JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     public boolean emailExists(Email verifiableEmail) {
         String findEmail = "SELECT COUNT(*) FROM Authors WHERE email = ?";
-        Integer count = jdbcTemplate.queryForObject(
-                findEmail,
-                Integer.class,
-                verifiableEmail.email());
-        return count != null && count > 0;
+
+        Integer count = jdbcClient.sql(findEmail)
+                .param(verifiableEmail.email())
+                .query(Integer.class)
+                .single();
+
+        return count > 0;
     }
 
-    public Result<Author, EmptyResultDataAccessException> findById(UUID authorId) {
+    public Result<Author, DataAccessException> findById(UUID authorId) {
         try {
             String findById = "SELECT * FROM Authors WHERE id = ?";
 
-            return Result.success(
-                    jdbcTemplate.queryForObject(findById, this::authorMapper, authorId.toString())
-            );
-        } catch (EmptyResultDataAccessException e) {
+            Author author = jdbcClient.sql(findById)
+                    .param(authorId.toString())
+                    .query(this::authorMapper)
+                    .single();
+
+            return Result.success(author);
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
             return Result.failure(e);
         }
     }
@@ -54,22 +61,25 @@ public class AuthorRepository {
         try {
             String findByLastName = "SELECT * FROM Authors WHERE last_name = ?";
 
-            List<Author> authors = jdbcTemplate.query(
-                    findByLastName, this::authorMapper, lastName
-            );
+            List<Author> authors = jdbcClient.sql(findByLastName)
+                    .param(lastName)
+                    .query(this::authorMapper)
+                    .list();
 
             if (authors.isEmpty()) {
+                log.error("No authors found for last name {}", lastName);
                 return Result.failure(new NotFoundException("Authors not found"));
-            } else {
-                return Result.success(authors);
             }
-        } catch (EmptyResultDataAccessException e) {
+
+            return Result.success(authors);
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
             return Result.failure(e);
         }
     }
 
     @Transactional
-    public Result<Author, Exception> saveAuthor(Author author) {
+    public Result<Author, DataAccessException> saveAuthor(Author author) {
         try {
             String saveAuthor = """
                     INSERT INTO Authors (id, first_name, last_name, email,
@@ -77,23 +87,22 @@ public class AuthorRepository {
                                 VALUES (?,?,?,?,?,?,?,?,?,?)
                     """;
 
-            jdbcTemplate.update(saveAuthor,
-                    ps -> {
-                        ps.setString(1, author.getId().toString());
-                        ps.setString(2, author.getFirstName().firstName());
-                        ps.setString(3, author.getLastName().lastName());
-                        ps.setString(4, author.getEmail().email());
-                        ps.setString(5, author.getAddress().state());
-                        ps.setString(6, author.getAddress().city());
-                        ps.setString(7, author.getAddress().street());
-                        ps.setString(8, author.getAddress().home());
-                        ps.setTimestamp(9, Timestamp.valueOf(author.getEvents().creation_date()));
-                        ps.setTimestamp(10, Timestamp.valueOf(author.getEvents().last_update_date()));
-                    }
-            );
+            jdbcClient.sql(saveAuthor)
+                    .param(author.getId().toString())
+                    .param(author.getFirstName().firstName())
+                    .param(author.getLastName().lastName())
+                    .param(author.getEmail().email())
+                    .param(author.getAddress().state())
+                    .param(author.getAddress().city())
+                    .param(author.getAddress().street())
+                    .param(author.getAddress().home())
+                    .param(author.getEvents().creation_date())
+                    .param(author.getEvents().last_update_date())
+                    .update();
 
             return Result.success(author);
         } catch (DataAccessException e) {
+            log.error(e.getMessage());
             return Result.failure(e);
         }
     }
