@@ -27,7 +27,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -49,9 +48,6 @@ public class OrderControllerTests {
     ObjectMapper objectMapper;
     @MockBean
     BookRepository bookRepository;
-
-    @Autowired
-    OrderRepository orderRepositoryActual;
 
     @MockBean(name = "orderRepositoryMock")
     OrderRepository mockOrderRepo;
@@ -177,7 +173,7 @@ public class OrderControllerTests {
         @DisplayName("Accept valid customer and book ids")
         void acceptValidCustomerAndBook(Customer customer, List<Book> books) throws Exception {
             when(customerRepository.findById(customer.getId())).thenReturn(Result.success(customer));
-            books.forEach(book -> when(bookRepository.findById(book.getId())).thenReturn(Optional.of(book)));
+            books.forEach(book -> when(bookRepository.findById(book.getId())).thenReturn(Result.success(book)));
 
             List<UUID> bookIds = books.stream().map(Book::getId).toList();
 

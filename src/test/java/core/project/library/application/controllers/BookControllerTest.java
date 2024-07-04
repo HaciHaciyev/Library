@@ -13,6 +13,7 @@ import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.PublisherRepository;
+import core.project.library.infrastructure.utilities.Result;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
@@ -30,9 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -42,13 +41,13 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @WebMvcTest(BookController.class)
@@ -127,7 +126,7 @@ class BookControllerTest {
         @DisplayName("Accept valid UUID")
         void acceptValidId(Book book) throws Exception {
             when(bookService.findById(any(UUID.class)))
-                    .thenReturn(Optional.of(book));
+                    .thenReturn(Result.success(book));
 
             MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + book.getId().toString())
                             .accept(MediaType.APPLICATION_JSON))
@@ -143,7 +142,7 @@ class BookControllerTest {
         void rejectInvalidId() throws Exception {
             UUID nonExistent = UUID.randomUUID();
             when(bookService.findById(nonExistent))
-                    .thenReturn(Optional.empty());
+                    .thenReturn(Result.failure(new NotFoundException()));
 
             MvcResult mvcResult = mockMvc.perform(get(FIND_BY_ID + nonExistent)
                             .accept(MediaType.APPLICATION_JSON))
