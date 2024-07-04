@@ -108,15 +108,15 @@ public class BookController {
 
     @PatchMapping("/patchBook/{bookId}")
     final ResponseEntity<Void> patchBook(@PathVariable("bookId") UUID bookId,
-                                         @RequestParam(required = false) String inboundDescription,
-                                         @RequestParam(required = false) Double inboundPrice,
-                                         @RequestParam(required = false) Integer inboundQuantityOnHand) {
-        boolean isAllValuesNull = inboundPrice == null && inboundDescription == null && inboundQuantityOnHand == null;
+                                         @RequestParam(required = false) String description,
+                                         @RequestParam(required = false) Double price,
+                                         @RequestParam(required = false) Integer quantityOnHand) {
+        boolean isAllValuesNull = price == null && description == null && quantityOnHand == null;
         if (isAllValuesNull) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        bookService.patchBook(bookId, inboundDescription, inboundPrice, inboundQuantityOnHand);
+        bookService.patchBook(bookId, description, price, quantityOnHand);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
