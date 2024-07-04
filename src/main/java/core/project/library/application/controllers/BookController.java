@@ -7,10 +7,7 @@ import core.project.library.domain.entities.Author;
 import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
-import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
-import core.project.library.domain.value_objects.Price;
-import core.project.library.domain.value_objects.QuantityOnHand;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.mappers.BookMapper;
 import core.project.library.infrastructure.repository.AuthorRepository;
@@ -119,12 +116,7 @@ public class BookController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        Description description = new Description(inboundDescription);
-        Price price = new Price(inboundPrice);
-        QuantityOnHand quantityOnHand = new QuantityOnHand(inboundQuantityOnHand);
-
-        bookService.patchBook(bookId, description, price, quantityOnHand);
-
+        bookService.patchBook(bookId, inboundDescription, inboundPrice, inboundQuantityOnHand);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

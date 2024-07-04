@@ -71,7 +71,6 @@ public class BookRepository {
         final int limit = buildLimit(pageSize);
         final int offSet = buildOffSet(limit, pageNumber);
         String sqlQuery = buildQueryForListOfBooks(limit, offSet, title, category);
-        log.info(sqlQuery);
 
         return jdbcTemplate.query(
                 preparedStatementFactory(sqlQuery), this::extractDataToListOfBooks
@@ -118,8 +117,8 @@ public class BookRepository {
             Where id = ?
             """,
                 foundBook.getDescription().description(),
-                foundBook.getPrice(),
-                foundBook.getQuantityOnHand(),
+                foundBook.getPrice().price(),
+                foundBook.getQuantityOnHand().quantityOnHand(),
                 foundBook.getId().toString()
         );
     }

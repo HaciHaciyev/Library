@@ -1,10 +1,7 @@
 package core.project.library.application.service;
 
 import core.project.library.domain.entities.Book;
-import core.project.library.domain.value_objects.Description;
 import core.project.library.domain.value_objects.ISBN;
-import core.project.library.domain.value_objects.Price;
-import core.project.library.domain.value_objects.QuantityOnHand;
 import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import core.project.library.infrastructure.repository.BookRepository;
@@ -49,20 +46,21 @@ public class BookService {
         bookRepository.completelySaveBook(book);
     }
 
-    public void patchBook(UUID bookId, Description description,
-                          Price price, QuantityOnHand quantityOnHand) {
-        bookRepository.findById(bookId).mapSuccess(foundBook ->  {
-            if (StringUtils.hasText(description.description())) {
-                foundBook.changeDescription(description.description());
+    public void patchBook(UUID bookId, String description,
+                          Double price, Integer quantityOnHand) {
+        bookRepository.findById(bookId).handle(foundBook ->  {
+            if (StringUtils.hasText(description)) {
+                foundBook.changeDescription(description);
             }
             if (price != null) {
-                foundBook.changePrice(price.price());
+                foundBook.changePrice(price);
             }
             if (quantityOnHand != null) {
-                foundBook.changeQuantityOnHand(quantityOnHand.quantityOnHand());
+                foundBook.changeQuantityOnHand(quantityOnHand);
             }
             bookRepository.patchBook(foundBook);
-            return foundBook;
+        }, _ -> {
+            throw new NotFoundException();
         });
     }
 }
