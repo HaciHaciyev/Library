@@ -78,10 +78,18 @@ public class AuthorRepository {
                     """;
 
             jdbcTemplate.update(saveAuthor,
-                    author.getId().toString(), author.getFirstName().firstName(), author.getLastName().lastName(),
-                    author.getEmail().email(), author.getAddress().state(), author.getAddress().city(),
-                    author.getAddress().street(), author.getAddress().home(),
-                    author.getEvents().creation_date(), author.getEvents().last_update_date()
+                    ps -> {
+                        ps.setString(1, author.getId().toString());
+                        ps.setString(2, author.getFirstName().firstName());
+                        ps.setString(3, author.getLastName().lastName());
+                        ps.setString(4, author.getEmail().email());
+                        ps.setString(5, author.getAddress().state());
+                        ps.setString(6, author.getAddress().city());
+                        ps.setString(7, author.getAddress().street());
+                        ps.setString(8, author.getAddress().home());
+                        ps.setTimestamp(9, Timestamp.valueOf(author.getEvents().creation_date()));
+                        ps.setTimestamp(10, Timestamp.valueOf(author.getEvents().last_update_date()));
+                    }
             );
 
             return Result.success(author);
