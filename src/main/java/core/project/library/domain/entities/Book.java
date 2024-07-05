@@ -138,6 +138,7 @@ public class Book {
         private QuantityOnHand quantityOnHand;
         private Category category;
         private Events events;
+        private Boolean withdrawnFromSale;
         private /**@ManyToOne*/ Publisher publisher;
         private /**@ManyToMany*/ Set<Author> authors;
 
@@ -183,6 +184,11 @@ public class Book {
             return this;
         }
 
+        public Builder withdrawnFromSale(Boolean withdrawnFromSale) {
+            this.withdrawnFromSale = withdrawnFromSale;
+            return this;
+        }
+
         public Builder publisher(final Publisher publisher) {
             this.publisher = publisher;
             return this;
@@ -196,12 +202,25 @@ public class Book {
         public final Book build() {
             validate();
 
-            Book book = new Book(id, title, description, isbn, price, quantityOnHand,
-                    category, events, false, publisher, Collections.unmodifiableSet(authors), new HashSet<>());
+            if (this.withdrawnFromSale == null) {
+                Book book = new Book(
+                        id, title, description, isbn, price, quantityOnHand, category,
+                        events, false, publisher, Collections.unmodifiableSet(authors), new HashSet<>()
+                );
 
-            publisher.addBook(book);
-            authors.forEach(author -> author.addBook(book));
-            return book;
+                publisher.addBook(book);
+                authors.forEach(author -> author.addBook(book));
+                return book;
+            } else {
+                Book book = new Book(
+                        id, title, description, isbn, price, quantityOnHand, category,
+                        events, withdrawnFromSale, publisher, Collections.unmodifiableSet(authors), new HashSet<>()
+                );
+
+                publisher.addBook(book);
+                authors.forEach(author -> author.addBook(book));
+                return book;
+            }
         }
 
         private void validate() {

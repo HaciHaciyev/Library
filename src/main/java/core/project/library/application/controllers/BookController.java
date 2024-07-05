@@ -140,4 +140,10 @@ public class BookController {
         bookService.patchBook(bookId, description, price, quantityOnHand);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @DeleteMapping("/withdrawFromSale/{bookId}")
+    final ResponseEntity<Void> withdrawBookFromTheSale(@PathVariable("bookId") UUID bookId) {
+        bookService.withdrawBookFromTheSale(bookId);
+        return ResponseEntity.noContent().build();
+    }
 }

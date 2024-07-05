@@ -136,6 +136,15 @@ public class BookRepository {
         );
     }
 
+    public void withdrawBookFromTheSale(Book book) {
+        jdbcTemplate.update("""
+            Update Books Set
+                  withdrawn_from_sale = ?
+            Where id = ?
+            """, book.getWithdrawnFromSale(), book.getId().toString()
+        );
+    }
+
     /**Below this are the auxiliary methods & fields.*/
 
     public static int buildLimit(Integer pageSize) {
@@ -187,6 +196,7 @@ public class BookRepository {
                     b.price AS book_price,
                     b.quantity_on_hand AS book_quantity,
                     b.category AS book_category,
+                    b.withdrawn_from_sale AS withdrawn_from_sale,
                     b.creation_date AS book_creation_date,
                     b.last_modified_date AS book_last_modified_date,
                 
@@ -322,6 +332,7 @@ public class BookRepository {
                                 rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
                         )
                 )
+                .withdrawnFromSale(rs.getBoolean("withdrawn_from_sale"))
                 .publisher(publisher)
                 .authors(authors)
                 .build();
