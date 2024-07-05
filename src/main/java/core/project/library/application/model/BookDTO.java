@@ -9,5 +9,6 @@ public record BookDTO(@NotNull @Valid Title title,
                       @NotNull @Valid ISBN isbn,
                       @NotNull @Valid Price price,
                       @NotNull @Valid QuantityOnHand quantityOnHand,
-                      @NotNull Category category) {
+                      @NotNull Category category,
+                      @NotNull Boolean withdrawnFromSale) {
 }

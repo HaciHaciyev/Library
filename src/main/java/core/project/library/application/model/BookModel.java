@@ -12,6 +12,7 @@ public record BookModel(@NotNull @Valid Title title,
                         @NotNull @Valid Price price,
                         @NotNull @Valid QuantityOnHand quantityOnHand,
                         @NotNull Category category,
+                        @NotNull Boolean withdrawnFromSale,
                         @NotNull @Valid PublisherDTO publisher,
                         @NotNull @Valid Set<AuthorDTO> authors) {
 }
