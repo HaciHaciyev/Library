@@ -6,6 +6,7 @@ import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
 import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.RemovedFromSaleException;
 import core.project.library.infrastructure.mappers.OrderMapper;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.CustomerRepository;
@@ -69,6 +70,11 @@ public class OrderController {
         Map<Book, Integer> books = inboundOrderDTO.booksId().stream()
                 .map(bookId -> bookRepository.findById(bookId).orElseThrow(NotFoundException::new))
                 .collect(Collectors.toMap(book -> book, _ -> 1, Integer::sum));
+
+        for (Map.Entry<Book, Integer> pair : books.entrySet()) {
+            Book book = pair.getKey();
+            if (!book.isItOnSale()) throw new RemovedFromSaleException("Book is not on sale");
+        }
 
         Order order = Order.builder()
                 .id(UUID.randomUUID())

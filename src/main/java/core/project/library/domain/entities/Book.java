@@ -22,6 +22,7 @@ public class Book {
     private QuantityOnHand quantityOnHand;
     private final Category category;
     private final Events events;
+    private Boolean withdrawnFromSale;
     private final /**@ManyToOne*/ Publisher publisher;
     private final /**@ManyToMany*/ Set<Author> authors;
     private final /**@ManyToMany*/ Set<Order> orders;
@@ -60,6 +61,14 @@ public class Book {
 
     public void changeQuantityOnHand(Integer quantityOnHand) {
         this.quantityOnHand = new QuantityOnHand(quantityOnHand);
+    }
+
+    public boolean isItOnSale() {
+        return !withdrawnFromSale;
+    }
+
+    public void withdrawnFromSale() {
+        this.withdrawnFromSale = true;
     }
 
     @Override
@@ -188,7 +197,7 @@ public class Book {
             validate();
 
             Book book = new Book(id, title, description, isbn, price, quantityOnHand,
-                    category, events, publisher, Collections.unmodifiableSet(authors), new HashSet<>());
+                    category, events, false, publisher, Collections.unmodifiableSet(authors), new HashSet<>());
 
             publisher.addBook(book);
             authors.forEach(author -> author.addBook(book));
