@@ -64,7 +64,7 @@ public class OrderController {
     }
 
     @PostMapping("/createOrder")
-    final ResponseEntity<String> createOrder(@RequestParam @Valid InboundOrderDTO inboundOrderDTO) {
+    final ResponseEntity<String> createOrder(@RequestBody @Valid InboundOrderDTO inboundOrderDTO) {
 
         Customer customer = customerRepository.findById(inboundOrderDTO.customerId()).orElseThrow(NotFoundException::new);
 
