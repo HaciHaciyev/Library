@@ -7,113 +7,32 @@ import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.utilities.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
 @Repository
 public class OrderRepository {
 
-    private static final String GET_ORDER_BY_ID = """
-            SELECT
-              o.id AS order_id,
-              o.count_of_book AS order_count_of_book,
-              o.total_price AS order_total_price,
-              o.paid_amount AS order_paid_amount,
-              o.change_of_order AS order_change_of_order,
-              o.credit_card_number AS credit_card_number,
-              o.credit_card_expiration AS credit_card_expiration,
-              o.creation_date AS order_creation_date,
-            
-              c.id AS customer_id,
-              c.first_name AS customer_first_name,
-              c.last_name AS customer_last_name,
-              c.email AS customer_email,
-              c.password AS customer_password,
-              c.state AS customer_state,
-              c.city AS customer_city,
-              c.street AS customer_street,
-              c.home AS customer_home,
-              c.creation_date AS customer_creation_date,
-              c.last_modified_date AS customer_last_modified_date,
-            
-              b.id AS book_id,
-              b.title AS book_title,
-              b.description AS book_description,
-              b.isbn AS book_isbn,
-              b.price AS book_price,
-              b.quantity_on_hand AS book_quantity,
-              bo.count_of_book_copies AS book_count_of_copies,
-              b.category AS book_category,
-              b.creation_date AS book_creation_date,
-              b.last_modified_date AS book_last_modified_date,
-            
-              p.id AS publisher_id,
-              p.publisher_name AS publisher_name,
-              p.state AS publisher_state,
-              p.city AS publisher_city,
-              p.street AS publisher_street,
-              p.home AS publisher_home,
-              p.phone AS publisher_phone,
-              p.email AS publisher_email,
-              p.creation_date AS publisher_creation_date,
-              p.last_modified_date AS publisher_last_modified_date,
-            
-              a.id AS author_id,
-              a.first_name AS author_first_name,
-              a.last_name AS author_last_name,
-              a.email AS author_email,
-              a.state AS author_state,
-              a.city AS author_city,
-              a.street AS author_street,
-              a.home AS author_home,
-              a.creation_date AS author_creation_date,
-              a.last_modified_date AS author_last_modified_date
-            FROM Orders o
-              INNER JOIN Customers c ON o.customer_id = c.id
-              INNER JOIN Book_Order bo ON o.id = bo.order_id
-              INNER JOIN Books b ON bo.book_id = b.id
-              INNER JOIN Publishers p ON b.publisher_id = p.id
-              INNER JOIN Book_Author ba ON b.id = ba.book_id
-              INNER JOIN Authors a ON ba.author_id = a.id
-            WHERE o.id = '%s'
-            ORDER BY b.id
-            """;
+    private final JdbcClient jdbcClient;
 
-    private final JdbcTemplate jdbcTemplate;
-
-    public OrderRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
-    private PreparedStatementCreator preparedStatementFactory(UUID id) {
-        return connection -> connection.prepareStatement(
-                GET_ORDER_BY_ID.formatted(id.toString()),
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY
-        );
+    public OrderRepository(JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     public Result<Order, Exception> findById(UUID orderId) {
         try {
-            Order order = jdbcTemplate.query(
-                    preparedStatementFactory(orderId), new OrderMapper()
-            );
+            Order order = getOrderById(orderId);
 
             return Result.success(order);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return Result.failure(new NotFoundException("Couldn't find order"));
+            return Result.failure(e);
         }
     }
 
@@ -124,18 +43,13 @@ public class OrderRepository {
                     WHERE Orders.customer_id = ?
                     """;
 
-            List<Order> orders = jdbcTemplate.query(
-                            findByCustomerId,
-                            (rs, _) -> UUID.fromString(rs.getString("id")),
-                            customerId.toString()
-                    ).stream()
-                    .distinct()
-                    .map(uuid ->
-                            jdbcTemplate.query(
-                                    preparedStatementFactory(uuid),
-                                    new OrderMapper()
-                            )
-                    )
+            Set<UUID> orderIds = jdbcClient.sql(findByCustomerId)
+                    .param(customerId.toString())
+                    .query((rs, _) -> UUID.fromString(rs.getString("id")))
+                    .set();
+
+            List<Order> orders = orderIds.stream()
+                    .map(this::getOrderById)
                     .toList();
 
             return Result.success(orders);
@@ -154,14 +68,13 @@ public class OrderRepository {
                     WHERE Books.id = ?
                     """;
 
-            List<Order> orders =
-                    jdbcTemplate.query(findByBookId, (rs, _) -> UUID.fromString(rs.getString("id")), bookId.toString())
-                            .stream()
-                            .distinct()
-                            .map(uuid -> jdbcTemplate.query(
-                            preparedStatementFactory(uuid),
-                            new OrderMapper()
-                            ))
+            Set<UUID> bookIds = jdbcClient.sql(findByBookId)
+                    .param(bookId.toString())
+                    .query((rs, _) -> UUID.fromString(rs.getString("id")))
+                    .set();
+
+            List<Order> orders = bookIds.stream()
+                    .map(this::getOrderById)
                     .toList();
 
             return Result.success(orders);
@@ -172,39 +85,44 @@ public class OrderRepository {
     }
 
     @Transactional
-    public Result<Order, Exception> save(Order order) {
+    public Result<Order, Exception> save(Order order, Set<Book> books) {
         try {
-            jdbcTemplate.update("""
-                            INSERT INTO Orders (id, customer_id,
-                                            count_of_book, total_price,
-                                            paid_amount, change_of_order,
-                                            credit_card_number, credit_card_expiration, creation_date)
-                                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            """,
-                    order.getId().toString(), order.getCustomer().getId().toString(),
-                    order.getCountOfBooks(), order.getTotalPrice().totalPrice(), order.getPaidAmount().paidAmount(),
-                    order.getChangeOfOrder().changeOfOrder(), order.getCreditCard().creditCardNumber(),
-                    order.getCreditCard().creditCardExpiration(), order.getCreationDate()
-            );
+            String save = """
+                    INSERT INTO Orders (id, customer_id,
+                                    count_of_book, total_price,
+                                    paid_amount, change_of_order,
+                                    credit_card_number, credit_card_expiration, creation_date)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """;
+
+            jdbcClient.sql(save)
+                    .params(order.getId().toString(), order.getCustomer().getId(), order.getCountOfBooks(),
+                            order.getTotalPrice().totalPrice(), order.getPaidAmount().paidAmount(),
+                            order.getChangeOfOrder().changeOfOrder(), order.getCreditCard().creditCardNumber(),
+                            order.getCreditCard().creditCardExpiration(), order.getCreationDate())
+                    .update();
+
 
             order.getBooks().forEach((book, countOfBooks) -> {
-                jdbcTemplate.update("""
-                                    INSERT INTO Book_Order (book_id, order_id, count_of_book_copies)
-                                                VALUES (?, ?, ?)
-                                    """,
-                        book.getId().toString(),
-                        order.getId().toString(),
-                        countOfBooks
-                );
-
-                jdbcTemplate.update("""
-                    UPDATE Books SET quantity_on_hand = ?
-                    WHERE id = ?
-                    """,
-                        book.getQuantityOnHand().quantityOnHand(),
-                        book.getId().toString()
-                );
+                jdbcClient.sql("""
+                        INSERT INTO Book_Order (book_id, order_id, count_of_book_copies)
+                                    VALUES (?, ?, ?)
+                        """)
+                        .param(book.getId().toString())
+                        .param(order.getId().toString())
+                        .param(countOfBooks)
+                        .update();
             });
+
+            books.forEach(book ->
+                    jdbcClient.sql("""
+                        UPDATE Books SET quantity_on_hand = ?
+                        WHERE id = ?
+                        """)
+                        .param(book.getQuantityOnHand().quantityOnHand())
+                        .param(book.getId().toString())
+                        .update());
+
 
             return Result.success(order);
         } catch (DataAccessException e) {
@@ -213,150 +131,214 @@ public class OrderRepository {
         }
     }
 
-    private static class OrderMapper implements ResultSetExtractor<Order> {
-        private record BookAndCount(Book book, Integer count) {}
+    private Order getOrderById(UUID orderId) {
+        var bookIds = fetchBookIds(orderId);
 
-        @Override
-        public Order extractData(ResultSet rs) throws SQLException, DataAccessException {
-            Map<Book, Integer> books = new LinkedHashMap<>();
-            String lastBookId = null;
-
-            while (rs.next()) {
-                String currentBookId = rs.getString("book_id");
-
-                if (!currentBookId.equals(lastBookId)) {
-                    Publisher publisher = mapPublisher(rs);
-                    Set<Author> authors = collectAuthors(rs, currentBookId);
-
-                    var bookPair = mapBook(rs, publisher, authors);
-                    books.put(bookPair.book, bookPair.count);
-
-                    lastBookId = currentBookId;
-                }
-            }
-
-            rs.previous();
-            Customer customer = mapCustomer(rs);
-            return constructOrder(rs, customer, books);
+        Map<Book, Integer> bookMap = new HashMap<>();
+        for (UUID bookId : bookIds) {
+            var publisher = fetchPublisher(bookId);
+            var authors = fetchAuthors(bookId);
+            var bookCount = fetchBooks(orderId, bookId, publisher, authors);
+            bookMap.put(bookCount.book(), bookCount.count());
         }
 
-        private Set<Author> collectAuthors(ResultSet rs, String bookId) throws SQLException {
-            Set<Author> authors = new LinkedHashSet<>();
+        var customer = fetchCustomer(orderId);
 
-            do {
-                authors.add(mapAuthor(rs));
-            } while (rs.next() && bookId.equals(rs.getString("book_id")));
+        return fetchOrder(orderId, customer, bookMap);
+    }
 
-            rs.previous();
-            return authors;
-        }
+    private Order fetchOrder(UUID orderId, Customer customer, Map<Book, Integer> bookMap) {
+        String sqlOrder = """
+                SELECT
+                    o.id AS id,
+                    o.count_of_book AS count_of_book,
+                    o.total_price AS total_price,
+                    o.paid_amount AS paid_amount,
+                    o.change_of_order AS change_of_order,
+                    o.credit_card_number AS credit_card_number,
+                    o.credit_card_expiration AS credit_card_expiration,
+                    o.creation_date AS creation_date
+                FROM Orders o WHERE id = ?
+                """;
 
-        private Order constructOrder(ResultSet rs, Customer customer, Map<Book, Integer> books) throws SQLException {
-            CreditCard creditCard = new CreditCard(
-                    rs.getString("order_credit_card_number"),
-                    LocalDate.parse(rs.getString("order_credit_card_expiration"))
-            );
+        return jdbcClient.sql(sqlOrder)
+                .param(orderId.toString())
+                .query((rs, _) -> {
+                    CreditCard creditCard = new CreditCard(
+                            rs.getString("credit_card_number"),
+                            LocalDate.parse(rs.getString("credit_card_expiration"))
+                    );
 
-            return Order.builder()
-                    .id(UUID.fromString(rs.getString("order_id")))
-                    .paidAmount(new PaidAmount(rs.getDouble("order_paid_amount")))
-                    .creditCard(creditCard)
-                    .creationDate(LocalDateTime.parse(rs.getString("order_creation_date")))
-                    .books(books)
-                    .customer(customer)
-                    .build();
-        }
+                    return Order.builder()
+                            .id(UUID.fromString(rs.getString("id")))
+                            .paidAmount(new PaidAmount(rs.getDouble("paid_amount")))
+                            .creditCard(creditCard)
+                            .creationDate(rs.getTimestamp("creation_date").toLocalDateTime())
+                            .customer(customer)
+                            .books(bookMap)
+                            .build();
+                }).single();
+    }
 
-        private Customer mapCustomer(ResultSet rs) throws SQLException {
-            Address address = new Address(
-                    rs.getString("customer_state"),
-                    rs.getString("customer_city"),
-                    rs.getString("customer_street"),
-                    rs.getString("customer_home")
-            );
+    private Customer fetchCustomer(UUID orderId) {
+        String sqlCustomer = """
+                SELECT * FROM Customers c
+                    INNER JOIN Orders o ON o.customer_id = c.id
+                WHERE o.id = ?
+                """;
 
-            Events events = new Events(
-                    rs.getObject("customer_creation_date", Timestamp.class).toLocalDateTime(),
-                    rs.getObject("customer_last_modified_date", Timestamp.class).toLocalDateTime()
-            );
+        return jdbcClient.sql(sqlCustomer)
+                .param(orderId.toString())
+                .query((rs, _) -> {
+                    Address address = new Address(
+                            rs.getString("state"),
+                            rs.getString("city"),
+                            rs.getString("street"),
+                            rs.getString("home")
+                    );
 
-            return Customer.builder()
-                    .id(UUID.fromString(rs.getString("customer_id")))
-                    .firstName(new FirstName(rs.getString("customer_first_name")))
-                    .lastName(new LastName(rs.getString("customer_last_name")))
-                    .password(new Password(rs.getString("customer_password")))
-                    .email(new Email(rs.getString("customer_email")))
-                    .address(address)
-                    .events(events)
-                    .build();
-        }
+                    Events events = new Events(
+                            rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
+                            rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
+                    );
 
-        private BookAndCount mapBook(ResultSet rs, Publisher publisher, Set<Author> authors) throws SQLException {
-            Events events = new Events(
-                    rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
-                    rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
-            );
+                    return Customer.builder()
+                            .id(UUID.fromString(rs.getString("id")))
+                            .firstName(new FirstName(rs.getString("first_name")))
+                            .lastName(new LastName(rs.getString("last_name")))
+                            .email(new Email(rs.getString("email")))
+                            .password(new Password(rs.getString("password")))
+                            .address(address)
+                            .events(events).build();
+                }).single();
+    }
 
-            Book book = Book.builder()
-                    .id(UUID.fromString(rs.getString("book_id")))
-                    .title(new Title(rs.getString("book_title")))
-                    .description(new Description(rs.getString("book_description")))
-                    .isbn(new ISBN(rs.getString("book_isbn")))
-                    .price(new Price(rs.getDouble("book_price")))
-                    .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
-                    .category(Category.valueOf(rs.getString("book_category")))
-                    .events(events)
-                    .publisher(publisher)
-                    .authors(authors)
-                    .build();
+    record BookCount(Book book, Integer count) {}
 
-            return new BookAndCount(book, rs.getInt("book_count"));
-        }
+    private BookCount fetchBooks(UUID orderId, UUID bookId, Publisher publisher, Set<Author> authors) {
+        String bookSql = """
+                SELECT
+                    b.id AS id,
+                    b.title AS title,
+                    b.description AS description,
+                    b.isbn AS isbn,
+                    b.price AS price,
+                    b.quantity_on_hand AS quantity_on_hand,
+                    bo.count_of_book_copies AS count_of_copies,
+                    b.category AS category,
+                    b.creation_date AS creation_date,
+                    b.last_modified_date AS last_modified_date
+                
+                FROM Books b
+                     INNER JOIN Book_Order bo ON b.id = bo.book_id AND bo.order_id = ?
+                WHERE b.id = ?
+                """;
 
-        private Author mapAuthor(ResultSet rs) throws SQLException {
-            Address address = new Address(
-                    rs.getString("author_state"),
-                    rs.getString("author_city"),
-                    rs.getString("author_street"),
-                    rs.getString("author_home")
-            );
+        return jdbcClient.sql(bookSql)
+                .param(orderId.toString())
+                .param(bookId.toString())
+                .query((rs, rowNum) -> {
+                    Events events = new Events(
+                            rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
+                            rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
+                    );
 
-            Events events = new Events(
-                    rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
-                    rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
-            );
+                    Book book = Book.builder()
+                            .id(UUID.fromString(rs.getString("id")))
+                            .title(new Title(rs.getString("title")))
+                            .description(new Description(rs.getString("description")))
+                            .isbn(new ISBN(rs.getString("isbn")))
+                            .price(new Price(rs.getDouble("price")))
+                            .quantityOnHand(new QuantityOnHand(rs.getInt("quantity_on_hand")))
+                            .category(Category.valueOf(rs.getString("category")))
+                            .publisher(publisher)
+                            .authors(authors)
+                            .events(events)
+                            .build();
 
-            return Author.builder()
-                    .id(UUID.fromString(rs.getString("author_id")))
-                    .firstName(new FirstName(rs.getString("author_first_name")))
-                    .lastName(new LastName(rs.getString("author_last_name")))
-                    .email(new Email(rs.getString("author_email")))
-                    .address(address)
-                    .events(events)
-                    .build();
-        }
+                    return new BookCount(book, rs.getInt("count_of_copies"));
+                }).single();
+    }
 
-        private Publisher mapPublisher(ResultSet rs) throws SQLException {
-            Address address = new Address(
-                    rs.getString("publisher_state"),
-                    rs.getString("publisher_city"),
-                    rs.getString("publisher_street"),
-                    rs.getString("publisher_home")
-            );
+    private Set<Author> fetchAuthors(UUID id) {
+        String sqlAuthors = """
+                Select * FROM Authors
+                     INNER JOIN Book_Author ba ON Authors.id = ba.author_id
+                WHERE ba.book_id = ?
+                """;
 
-            Events events = new Events(
-                    rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
-                    rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
-            );
+        return jdbcClient.sql(sqlAuthors)
+                .param(id.toString())
+                .query((rs, _) -> {
+                    Address address = new Address(
+                            rs.getString("state"),
+                            rs.getString("city"),
+                            rs.getString("street"),
+                            rs.getString("home")
+                    );
 
-            return Publisher.builder()
-                    .id(UUID.fromString(rs.getString("publisher_id")))
-                    .publisherName(new PublisherName(rs.getString("publisher_name")))
-                    .address(address)
-                    .phone(new Phone(rs.getString("publisher_phone")))
-                    .email(new Email(rs.getString("publisher_email")))
-                    .events(events)
-                    .build();
-        }
+                    Events events = new Events(
+                            rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
+                            rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
+                    );
+
+                    return Author.builder()
+                            .id(UUID.fromString(rs.getString("id")))
+                            .firstName(new FirstName(rs.getString("first_name")))
+                            .lastName(new LastName(rs.getString("last_name")))
+                            .email(new Email(rs.getString("email")))
+                            .address(address)
+                            .events(events)
+                            .build();
+                }).set();
+    }
+
+    private Publisher fetchPublisher(UUID id) {
+        String sqlPublisher = """
+                Select * FROM Publishers
+                      INNER JOIN Books b ON Publishers.id = b.publisher_id
+                WHERE b.id = ?
+                """;
+
+        return jdbcClient.sql(sqlPublisher)
+                .param(id.toString())
+                .query((rs, _) -> {
+                    Address address = new Address(
+                            rs.getString("state"),
+                            rs.getString("city"),
+                            rs.getString("street"),
+                            rs.getString("home")
+                    );
+
+                    Events events = new Events(
+                            rs.getObject("creation_date", Timestamp.class).toLocalDateTime(),
+                            rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
+                    );
+
+                    return Publisher.builder()
+                            .id(UUID.fromString(rs.getString("id")))
+                            .publisherName(new PublisherName(rs.getString("publisher_name")))
+                            .address(address)
+                            .phone(new Phone(rs.getString("phone")))
+                            .email(new Email(rs.getString("email")))
+                            .events(events)
+                            .build();
+
+                }).single();
+    }
+
+    private List<UUID> fetchBookIds(UUID orderId) {
+        String sqlBookId = """
+                SELECT b.id
+                FROM orders o
+                         INNER JOIN Book_Order bo ON o.id = bo.order_id
+                         INNER JOIN Books b ON bo.book_id = b.id
+                WHERE o.id = ?
+                """;
+
+        return jdbcClient.sql(sqlBookId)
+                .param(orderId.toString())
+                .query((rs, _) -> UUID.fromString(rs.getString("id")))
+                .list();
     }
 }

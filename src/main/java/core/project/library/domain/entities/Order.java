@@ -7,7 +7,6 @@ import core.project.library.domain.value_objects.TotalPrice;
 import core.project.library.infrastructure.exceptions.InsufficientPaymentException;
 import core.project.library.infrastructure.exceptions.NegativeValueException;
 import core.project.library.infrastructure.exceptions.NullValueException;
-import core.project.library.infrastructure.exceptions.QuantityOnHandException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -132,7 +131,6 @@ public class Order {
             ChangeOfOrder changeOfOrder = calculateChange(totalPrice, paidAmount);
 
             validate(countOfBooks, totalPrice, changeOfOrder);
-            validateQuantityOnHandOfBooksAndChangeIt(books);
 
             Order order = new Order(id, countOfBooks, totalPrice, paidAmount, changeOfOrder,
                     creditCard, creationDate, customer, Collections.unmodifiableMap(books));
@@ -187,21 +185,6 @@ public class Order {
             }
             if (books.isEmpty()) {
                 throw new IllegalArgumentException("Books can`t be empty");
-            }
-        }
-
-        private void validateQuantityOnHandOfBooksAndChangeIt(Map<Book, Integer> books) {
-            for (Map.Entry<Book, Integer> pair : books.entrySet()) {
-                Book book = pair.getKey();
-                int requiredQuantityForOneCopyOfBook = pair.getValue();
-                int existedQuantityOnHand = book.getQuantityOnHand().quantityOnHand();
-
-                boolean isQuantityOnHandEnough = existedQuantityOnHand >= requiredQuantityForOneCopyOfBook;
-                if (!isQuantityOnHandEnough) {
-                    throw new QuantityOnHandException("We do not have enough books for this order.");
-                }
-
-                book.changeQuantityOnHand(existedQuantityOnHand - requiredQuantityForOneCopyOfBook);
             }
         }
 

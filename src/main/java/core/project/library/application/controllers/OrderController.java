@@ -6,6 +6,7 @@ import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.entities.Order;
 import core.project.library.infrastructure.exceptions.NotFoundException;
+import core.project.library.infrastructure.exceptions.QuantityOnHandException;
 import core.project.library.infrastructure.exceptions.RemovedFromSaleException;
 import core.project.library.infrastructure.mappers.OrderMapper;
 import core.project.library.infrastructure.repository.BookRepository;
@@ -74,6 +75,14 @@ public class OrderController {
         for (Map.Entry<Book, Integer> pair : books.entrySet()) {
             Book book = pair.getKey();
             if (!book.isItOnSale()) throw new RemovedFromSaleException("Book is not on sale");
+
+            int requiredQuantityForOneCopyOfBook = pair.getValue();
+            int existedQuantityOnHand = book.getQuantityOnHand().quantityOnHand();
+
+            boolean isQuantityOnHandEnough = existedQuantityOnHand >= requiredQuantityForOneCopyOfBook;
+            if (!isQuantityOnHandEnough) {
+                throw new QuantityOnHandException("We do not have enough books for this order.");
+            }
         }
 
         Order order = Order.builder()
@@ -85,7 +94,15 @@ public class OrderController {
                 .books(books)
                 .build();
 
-        var savedOrder = orderRepository.save(order)
+        for (Map.Entry<Book, Integer> pair : books.entrySet()) {
+            Book book = pair.getKey();
+            int requiredQuantityForOneCopyOfBook = pair.getValue();
+            int existedQuantityOnHand = book.getQuantityOnHand().quantityOnHand();
+
+            book.changeQuantityOnHand(existedQuantityOnHand - requiredQuantityForOneCopyOfBook);
+        }
+
+        var savedOrder = orderRepository.save(order, books.keySet())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not save order"));
 
         return ResponseEntity
