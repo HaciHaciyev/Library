@@ -25,70 +25,71 @@ import java.util.*;
 public class OrderRepository {
 
     private static final String GET_ORDER_BY_ID = """
-            SELECT
-              o.id AS order_id,
-              o.count_of_book AS order_count_of_book,
-              o.total_price AS order_total_price,
-              o.paid_amount AS order_paid_amount,
-              o.change_of_order AS order_change_of_order,
-              o.credit_card_number AS credit_card_number,
-              o.credit_card_expiration AS credit_card_expiration,
-              o.creation_date AS order_creation_date,
-            
-              c.id AS customer_id,
-              c.first_name AS customer_first_name,
-              c.last_name AS customer_last_name,
-              c.email AS customer_email,
-              c.password AS customer_password,
-              c.state AS customer_state,
-              c.city AS customer_city,
-              c.street AS customer_street,
-              c.home AS customer_home,
-              c.creation_date AS customer_creation_date,
-              c.last_modified_date AS customer_last_modified_date,
-            
-              b.id AS book_id,
-              b.title AS book_title,
-              b.description AS book_description,
-              b.isbn AS book_isbn,
-              b.price AS book_price,
-              b.quantity_on_hand AS book_quantity,
-              bo.count_of_book_copies AS book_count_of_copies,
-              b.category AS book_category,
-              b.creation_date AS book_creation_date,
-              b.last_modified_date AS book_last_modified_date,
-            
-              p.id AS publisher_id,
-              p.publisher_name AS publisher_name,
-              p.state AS publisher_state,
-              p.city AS publisher_city,
-              p.street AS publisher_street,
-              p.home AS publisher_home,
-              p.phone AS publisher_phone,
-              p.email AS publisher_email,
-              p.creation_date AS publisher_creation_date,
-              p.last_modified_date AS publisher_last_modified_date,
-            
-              a.id AS author_id,
-              a.first_name AS author_first_name,
-              a.last_name AS author_last_name,
-              a.email AS author_email,
-              a.state AS author_state,
-              a.city AS author_city,
-              a.street AS author_street,
-              a.home AS author_home,
-              a.creation_date AS author_creation_date,
-              a.last_modified_date AS author_last_modified_date
-            FROM Orders o
-              INNER JOIN Customers c ON o.customer_id = c.id
-              INNER JOIN Book_Order bo ON o.id = bo.order_id
-              INNER JOIN Books b ON bo.book_id = b.id
-              INNER JOIN Publishers p ON b.publisher_id = p.id
-              INNER JOIN Book_Author ba ON b.id = ba.book_id
-              INNER JOIN Authors a ON ba.author_id = a.id
-            WHERE o.id = '%s'
-            ORDER BY b.id
-            """;
+           SELECT
+           o.id AS order_id,
+           o.count_of_book AS order_count_of_book,
+           o.total_price AS order_total_price,
+           o.paid_amount AS order_paid_amount,
+           o.change_of_order AS order_change_of_order,
+           o.credit_card_number AS credit_card_number,
+           o.credit_card_expiration AS credit_card_expiration,
+           o.creation_date AS order_creation_date,
+           
+           c.id AS customer_id,
+           c.first_name AS customer_first_name,
+           c.last_name AS customer_last_name,
+           c.email AS customer_email,
+           c.password AS customer_password,
+           c.state AS customer_state,
+           c.city AS customer_city,
+           c.street AS customer_street,
+           c.home AS customer_home,
+           c.creation_date AS customer_creation_date,
+           c.last_modified_date AS customer_last_modified_date,
+           
+           b.id AS book_id,
+           b.title AS book_title,
+           b.description AS book_description,
+           b.isbn AS book_isbn,
+           b.price AS book_price,
+           b.quantity_on_hand AS book_quantity,
+           bo.count_of_book_copies AS book_count_of_copies,
+           b.category AS book_category,
+           b.withdrawn_from_sale AS withdrawn_from_sale,
+           b.creation_date AS book_creation_date,
+           b.last_modified_date AS book_last_modified_date,
+           
+           p.id AS publisher_id,
+           p.publisher_name AS publisher_name,
+           p.state AS publisher_state,
+           p.city AS publisher_city,
+           p.street AS publisher_street,
+           p.home AS publisher_home,
+           p.phone AS publisher_phone,
+           p.email AS publisher_email,
+           p.creation_date AS publisher_creation_date,
+           p.last_modified_date AS publisher_last_modified_date,
+           
+           a.id AS author_id,
+           a.first_name AS author_first_name,
+           a.last_name AS author_last_name,
+           a.email AS author_email,
+           a.state AS author_state,
+           a.city AS author_city,
+           a.street AS author_street,
+           a.home AS author_home,
+           a.creation_date AS author_creation_date,
+           a.last_modified_date AS author_last_modified_date
+           FROM Orders o
+             INNER JOIN Customers c ON o.customer_id = c.id
+             INNER JOIN Book_Order bo ON o.id = bo.order_id
+             INNER JOIN Books b ON bo.book_id = b.id
+             INNER JOIN Publishers p ON b.publisher_id = p.id
+             INNER JOIN Book_Author ba ON b.id = ba.book_id
+             INNER JOIN Authors a ON ba.author_id = a.id
+           WHERE o.id = '%s'
+           ORDER BY b.id
+           """;
 
     private final JdbcTemplate jdbcTemplate;
 
