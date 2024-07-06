@@ -64,7 +64,7 @@ public class Bootstrap implements CommandLineRunner {
             customers.forEach(customerRepository::saveCustomer);
 
             populateOrders();
-            orders.forEach(orderRepository::save);
+            orders.forEach(order -> orderRepository.save(order, new HashSet<>(books)));
 
             log.info("Bootstrap is completed basic values in database.");
         }
