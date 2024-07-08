@@ -85,7 +85,7 @@ public class OrderRepository {
     }
 
     @Transactional
-    public Result<Order, Exception> save(Order order, Set<Book> books) {
+    public Result<Order, Exception> save(Order order) {
         try {
             String save = """
                     INSERT INTO Orders (id, customer_id,
@@ -112,17 +112,15 @@ public class OrderRepository {
                         .param(order.getId().toString())
                         .param(countOfBooks)
                         .update();
-            });
 
-            books.forEach(book ->
-                    jdbcClient.sql("""
+                jdbcClient.sql("""
                         UPDATE Books SET quantity_on_hand = ?
                         WHERE id = ?
                         """)
                         .param(book.getQuantityOnHand().quantityOnHand())
                         .param(book.getId().toString())
-                        .update());
-
+                        .update();
+            });
 
             return Result.success(order);
         } catch (DataAccessException e) {
