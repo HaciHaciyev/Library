@@ -6,12 +6,12 @@ import core.project.library.infrastructure.exceptions.NotFoundException;
 import core.project.library.infrastructure.repository.AuthorRepository;
 import core.project.library.infrastructure.repository.BookRepository;
 import core.project.library.infrastructure.repository.PublisherRepository;
-import core.project.library.infrastructure.utilities.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,15 +28,15 @@ public class BookService {
         return bookRepository.isbnExists(isbn);
     }
 
-    public final Result<Book, NotFoundException> findById(UUID bookId) {
+    public final Optional<Book> findById(UUID bookId) {
         return bookRepository.findById(bookId);
     }
 
-    public final Result<Book, NotFoundException> findByISBN(ISBN isbn) {
+    public final Optional<Book> findByISBN(ISBN isbn) {
         return bookRepository.findByISBN(isbn);
     }
 
-    public final Result<List<Book>, NotFoundException> listOfBooks(
+    public final List<Book> listOfBooks(
             Integer pageNumber, Integer pageSize, String title, String category
     ) {
         return bookRepository.listOfBooks(pageNumber, pageSize, title, category);
@@ -48,7 +48,7 @@ public class BookService {
 
     public void patchBook(UUID bookId, String description,
                           Double price, Integer quantityOnHand) {
-        bookRepository.findById(bookId).handle(foundBook ->  {
+        bookRepository.findById(bookId).ifPresentOrElse(foundBook ->  {
             if (StringUtils.hasText(description)) {
                 foundBook.changeDescription(description);
             }
@@ -59,16 +59,16 @@ public class BookService {
                 foundBook.changeQuantityOnHand(quantityOnHand);
             }
             bookRepository.patchBook(foundBook);
-        }, _ -> {
+        }, () -> {
             throw new NotFoundException();
         });
     }
 
     public void withdrawBookFromTheSale(UUID bookId) {
-        bookRepository.findById(bookId).handle(foundBook -> {
+        bookRepository.findById(bookId).ifPresentOrElse(foundBook -> {
             foundBook.withdrawnFromSale();
             bookRepository.withdrawBookFromTheSale(foundBook);
-        }, _ -> {
+        }, () -> {
             throw new NotFoundException();
         });
     }

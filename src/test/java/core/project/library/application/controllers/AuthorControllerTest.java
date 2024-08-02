@@ -8,7 +8,6 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.LastName;
 import core.project.library.infrastructure.mappers.AuthorMapper;
 import core.project.library.infrastructure.repository.AuthorRepository;
-import core.project.library.infrastructure.utilities.Result;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +22,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -80,7 +81,7 @@ public class AuthorControllerTest {
         @MethodSource("dtoEntity")
         @DisplayName("Accept valid UUID")
         void acceptValidUuid(AuthorDTO authorDTO, Author author) throws Exception {
-            when(mockRepo.findById(author.getId())).thenReturn(Result.success(author));
+            when(mockRepo.findById(author.getId())).thenReturn(Optional.of(author));
             when(mockMapper.toDTO(author)).thenReturn(authorDTO);
 
             mockMvc.perform(get(FIND_BY_ID + author.getId())
@@ -101,7 +102,7 @@ public class AuthorControllerTest {
         @Test
         @DisplayName("Reject invalid UUID")
         void rejectInvalidId() throws Exception {
-            when(mockRepo.findById(any(UUID.class))).thenReturn(Result.failure(null));
+            when(mockRepo.findById(any(UUID.class))).thenReturn(Optional.empty());
 
             mockMvc.perform(get(FIND_BY_ID + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
@@ -122,14 +123,14 @@ public class AuthorControllerTest {
         private static Stream<Arguments> authorsDtosName() {
             String lastName = faker.name().lastName();
 
-            Supplier<Author> authorSupplier = () -> Author.builder()
-                    .id(UUID.randomUUID())
-                    .firstName(Bootstrap.randomFirstName())
-                    .lastName(new LastName(lastName))
-                    .email(Bootstrap.randomEmail())
-                    .address(Bootstrap.randomAddress())
-                    .events(new Events())
-                    .build();
+            Supplier<Author> authorSupplier = () -> Author.create(
+                    UUID.randomUUID(),
+                    Bootstrap.randomFirstName(),
+                    new LastName(lastName),
+                    Bootstrap.randomEmail(),
+                    Bootstrap.randomAddress(),
+                    new Events()
+            );
 
             List<Author> authors = Stream.generate(authorSupplier).limit(5).toList();
 
@@ -148,7 +149,7 @@ public class AuthorControllerTest {
         @MethodSource("authorsDtosName")
         @DisplayName("Return matching authors")
         void returnMatchingAuthors(List<Author> authors, List<AuthorDTO> authorDTOS, String lastName) throws Exception {
-            when(mockRepo.findByLastName(lastName)).thenReturn(Result.success(authors));
+            when(mockRepo.findByLastName(lastName)).thenReturn(authors);
             when(mockMapper.listOfDTO(authors)).thenReturn(authorDTOS);
 
             mockMvc.perform(get(FIND_BY_LAST_NAME + lastName)
@@ -162,7 +163,7 @@ public class AuthorControllerTest {
         @DisplayName("Reject invalid name")
         void rejectInvalidName() throws Exception {
             String invalid = "invalid";
-            when(mockRepo.findByLastName(invalid)).thenReturn(Result.failure(null));
+            when(mockRepo.findByLastName(invalid)).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get(FIND_BY_LAST_NAME + invalid)
                             .accept(MediaType.APPLICATION_JSON))
@@ -194,7 +195,7 @@ public class AuthorControllerTest {
         @MethodSource("authorDTO")
         @DisplayName("accept valid DTO")
         void acceptValidDTO(AuthorDTO authorDTO, Author author) throws Exception {
-            when(mockRepo.saveAuthor(author)).thenReturn(Result.success(author));
+            when(mockRepo.saveAuthor(author)).thenReturn(Optional.of(author));
             when(mockMapper.authorFromDTO(authorDTO)).thenReturn(author);
 
             mockMvc.perform(post(SAVE_AUTHOR)

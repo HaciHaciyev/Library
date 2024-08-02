@@ -6,8 +6,6 @@ import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.FirstName;
 import core.project.library.domain.value_objects.LastName;
-import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.utilities.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -17,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -41,7 +41,7 @@ public class AuthorRepository {
         return count > 0;
     }
 
-    public Result<Author, DataAccessException> findById(UUID authorId) {
+    public Optional<Author> findById(UUID authorId) {
         try {
             String findById = "SELECT * FROM Authors WHERE id = ?";
 
@@ -50,36 +50,30 @@ public class AuthorRepository {
                     .query(this::authorMapper)
                     .single();
 
-            return Result.success(author);
+            return Optional.of(author);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return Result.failure(e);
+            return Optional.empty();
         }
     }
 
-    public Result<List<Author>, Exception> findByLastName(String lastName) {
+    public List<Author> findByLastName(String lastName) {
         try {
             String findByLastName = "SELECT * FROM Authors WHERE last_name = ?";
 
-            List<Author> authors = jdbcClient.sql(findByLastName)
+            return jdbcClient.sql(findByLastName)
                     .param(lastName)
                     .query(this::authorMapper)
                     .list();
 
-            if (authors.isEmpty()) {
-                log.error("No authors found for last name {}", lastName);
-                return Result.failure(new NotFoundException("Authors not found"));
-            }
-
-            return Result.success(authors);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return Result.failure(e);
+            return Collections.emptyList();
         }
     }
 
     @Transactional
-    public Result<Author, DataAccessException> saveAuthor(Author author) {
+    public Optional<Author> saveAuthor(Author author) {
         try {
             String saveAuthor = """
                     INSERT INTO Authors (id, first_name, last_name, email,
@@ -100,10 +94,10 @@ public class AuthorRepository {
                     .param(author.getEvents().last_update_date())
                     .update();
 
-            return Result.success(author);
+            return Optional.of(author);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return Result.failure(e);
+            return Optional.empty();
         }
     }
 
@@ -120,13 +114,13 @@ public class AuthorRepository {
                 rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
         );
 
-        return Author.builder()
-                .id(UUID.fromString(rs.getString("id")))
-                .firstName(new FirstName(rs.getString("first_name")))
-                .lastName(new LastName(rs.getString("last_name")))
-                .email(new Email(rs.getString("email")))
-                .address(address)
-                .events(events)
-                .build();
+        return Author.create(
+                UUID.fromString(rs.getString("id")),
+                new FirstName(rs.getString("first_name")),
+                new LastName(rs.getString("last_name")),
+                new Email(rs.getString("email")),
+                address,
+                events
+        );
     }
 }

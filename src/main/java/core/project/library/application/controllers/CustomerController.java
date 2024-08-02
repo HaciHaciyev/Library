@@ -39,9 +39,11 @@ public class CustomerController {
 
     @GetMapping("/findByLastName/{customerLastName}")
     final ResponseEntity<List<CustomerDTO>> findByLastName(@PathVariable("customerLastName") String customerLastName) {
-        var customers = customerRepository
-                .findByLastName(customerLastName)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        var customers = customerRepository.findByLastName(customerLastName);
+
+        if (customers.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
+        }
 
         return ResponseEntity.ok(customerMapper.listOfDTO(customers));
     }

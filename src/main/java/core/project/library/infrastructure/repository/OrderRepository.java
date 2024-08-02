@@ -3,8 +3,6 @@ package core.project.library.infrastructure.repository;
 import core.project.library.domain.entities.*;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
-import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.utilities.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -25,18 +23,18 @@ public class OrderRepository {
         this.jdbcClient = jdbcClient;
     }
 
-    public Result<Order, Exception> findById(UUID orderId) {
+    public Optional<Order> findById(UUID orderId) {
         try {
             Order order = getOrderById(orderId);
 
-            return Result.success(order);
+            return Optional.of(order);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return Result.failure(e);
+            return Optional.empty();
         }
     }
 
-    public Result<List<Order>, Exception> findByCustomerId(UUID customerId) {
+    public List<Order> findByCustomerId(UUID customerId) {
         try {
             String findByCustomerId = """
                     SELECT Orders.id FROM Orders
@@ -48,18 +46,16 @@ public class OrderRepository {
                     .query((rs, _) -> UUID.fromString(rs.getString("id")))
                     .set();
 
-            List<Order> orders = orderIds.stream()
+            return orderIds.stream()
                     .map(this::getOrderById)
                     .toList();
-
-            return Result.success(orders);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return Result.failure(new NotFoundException("Couldn't find orders"));
+            return Collections.emptyList();
         }
     }
 
-    public Result<List<Order>, Exception> findByBookId(UUID bookId) {
+    public List<Order> findByBookId(UUID bookId) {
         try {
             String findByBookId = """
                     Select Orders.id FROM Orders
@@ -73,19 +69,17 @@ public class OrderRepository {
                     .query((rs, _) -> UUID.fromString(rs.getString("id")))
                     .set();
 
-            List<Order> orders = bookIds.stream()
+            return bookIds.stream()
                     .map(this::getOrderById)
                     .toList();
-
-            return Result.success(orders);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return Result.failure(new NotFoundException("Couldn't find orders"));
+            return Collections.emptyList();
         }
     }
 
     @Transactional
-    public Result<Order, Exception> save(Order order) {
+    public Optional<Order> save(Order order, Set<Book> books) {
         try {
             String save = """
                     INSERT INTO Orders (id, customer_id,
@@ -103,29 +97,27 @@ public class OrderRepository {
                     .update();
 
 
-            order.getBooks().forEach((book, countOfBooks) -> {
-                jdbcClient.sql("""
-                        INSERT INTO Book_Order (book_id, order_id, count_of_book_copies)
-                                    VALUES (?, ?, ?)
-                        """)
-                        .param(book.getId().toString())
-                        .param(order.getId().toString())
-                        .param(countOfBooks)
-                        .update();
+            order.getBooks().forEach((book, countOfBooks) -> jdbcClient.sql("""
+                    INSERT INTO Book_Order (book_id, order_id, count_of_book_copies)
+                                VALUES (?, ?, ?)
+                    """)
+                    .param(book.getId().toString())
+                    .param(order.getId().toString())
+                    .param(countOfBooks)
+                    .update());
 
-                jdbcClient.sql("""
+            books.forEach(book -> jdbcClient.sql("""
                         UPDATE Books SET quantity_on_hand = ?
                         WHERE id = ?
                         """)
-                        .param(book.getQuantityOnHand().quantityOnHand())
-                        .param(book.getId().toString())
-                        .update();
-            });
+                    .param(book.getQuantityOnHand().quantityOnHand())
+                    .param(book.getId().toString())
+                    .update());
 
-            return Result.success(order);
+            return Optional.of(order);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return Result.failure(e);
+            return Optional.empty();
         }
     }
 
@@ -167,14 +159,14 @@ public class OrderRepository {
                             LocalDate.parse(rs.getString("credit_card_expiration"))
                     );
 
-                    return Order.builder()
-                            .id(UUID.fromString(rs.getString("id")))
-                            .paidAmount(new PaidAmount(rs.getDouble("paid_amount")))
-                            .creditCard(creditCard)
-                            .creationDate(rs.getTimestamp("creation_date").toLocalDateTime())
-                            .customer(customer)
-                            .books(bookMap)
-                            .build();
+                    return Order.create(
+                            UUID.fromString(rs.getString("id")),
+                            new PaidAmount(rs.getDouble("paid_amount")),
+                            creditCard,
+                            rs.getTimestamp("creation_date").toLocalDateTime(),
+                            customer,
+                            bookMap
+                    );
                 }).single();
     }
 
@@ -200,14 +192,15 @@ public class OrderRepository {
                             rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                     );
 
-                    return Customer.builder()
-                            .id(UUID.fromString(rs.getString("id")))
-                            .firstName(new FirstName(rs.getString("first_name")))
-                            .lastName(new LastName(rs.getString("last_name")))
-                            .email(new Email(rs.getString("email")))
-                            .password(new Password(rs.getString("password")))
-                            .address(address)
-                            .events(events).build();
+                    return Customer.create(
+                            UUID.fromString(rs.getString("id")),
+                            new FirstName(rs.getString("first_name")),
+                            new LastName(rs.getString("last_name")),
+                            new Password(rs.getString("password")),
+                            new Email(rs.getString("email")),
+                            address,
+                            events
+                    );
                 }).single();
     }
 
@@ -225,7 +218,8 @@ public class OrderRepository {
                     bo.count_of_book_copies AS count_of_copies,
                     b.category AS category,
                     b.creation_date AS creation_date,
-                    b.last_modified_date AS last_modified_date
+                    b.last_modified_date AS last_modified_date,
+                    b.withdrawn_from_sale AS withdrawn_from_sale
                 
                 FROM Books b
                      INNER JOIN Book_Order bo ON b.id = bo.book_id AND bo.order_id = ?
@@ -241,18 +235,19 @@ public class OrderRepository {
                             rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                     );
 
-                    Book book = Book.builder()
-                            .id(UUID.fromString(rs.getString("id")))
-                            .title(new Title(rs.getString("title")))
-                            .description(new Description(rs.getString("description")))
-                            .isbn(new ISBN(rs.getString("isbn")))
-                            .price(new Price(rs.getDouble("price")))
-                            .quantityOnHand(new QuantityOnHand(rs.getInt("quantity_on_hand")))
-                            .category(Category.valueOf(rs.getString("category")))
-                            .publisher(publisher)
-                            .authors(authors)
-                            .events(events)
-                            .build();
+                    Book book = Book.create(
+                            UUID.fromString(rs.getString("id")),
+                            new Title(rs.getString("title")),
+                            new Description(rs.getString("description")),
+                            new ISBN(rs.getString("isbn")),
+                            new Price(rs.getDouble("price")),
+                            new QuantityOnHand(rs.getInt("quantity_on_hand")),
+                            Category.valueOf(rs.getString("category")),
+                            events,
+                            rs.getBoolean("withdrawn_from_sale"),
+                            publisher,
+                            authors
+                    );
 
                     return new BookCount(book, rs.getInt("count_of_copies"));
                 }).single();
@@ -280,14 +275,14 @@ public class OrderRepository {
                             rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                     );
 
-                    return Author.builder()
-                            .id(UUID.fromString(rs.getString("id")))
-                            .firstName(new FirstName(rs.getString("first_name")))
-                            .lastName(new LastName(rs.getString("last_name")))
-                            .email(new Email(rs.getString("email")))
-                            .address(address)
-                            .events(events)
-                            .build();
+                    return Author.create(
+                            UUID.fromString(rs.getString("id")),
+                            new FirstName(rs.getString("first_name")),
+                            new LastName(rs.getString("last_name")),
+                            new Email(rs.getString("email")),
+                            address,
+                            events
+                    );
                 }).set();
     }
 
@@ -313,15 +308,14 @@ public class OrderRepository {
                             rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
                     );
 
-                    return Publisher.builder()
-                            .id(UUID.fromString(rs.getString("id")))
-                            .publisherName(new PublisherName(rs.getString("publisher_name")))
-                            .address(address)
-                            .phone(new Phone(rs.getString("phone")))
-                            .email(new Email(rs.getString("email")))
-                            .events(events)
-                            .build();
-
+                    return Publisher.create(
+                            UUID.fromString(rs.getString("id")),
+                            new PublisherName(rs.getString("publisher_name")),
+                            address,
+                            new Phone(rs.getString("phone")),
+                            new Email(rs.getString("email")),
+                            events
+                    );
                 }).single();
     }
 

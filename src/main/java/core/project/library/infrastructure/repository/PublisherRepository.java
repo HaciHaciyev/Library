@@ -6,7 +6,6 @@ import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.Phone;
 import core.project.library.domain.value_objects.PublisherName;
-import core.project.library.infrastructure.utilities.Result;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -47,32 +48,30 @@ public class PublisherRepository {
         return count != null && count > 0;
     }
 
-    public Result<Publisher, Exception> findById(UUID publisherId) {
+    public Optional<Publisher> findById(UUID publisherId) {
         try {
             String findById = "SELECT * FROM Publishers WHERE id = ?";
 
-            return Result.success(
+            return Optional.of(
                     jdbcTemplate.queryForObject(findById, this::publisherMapper, publisherId.toString())
             );
         } catch (EmptyResultDataAccessException e) {
-            return Result.failure(e);
+            return Optional.empty();
         }
     }
 
-    public Result<List<Publisher>, Exception> findByName(String publisherName) {
+    public List<Publisher> findByName(String publisherName) {
         try {
             String findByName = "SELECT * FROM Publishers WHERE publisher_name = ?";
 
-            return Result.success(
-                    jdbcTemplate.query(findByName, this::publisherMapper, publisherName)
-            );
+            return jdbcTemplate.query(findByName, this::publisherMapper, publisherName);
         } catch (EmptyResultDataAccessException e) {
-            return Result.failure(e);
+            return Collections.emptyList();
         }
     }
 
     @Transactional
-    public Result<Publisher, Exception> savePublisher(Publisher publisher) {
+    public Optional<Publisher> savePublisher(Publisher publisher) {
         String savePublisher = """
                 INSERT INTO Publishers (id, publisher_name, state, city, street, home,
                                phone, email, creation_date, last_modified_date)
@@ -87,7 +86,7 @@ public class PublisherRepository {
                 publisher.getEvents().creation_date(), publisher.getEvents().last_update_date()
         );
 
-        return Result.success(publisher);
+        return Optional.of(publisher);
     }
 
     private Publisher publisherMapper(ResultSet rs, int rowNum) throws SQLException {
@@ -103,13 +102,13 @@ public class PublisherRepository {
                 rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
         );
 
-        return Publisher.builder()
-                .id(UUID.fromString(rs.getString("id")))
-                .publisherName(new PublisherName(rs.getString("publisher_name")))
-                .address(address)
-                .phone(new Phone(rs.getString("phone")))
-                .email(new Email(rs.getString("email")))
-                .events(events)
-                .build();
+        return Publisher.create(
+                UUID.fromString(rs.getString("id")),
+                new PublisherName(rs.getString("publisher_name")),
+                address,
+                new Phone(rs.getString("phone")),
+                new Email(rs.getString("email")),
+                events
+        );
     }
 }

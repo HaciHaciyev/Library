@@ -1,6 +1,8 @@
 package core.project.library.domain.value_objects;
 
 import core.project.library.application.bootstrap.Bootstrap;
+import core.project.library.infrastructure.exceptions.BlankValueException;
+import core.project.library.infrastructure.exceptions.NullValueException;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,7 +31,7 @@ class AddressTests {
         void rejectNullOrEmptyState(String state) {
             assertThatException()
                     .isThrownBy(() -> new Address(state, VALID_STRING, VALID_STRING, VALID_STRING))
-                    .isInstanceOfAny(IllegalArgumentException.class, NullPointerException.class);
+                    .isInstanceOfAny(BlankValueException.class, NullValueException.class);
         }
 
         @ParameterizedTest

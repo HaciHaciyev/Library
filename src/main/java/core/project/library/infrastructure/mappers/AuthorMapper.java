@@ -5,7 +5,6 @@ import core.project.library.application.model.AuthorModel;
 import core.project.library.domain.entities.Author;
 import core.project.library.domain.events.Events;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,15 +20,18 @@ public interface AuthorMapper {
 
     List<AuthorModel> listOfModel(List<Author> authors);
 
-    @Mapping(target = "id", source = "authorDTO")
-    @Mapping(target = "events", source = "authorDTO")
-    Author authorFromDTO(AuthorDTO authorDTO);
+    default Author authorFromDTO(AuthorDTO authorDTO) {
+        if (authorDTO == null) {
+            return null;
+        }
 
-    default UUID getUUID(AuthorDTO authorDTO) {
-        return UUID.randomUUID();
-    }
-
-    default Events getEvents(AuthorDTO authorDTO) {
-        return new Events();
+        return Author.create(
+                UUID.randomUUID(),
+                authorDTO.firstName(),
+                authorDTO.lastName(),
+                authorDTO.email(),
+                authorDTO.address(),
+                new Events()
+        );
     }
 }

@@ -5,8 +5,6 @@ import core.project.library.domain.entities.Book;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
-import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.utilities.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -47,33 +45,33 @@ public class BookRepository {
         }
     }
 
-    public Result<Book, NotFoundException> findById(UUID bookId) {
+    public Optional<Book> findById(UUID bookId) {
         try {
             String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ID, bookId);
 
-            return Result.success(
+            return Optional.of(
                     jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToBook)
             );
         } catch (EmptyResultDataAccessException e) {
             log.info("BookRepository findById(...): {}", e.getMessage());
-            return Result.failure(new NotFoundException("Could`t found the book."));
+            return Optional.empty();
         }
     }
 
-    public Result<Book, NotFoundException> findByISBN(ISBN isbn) {
+    public Optional<Book> findByISBN(ISBN isbn) {
         try {
             String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ISBN, isbn.isbn());
 
-            return Result.success(
+            return Optional.of(
                     jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToBook)
             );
         } catch (EmptyResultDataAccessException e) {
             log.info("BookRepository findByISBN(...): {}", e.getMessage());
-            return Result.failure(new NotFoundException("Could`t found the book."));
+            return Optional.empty();
         }
     }
 
-    public Result<List<Book>, NotFoundException> listOfBooks(
+    public List<Book> listOfBooks(
             Integer pageNumber, Integer pageSize, String title, String category
     ) {
         try {
@@ -81,12 +79,10 @@ public class BookRepository {
             final int offSet = buildOffSet(limit, pageNumber);
             String sqlQuery = buildQueryForListOfBooks(limit, offSet, title, category);
 
-            return Result.success(
-                    jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToListOfBooks)
-            );
+            return jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToListOfBooks);
         } catch (EmptyResultDataAccessException e) {
             log.info("BookRepository listOfBooks(...): {}", e.getMessage());
-            return Result.failure(new NotFoundException("Could`t found the list of books."));
+            return Collections.emptyList();
         }
     }
 
@@ -267,47 +263,51 @@ public class BookRepository {
     }
 
     private Publisher extractDataToPublisherOfBook(ResultSet rs) throws SQLException {
-        return Publisher.builder()
-                .id(UUID.fromString(rs.getString("publisher_id")))
-                .publisherName(new PublisherName(rs.getString("publisher_name")))
-                .address(new Address(
-                                rs.getString("publisher_state"),
-                                rs.getString("publisher_city"),
-                                rs.getString("publisher_street"),
-                                rs.getString("publisher_home")
-                        )
-                )
-                .phone(new Phone(rs.getString("publisher_phone")))
-                .email(new Email(rs.getString("publisher_email")))
-                .events(new Events(
-                                rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
-                                rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
-                        )
-                )
-                .build();
+        Address address = new Address(
+                rs.getString("publisher_state"),
+                rs.getString("publisher_city"),
+                rs.getString("publisher_street"),
+                rs.getString("publisher_home")
+        );
+
+        Events events = new Events(
+                rs.getObject("publisher_creation_date", Timestamp.class).toLocalDateTime(),
+                rs.getObject("publisher_last_modified_date", Timestamp.class).toLocalDateTime()
+        );
+
+        return Publisher.create(
+                UUID.fromString(rs.getString("publisher_id")),
+                new PublisherName(rs.getString("publisher_name")),
+                address,
+                new Phone(rs.getString("publisher_phone")),
+                new Email(rs.getString("publisher_email")),
+                events
+        );
     }
 
     private Set<Author> extractDataToListOfAuthorsOfBook(ResultSet rs, UUID currentBookID) throws SQLException {
         Set<Author> authors = new LinkedHashSet<>();
         do {
-            Author author = Author.builder()
-                    .id(UUID.fromString(rs.getString("author_id")))
-                    .firstName(new FirstName(rs.getString("author_first_name")))
-                    .lastName(new LastName(rs.getString("author_last_name")))
-                    .email(new Email(rs.getString("author_email")))
-                    .address(new Address(
-                                    rs.getString("author_state"),
-                                    rs.getString("author_city"),
-                                    rs.getString("author_street"),
-                                    rs.getString("author_home")
-                            )
-                    )
-                    .events(new Events(
-                                    rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
-                                    rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
-                            )
-                    )
-                    .build();
+            Address address = new Address(
+                    rs.getString("author_state"),
+                    rs.getString("author_city"),
+                    rs.getString("author_street"),
+                    rs.getString("author_home")
+            );
+            Events events = new Events(
+                    rs.getObject("author_creation_date", Timestamp.class).toLocalDateTime(),
+                    rs.getObject("author_last_modified_date", Timestamp.class).toLocalDateTime()
+            );
+
+            Author author = Author.create(
+                    UUID.fromString(rs.getString("id")),
+                    new FirstName(rs.getString("first_name")),
+                    new LastName(rs.getString("last_name")),
+                    new Email(rs.getString("email")),
+                    address,
+                    events
+            );
+
             authors.add(author);
         } while (
                 rs.next() && UUID.fromString(rs.getString("book_id")).equals(currentBookID)
@@ -319,22 +319,24 @@ public class BookRepository {
     private Book extractDataAndCompletelyConstructTheBook(
             ResultSet rs, UUID currentBookId, Publisher publisher, Set<Author> authors
     ) throws SQLException {
-        return Book.builder()
-                .id(currentBookId)
-                .title(new Title(rs.getString("book_title")))
-                .description(new Description(rs.getString("book_description")))
-                .isbn(new ISBN(rs.getString("book_isbn")))
-                .price(new Price(rs.getDouble("book_price")))
-                .quantityOnHand(new QuantityOnHand(rs.getInt("book_quantity")))
-                .category(Category.valueOf(rs.getString("book_category")))
-                .events(new Events(
-                                rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
-                                rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
-                        )
-                )
-                .withdrawnFromSale(rs.getBoolean("withdrawn_from_sale"))
-                .publisher(publisher)
-                .authors(authors)
-                .build();
+
+        Events events = new Events(
+                rs.getObject("book_creation_date", Timestamp.class).toLocalDateTime(),
+                rs.getObject("book_last_modified_date", Timestamp.class).toLocalDateTime()
+        );
+
+        return Book.create(
+                currentBookId,
+                new Title(rs.getString("book_title")),
+                new Description(rs.getString("book_description")),
+                new ISBN(rs.getString("book_isbn")),
+                new Price(rs.getDouble("book_price")),
+                new QuantityOnHand(rs.getInt("book_quantity")),
+                Category.valueOf(rs.getString("book_category")),
+                events,
+                rs.getBoolean("withdrawn_from_sale"),
+                publisher,
+                authors
+        );
     }
 }

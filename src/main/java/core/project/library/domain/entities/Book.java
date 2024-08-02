@@ -2,17 +2,15 @@ package core.project.library.domain.entities;
 
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
-import core.project.library.infrastructure.exceptions.NegativeValueException;
-import core.project.library.infrastructure.exceptions.NullValueException;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Book {
     private final UUID id;
     private final Title title;
@@ -27,8 +25,60 @@ public class Book {
     private final /**@ManyToMany*/ Set<Author> authors;
     private final /**@ManyToMany*/ Set<Order> orders;
 
-    public static Builder builder() {
-        return new Builder();
+    private Book(UUID id, Title title, Description description, ISBN isbn,
+                Price price, QuantityOnHand quantityOnHand, Category category, Events events,
+                Boolean withdrawnFromSale, Publisher publisher, Set<Author> authors, Set<Order> orders) {
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(title);
+        Objects.requireNonNull(description);
+        Objects.requireNonNull(isbn);
+        Objects.requireNonNull(price);
+        Objects.requireNonNull(quantityOnHand);
+        Objects.requireNonNull(category);
+        Objects.requireNonNull(events);
+        Objects.requireNonNull(withdrawnFromSale);
+        Objects.requireNonNull(publisher);
+        Objects.requireNonNull(authors);
+        Objects.requireNonNull(orders);
+
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.isbn = isbn;
+        this.price = price;
+        this.quantityOnHand = quantityOnHand;
+        this.category = category;
+        this.events = events;
+        this.withdrawnFromSale = withdrawnFromSale;
+        this.publisher = publisher;
+        this.authors = authors;
+        this.orders = orders;
+    }
+
+    /**
+     * upon creation book adds itself to publisher and authors
+     */
+    public static Book create(UUID id, Title title, Description description, ISBN isbn,
+                              Price price, QuantityOnHand quantityOnHand, Category category, Events events,
+                              Boolean withdrawnFromSale, Publisher publisher, Set<Author> authors) {
+        Book book = new Book(
+                id,
+                title,
+                description,
+                isbn,
+                price,
+                quantityOnHand,
+                category,
+                events,
+                withdrawnFromSale,
+                publisher,
+                authors,
+                new HashSet<>()
+        );
+
+        publisher.addBook(book);
+        authors.forEach(a -> a.addBook(book));
+        return book;
     }
 
     void addOrder(Order order) {
@@ -127,140 +177,5 @@ public class Book {
                 """, id.toString(), title.title(), description.description(),
                 isbn.isbn(), category.toString(), price.price(), quantityOnHand.quantityOnHand(),
                 events.creation_date().toString(), events.last_update_date().toString());
-    }
-
-    public static class Builder {
-        private UUID id;
-        private Title title;
-        private Description description;
-        private ISBN isbn;
-        private Price price;
-        private QuantityOnHand quantityOnHand;
-        private Category category;
-        private Events events;
-        private Boolean withdrawnFromSale;
-        private /**@ManyToOne*/ Publisher publisher;
-        private /**@ManyToMany*/ Set<Author> authors;
-
-        private Builder() {}
-
-        public Builder id(final UUID id) {
-            this.id = id;
-            return this;
-        }
-
-        public Builder title(final Title title) {
-            this.title = title;
-            return this;
-        }
-
-        public Builder description(final Description description) {
-            this.description = description;
-            return this;
-        }
-
-        public Builder isbn(final ISBN isbn) {
-            this.isbn = isbn;
-            return this;
-        }
-
-        public Builder price(final Price price) {
-            this.price = price;
-            return this;
-        }
-
-        public Builder quantityOnHand(final QuantityOnHand quantityOnHand) {
-            this.quantityOnHand = quantityOnHand;
-            return this;
-        }
-
-        public Builder category(final Category category) {
-            this.category = category;
-            return this;
-        }
-
-        public Builder events(final Events events) {
-            this.events = events;
-            return this;
-        }
-
-        public Builder withdrawnFromSale(Boolean withdrawnFromSale) {
-            this.withdrawnFromSale = withdrawnFromSale;
-            return this;
-        }
-
-        public Builder publisher(final Publisher publisher) {
-            this.publisher = publisher;
-            return this;
-        }
-
-        public Builder authors(Set<Author> authors) {
-            this.authors = authors;
-            return this;
-        }
-
-        public final Book build() {
-            validate();
-
-            if (this.withdrawnFromSale == null) {
-                Book book = new Book(
-                        id, title, description, isbn, price, quantityOnHand, category,
-                        events, false, publisher, Collections.unmodifiableSet(authors), new HashSet<>()
-                );
-
-                publisher.addBook(book);
-                authors.forEach(author -> author.addBook(book));
-                return book;
-            } else {
-                Book book = new Book(
-                        id, title, description, isbn, price, quantityOnHand, category,
-                        events, withdrawnFromSale, publisher, Collections.unmodifiableSet(authors), new HashSet<>()
-                );
-
-                publisher.addBook(book);
-                authors.forEach(author -> author.addBook(book));
-                return book;
-            }
-        }
-
-        private void validate() {
-            if (Objects.isNull(id)) {
-                throw new NullValueException("Book id can`t be null");
-            }
-            if (Objects.isNull(title)) {
-                throw new NullValueException("Book title can`t be null");
-            }
-            if (Objects.isNull(description)) {
-                throw new NullValueException("Book description can`t be null");
-            }
-            if (Objects.isNull(isbn)) {
-                throw new NullValueException("Book isbn can`t be null");
-            }
-            if (Objects.isNull(price)) {
-                throw new NullValueException("Book price can`t be null");
-            }
-            if (Objects.isNull(quantityOnHand)) {
-                throw new NullValueException("Book quantityOnHand can`t be null");
-            }
-            if (Objects.isNull(category)) {
-                throw new NullValueException("Book category can`t be null");
-            }
-            if (Objects.isNull(events)) {
-                throw new NullValueException("Book events can`t be null");
-            }
-            if (Objects.isNull(publisher)) {
-                throw new NullValueException("Book publisher can`t be null");
-            }
-            if (Objects.isNull(authors)) {
-                throw new NullValueException("Book authors can`t be null");
-            }
-
-            if (price.price() < 0.0) {
-                throw new NegativeValueException("Price can`t be negative");
-            }
-            if (quantityOnHand.quantityOnHand() < 0) {
-                throw new NegativeValueException("Quantity can`t be negative");
-            }
-        }
     }
 }

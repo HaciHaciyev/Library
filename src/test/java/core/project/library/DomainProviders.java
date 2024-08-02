@@ -31,29 +31,30 @@ public class DomainProviders {
             int randomQuantity = faker.number().numberBetween(1, 15);
             int countOfAuthors = faker.number().numberBetween(1, 5);
 
-            Set<Author> authors = Stream.generate(() -> Author.builder()
-                            .id(UUID.randomUUID())
-                            .firstName(Bootstrap.randomFirstName())
-                            .lastName(Bootstrap.randomLastName())
-                            .email(Bootstrap.randomEmail())
-                            .address(Bootstrap.randomAddress())
-                            .events(new Events())
-                            .build())
+            Set<Author> authors = Stream.generate(() -> Author.create(
+                            UUID.randomUUID(),
+                            Bootstrap.randomFirstName(),
+                            Bootstrap.randomLastName(),
+                            Bootstrap.randomEmail(),
+                            Bootstrap.randomAddress(),
+                            new Events()
+                    ))
                     .limit(countOfAuthors)
                     .collect(Collectors.toSet());
 
-            return Book.builder()
-                    .id(UUID.randomUUID())
-                    .title(Bootstrap.randomTitle())
-                    .description(Bootstrap.randomDescription())
-                    .isbn(Bootstrap.randomISBN13())
-                    .price(Bootstrap.randomPrice())
-                    .quantityOnHand(Bootstrap.randomQuantityOnHand())
-                    .events(new Events())
-                    .category(Bootstrap.randomCategory())
-                    .publisher(Bootstrap.publisherFactory().get())
-                    .authors(authors)
-                    .build();
+            return Book.create(
+                    UUID.randomUUID(),
+                    Bootstrap.randomTitle(),
+                    Bootstrap.randomDescription(),
+                    Bootstrap.randomISBN13(),
+                    Bootstrap.randomPrice(),
+                    Bootstrap.randomQuantityOnHand(),
+                    Bootstrap.randomCategory(),
+                    new Events(),
+                    false,
+                    Bootstrap.publisherFactory().get(),
+                    authors
+                    );
         };
     }
 
@@ -62,26 +63,26 @@ public class DomainProviders {
         int countOfBooks = faker.number().numberBetween(1, 100);
         Set<Book> books = Stream.generate(book()).limit(countOfBooks).collect(Collectors.toSet());
 
-        return () -> Order.builder()
-                .id(UUID.randomUUID())
-                .paidAmount(new PaidAmount((double) faker.number().numberBetween(1, 5000)))
-                .creditCard(randomCreditCard())
-                .creationDate(LocalDateTime.now())
-                .customer(Bootstrap.customerFactory().get())
-                .books(new LinkedHashMap<>())
-                .build();
+        return () -> Order.create(
+                UUID.randomUUID(),
+                new PaidAmount((double) faker.number().numberBetween(1, 5000)),
+                randomCreditCard(),
+                LocalDateTime.now(),
+                Bootstrap.customerFactory().get(),
+                new LinkedHashMap<>()
+        );
     }
 
     public static Supplier<Order> order(Set<Book> books, Customer customer) {
         int countOfBooks = faker.number().numberBetween(1, 100);
 
-        return () -> Order.builder()
-                .id(UUID.randomUUID())
-                .paidAmount(new PaidAmount((double) faker.number().numberBetween(1, 5000)))
-                .creditCard(randomCreditCard())
-                .creationDate(LocalDateTime.now())
-                .customer(customer)
-                .books(new LinkedHashMap<>())
-                .build();
+        return () -> Order.create(
+                UUID.randomUUID(),
+                new PaidAmount((double) faker.number().numberBetween(1, 5000)),
+                randomCreditCard(),
+                LocalDateTime.now(),
+                customer,
+                new LinkedHashMap<>()
+        );
     }
 }
