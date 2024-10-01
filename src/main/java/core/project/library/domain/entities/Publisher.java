@@ -5,9 +5,6 @@ import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.Phone;
 import core.project.library.domain.value_objects.PublisherName;
-import core.project.library.infrastructure.exceptions.NullValueException;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.HashSet;
@@ -17,7 +14,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Publisher {
     private final UUID id;
     private final PublisherName publisherName;
@@ -25,10 +21,33 @@ public class Publisher {
     private final Phone phone;
     private final Email email;
     private final Events events;
-    private final /**@OneToMany*/ Set<Book> books;
+    private final /**@OneToMany*/
+            Set<Book> books;
 
-    public static Builder builder() {
-        return new Builder();
+    private Publisher(UUID id, PublisherName publisherName, Address address,
+                      Phone phone, Email email, Events events,
+                      Set<Book> books) {
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(publisherName);
+        Objects.requireNonNull(address);
+        Objects.requireNonNull(phone);
+        Objects.requireNonNull(email);
+        Objects.requireNonNull(events);
+        Objects.requireNonNull(books);
+
+        this.id = id;
+        this.publisherName = publisherName;
+        this.address = address;
+        this.phone = phone;
+        this.email = email;
+        this.events = events;
+        this.books = books;
+    }
+
+    public static Publisher create(UUID id, PublisherName publisherName, Address address,
+                                   Phone phone, Email email, Events events) {
+        return new Publisher(id, publisherName, address,
+                phone, email, events, new HashSet<>());
     }
 
     void addBook(Book book) {
@@ -72,88 +91,19 @@ public class Publisher {
     @Override
     public String toString() {
         return String.format("""
-                Publisher {
-                id = %s,
-                publisher_name = %s,
-                state = %s,
-                city = %s,
-                street = %s,
-                home = %s,
-                email = %s,
-                creation_date = %s,
-                last_modified_date = %s
-                }
-                """, id.toString(), publisherName.publisherName(),
+                        Publisher {
+                        id = %s,
+                        publisher_name = %s,
+                        state = %s,
+                        city = %s,
+                        street = %s,
+                        home = %s,
+                        email = %s,
+                        creation_date = %s,
+                        last_modified_date = %s
+                        }
+                        """, id.toString(), publisherName.publisherName(),
                 address.state(), address.city(), address.street(), address.home(),
                 email.email(), events.creation_date().toString(), events.last_update_date().toString());
-    }
-
-    public static class Builder {
-        private UUID id;
-        private PublisherName publisherName;
-        private Address address;
-        private Phone phone;
-        private Email email;
-        private Events events;
-
-        private Builder() {}
-
-        public Builder id(final UUID id) {
-            this.id = id;
-            return this;
-        }
-
-        public Builder publisherName(final PublisherName publisherName) {
-            this.publisherName = publisherName;
-            return this;
-        }
-
-        public Builder address(final Address address) {
-            this.address = address;
-            return this;
-        }
-
-        public Builder phone(final Phone phone) {
-            this.phone = phone;
-            return this;
-        }
-
-        public Builder email(final Email email) {
-            this.email = email;
-            return this;
-        }
-
-        public Builder events(final Events events) {
-            this.events = events;
-            return this;
-        }
-
-        public final Publisher build() {
-            validate();
-
-            return new Publisher(id, publisherName, address,
-                    phone, email, events, new HashSet<>());
-        }
-
-        private void validate() {
-            if (Objects.isNull(id)) {
-                throw new NullValueException("Publisher id can`t be null");
-            }
-            if (Objects.isNull(publisherName)) {
-                throw new NullValueException("Publisher name can`t be null");
-            }
-            if (Objects.isNull(address)) {
-                throw new NullValueException("Publisher address can`t be null");
-            }
-            if (Objects.isNull(phone)) {
-                throw new NullValueException("Publisher phone can`t be null");
-            }
-            if (Objects.isNull(email)) {
-                throw new NullValueException("Publisher email can`t be null");
-            }
-            if (Objects.isNull(events)) {
-                throw new NullValueException("Publisher events can`t be null");
-            }
-        }
     }
 }

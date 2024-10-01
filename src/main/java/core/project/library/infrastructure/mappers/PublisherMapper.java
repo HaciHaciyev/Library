@@ -5,8 +5,6 @@ import core.project.library.application.model.PublisherModel;
 import core.project.library.domain.entities.Publisher;
 import core.project.library.domain.events.Events;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.springframework.boot.actuate.autoconfigure.web.mappings.MappingsEndpointAutoConfiguration;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,15 +20,18 @@ public interface PublisherMapper {
 
     List<PublisherModel> listOfModel(List<Publisher> publishers);
 
-    @Mapping(target = "id", source = "publisherDTO")
-    @Mapping(target = "events", source = "publisherDTO")
-    Publisher publisherFromDTO(PublisherDTO publisherDTO);
+    default Publisher publisherFromDTO(PublisherDTO publisherDTO) {
+        if (publisherDTO == null) {
+            return null;
+        }
 
-    default UUID getUUID(PublisherDTO publisherDTO) {
-        return UUID.randomUUID();
-    }
-
-    default Events getEvents(PublisherDTO publisherDTO) {
-        return new Events();
+        return Publisher.create(
+                UUID.randomUUID(),
+                publisherDTO.publisherName(),
+                publisherDTO.address(),
+                publisherDTO.phone(),
+                publisherDTO.email(),
+                new Events()
+        );
     }
 }

@@ -8,7 +8,6 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.PublisherName;
 import core.project.library.infrastructure.mappers.PublisherMapper;
 import core.project.library.infrastructure.repository.PublisherRepository;
-import core.project.library.infrastructure.utilities.Result;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -75,7 +76,7 @@ public class PublisherControllerTests {
         @MethodSource("publisherAndDTO")
         @DisplayName("Accept valid publisher id")
         void acceptValidPublisherId(Publisher publisher, PublisherDTO publisherDTO) throws Exception {
-            when(mockRepo.findById(publisher.getId())).thenReturn(Result.success(publisher));
+            when(mockRepo.findById(publisher.getId())).thenReturn(Optional.of(publisher));
             when(mockMapper.toDTO(publisher)).thenReturn(publisherDTO);
 
             mockMvc.perform(get(FIND_BY_ID + publisher.getId().toString())
@@ -97,7 +98,7 @@ public class PublisherControllerTests {
         @Test
         @DisplayName("reject invalid id")
         void rejectInvalidId() throws Exception {
-            when(mockRepo.findById(any(UUID.class))).thenReturn(Result.failure(null));
+            when(mockRepo.findById(any(UUID.class))).thenReturn(Optional.empty());
 
             mockMvc.perform(get(FIND_BY_ID + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
@@ -118,14 +119,14 @@ public class PublisherControllerTests {
         private static Stream<Arguments> publishersDtosName() {
             PublisherName name = Bootstrap.randomPublisherName();
 
-            Supplier<Publisher> supplier = () -> Publisher.builder()
-                    .id(UUID.randomUUID())
-                    .publisherName(name)
-                    .address(Bootstrap.randomAddress())
-                    .phone(Bootstrap.randomPhone())
-                    .email(Bootstrap.randomEmail())
-                    .events(new Events())
-                    .build();
+            Supplier<Publisher> supplier = () -> Publisher.create(
+                    UUID.randomUUID(),
+                    name,
+                    Bootstrap.randomAddress(),
+                    Bootstrap.randomPhone(),
+                    Bootstrap.randomEmail(),
+                    new Events()
+            );
 
             List<Publisher> publishers = Stream.generate(supplier).limit(5).toList();
 
@@ -147,7 +148,7 @@ public class PublisherControllerTests {
                                           List<PublisherDTO> dtos,
                                           String name) throws Exception {
 
-            when(mockRepo.findByName(name)).thenReturn(Result.success(publishers));
+            when(mockRepo.findByName(name)).thenReturn(publishers);
             when(mockMapper.listOfDTO(publishers)).thenReturn(dtos);
 
             mockMvc.perform(get(FIND_BY_NAME + name)
@@ -163,7 +164,7 @@ public class PublisherControllerTests {
         @DisplayName("reject when no publisher found")
         void rejectWhenNoPublisherFound() throws Exception {
             String name = "randomName";
-            when(mockRepo.findByName(name)).thenReturn(Result.failure(null));
+            when(mockRepo.findByName(name)).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get(FIND_BY_NAME + name)
                             .accept(MediaType.APPLICATION_JSON))
@@ -198,7 +199,7 @@ public class PublisherControllerTests {
         @MethodSource("publisherAndDTO")
         @DisplayName("Accept valid DTO")
         void acceptValidDTO(Publisher publisher, PublisherDTO publisherDTO) throws Exception {
-            when(mockRepo.savePublisher(publisher)).thenReturn(Result.success(publisher));
+            when(mockRepo.savePublisher(publisher)).thenReturn(Optional.of(publisher));
             when(mockMapper.publisherFromDTO(publisherDTO)).thenReturn(publisher);
 
             mockMvc.perform(post(SAVE_PUBLISHER)

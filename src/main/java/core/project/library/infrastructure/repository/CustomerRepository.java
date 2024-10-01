@@ -3,8 +3,6 @@ package core.project.library.infrastructure.repository;
 import core.project.library.domain.entities.Customer;
 import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.*;
-import core.project.library.infrastructure.exceptions.NotFoundException;
-import core.project.library.infrastructure.utilities.Result;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -13,7 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -34,38 +34,33 @@ public class CustomerRepository {
         return count != null && count > 0;
     }
 
-    public Result<Customer, DataAccessException> findById(UUID customerId) {
+    public Optional<Customer> findById(UUID customerId) {
         try {
             String findById = "SELECT * FROM Customers WHERE id=?";
 
-            return Result.success(
+            return Optional.of(
                     jdbcTemplate.queryForObject(findById, this::customerMapper, customerId.toString())
             );
         } catch (DataAccessException e) {
-            return Result.failure(e);
+            return Optional.empty();
         }
     }
 
-    public Result<List<Customer>, Exception> findByLastName(String lastName) {
+    public List<Customer> findByLastName(String lastName) {
         try {
             String findByLastName = "SELECT * FROM Customers WHERE last_name=?";
 
-            List<Customer> customers = jdbcTemplate.query(
+            return jdbcTemplate.query(
                     findByLastName, this::customerMapper, lastName
             );
 
-            if (customers.isEmpty()) {
-                return Result.failure(new NotFoundException("Customer not found"));
-            } else {
-                return Result.success(customers);
-            }
         } catch (DataAccessException e) {
-            return Result.failure(e);
+            return Collections.emptyList();
         }
     }
 
     @Transactional
-    public Result<Customer, Exception> saveCustomer(Customer customer) {
+    public Optional<Customer> saveCustomer(Customer customer) {
         try {
             String saveCustomer = """
                     INSERT INTO Customers (id, first_name, last_name, email, password,
@@ -81,9 +76,9 @@ public class CustomerRepository {
                     customer.getEvents().creation_date(), customer.getEvents().last_update_date()
             );
 
-            return Result.success(customer);
+            return Optional.of(customer);
         } catch (DataAccessException e) {
-            return Result.failure(e);
+            return Optional.empty();
         }
     }
 
@@ -100,14 +95,14 @@ public class CustomerRepository {
                 rs.getObject("last_modified_date", Timestamp.class).toLocalDateTime()
         );
 
-        return Customer.builder()
-                .id(UUID.fromString(rs.getString("id")))
-                .firstName(new FirstName(rs.getString("first_name")))
-                .lastName(new LastName(rs.getString("last_name")))
-                .password(new Password(rs.getString("password")))
-                .email(new Email(rs.getString("email")))
-                .address(address)
-                .events(events)
-                .build();
+        return Customer.create(
+                UUID.fromString(rs.getString("id")),
+                new FirstName(rs.getString("first_name")),
+                new LastName(rs.getString("last_name")),
+                new Password(rs.getString("password")),
+                new Email(rs.getString("email")),
+                address,
+                events
+        );
     }
 }

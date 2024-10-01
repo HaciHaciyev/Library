@@ -35,9 +35,11 @@ public class PublisherController {
 
     @GetMapping("/findByName/{publisherName}")
     final ResponseEntity<List<PublisherDTO>> findByName(@PathVariable("publisherName") String publisherName) {
-        var publishers = publisherRepository
-                .findByName(publisherName)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Publisher not found"));
+        var publishers = publisherRepository.findByName(publisherName);
+
+        if (publishers.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Publisher not found");
+        }
 
         return ResponseEntity.ok(publisherMapper.listOfDTO(publishers));
     }

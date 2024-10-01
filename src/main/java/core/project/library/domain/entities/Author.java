@@ -5,9 +5,6 @@ import core.project.library.domain.value_objects.Address;
 import core.project.library.domain.value_objects.Email;
 import core.project.library.domain.value_objects.FirstName;
 import core.project.library.domain.value_objects.LastName;
-import core.project.library.infrastructure.exceptions.NullValueException;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.HashSet;
@@ -17,7 +14,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Author {
     private final UUID id;
     private final FirstName firstName;
@@ -25,10 +21,31 @@ public class Author {
     private final Email email;
     private final Address address;
     private final Events events;
-    private final /**@ManyToMany*/ Set<Book> books;
+    private final Set<Book> books;
 
-    public static Builder builder() {
-        return new Builder();
+    private Author(UUID id, FirstName firstName, LastName lastName,
+                  Email email, Address address, Events events,
+                  Set<Book> books) {
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(firstName);
+        Objects.requireNonNull(lastName);
+        Objects.requireNonNull(email);
+        Objects.requireNonNull(address);
+        Objects.requireNonNull(events);
+        Objects.requireNonNull(books);
+
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.address = address;
+        this.events = events;
+        this.books = books;
+    }
+
+    public static Author create(UUID id, FirstName firstName, LastName lastName,
+                                Email email, Address address, Events events) {
+        return new Author(id, firstName, lastName, email, address, events, new HashSet<>());
     }
 
     void addBook(Book book) {
@@ -72,89 +89,20 @@ public class Author {
     @Override
     public String toString() {
         return String.format("""
-                Author {
-                id = %s,
-                first_name = %s,
-                last_name = %s,
-                email = %s,
-                state = %s,
-                city = %s,
-                street = %s,
-                home = %s,
-                creation_date = %s,
-                last_modified_date = %s
-                }
-                """, id.toString(), firstName.firstName(), lastName.lastName(),
+                        Author {
+                        id = %s,
+                        first_name = %s,
+                        last_name = %s,
+                        email = %s,
+                        state = %s,
+                        city = %s,
+                        street = %s,
+                        home = %s,
+                        creation_date = %s,
+                        last_modified_date = %s
+                        }
+                        """, id.toString(), firstName.firstName(), lastName.lastName(),
                 email.email(), address.state(), address.city(), address.street(), address.home(),
                 events.creation_date().toString(), events.last_update_date().toString());
-    }
-
-    public static class Builder {
-        private UUID id;
-        private FirstName firstName;
-        private LastName lastName;
-        private Email email;
-        private Address address;
-        private Events events;
-
-        private Builder() {}
-
-        public Builder id(final UUID id) {
-            this.id = id;
-            return this;
-        }
-
-        public Builder firstName(final FirstName firstName) {
-            this.firstName = firstName;
-            return this;
-        }
-
-        public Builder lastName(final LastName lastName) {
-            this.lastName = lastName;
-            return this;
-        }
-
-        public Builder email(final Email email) {
-            this.email = email;
-            return this;
-        }
-
-        public Builder address(final Address address) {
-            this.address = address;
-            return this;
-        }
-
-        public Builder events(final Events events) {
-            this.events = events;
-            return this;
-        }
-
-        public final Author build() {
-            validate();
-
-            return new Author(id, firstName, lastName,
-                    email, address, events, new HashSet<>());
-        }
-
-        private void validate() {
-            if (Objects.isNull(id)) {
-                throw new NullValueException("Author id can`t be null");
-            }
-            if (Objects.isNull(firstName)) {
-                throw new NullValueException("Author firstName can`t be null");
-            }
-            if (Objects.isNull(lastName)) {
-                throw new NullValueException("Author lastName can`t be null");
-            }
-            if (Objects.isNull(email)) {
-                throw new NullValueException("Author email can`t be null");
-            }
-            if (Objects.isNull(address)) {
-                throw new NullValueException("Author address can`t be null");
-            }
-            if (Objects.isNull(events)) {
-                throw new NullValueException("Author events can`t be null");
-            }
-        }
     }
 }

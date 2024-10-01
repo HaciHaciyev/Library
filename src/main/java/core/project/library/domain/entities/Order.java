@@ -6,18 +6,17 @@ import core.project.library.domain.value_objects.PaidAmount;
 import core.project.library.domain.value_objects.TotalPrice;
 import core.project.library.infrastructure.exceptions.InsufficientPaymentException;
 import core.project.library.infrastructure.exceptions.NegativeValueException;
-import core.project.library.infrastructure.exceptions.NullValueException;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 @Slf4j
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Order {
     private final UUID id;
     private final Integer countOfBooks;
@@ -26,11 +25,73 @@ public class Order {
     private final ChangeOfOrder changeOfOrder;
     private final CreditCard creditCard;
     private final LocalDateTime creationDate;
-    private final /**@ManyToOne*/ Customer customer;
-    private final /**@ManyToMany*/ Map<Book, Integer> books;
+    private final /**@ManyToOne*/
+            Customer customer;
+    private final /**@ManyToMany*/
+            Map<Book, Integer> books;
 
-    public static Builder builder() {
-        return new Builder();
+    private Order(UUID id, Integer countOfBooks, TotalPrice totalPrice, PaidAmount paidAmount,
+                  ChangeOfOrder changeOfOrder, CreditCard creditCard, LocalDateTime creationDate, Customer customer,
+                  Map<Book, Integer> books) {
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(countOfBooks);
+        Objects.requireNonNull(totalPrice);
+        Objects.requireNonNull(paidAmount);
+        Objects.requireNonNull(changeOfOrder);
+        Objects.requireNonNull(creditCard);
+        Objects.requireNonNull(creationDate);
+        Objects.requireNonNull(customer);
+        Objects.requireNonNull(books);
+
+        if (countOfBooks <= 0) {
+            throw new NegativeValueException("Count of books can`t be negative or zero");
+        }
+        if (totalPrice.totalPrice() < 0.0) {
+            throw new NegativeValueException("Total price can`t be negative");
+        }
+        if (paidAmount.paidAmount() < 0.0) {
+            throw new NegativeValueException("Paid amount can`t be negative or smaller than total price in order");
+        }
+        if (paidAmount.paidAmount() < totalPrice.totalPrice()) {
+            throw new InsufficientPaymentException("The paid amount is not enough to complete the order");
+        }
+        if (books.isEmpty()) {
+            throw new IllegalArgumentException("Books can`t be empty");
+        }
+
+        this.id = id;
+        this.countOfBooks = countOfBooks;
+        this.totalPrice = totalPrice;
+        this.paidAmount = paidAmount;
+        this.changeOfOrder = changeOfOrder;
+        this.creditCard = creditCard;
+        this.creationDate = creationDate;
+        this.customer = customer;
+        this.books = books;
+    }
+
+    public static Order create(UUID id, PaidAmount paidAmount, CreditCard creditCard,
+                               LocalDateTime creationDate, Customer customer, Map<Book, Integer> books) {
+        Integer countOfBooks = calculateCountOfBooks(books);
+        TotalPrice totalPrice = calculateTotalPrice(books);
+        ChangeOfOrder changeOfOrder = calculateChange(totalPrice, paidAmount);
+
+        Order order = new Order(
+                id,
+                countOfBooks,
+                totalPrice,
+                paidAmount,
+                changeOfOrder,
+                creditCard,
+                creationDate,
+                customer,
+                Map.copyOf(books)
+        );
+
+        customer.addOrder(order);
+        books.forEach((book, _) -> book.addOrder(order));
+
+        return order;
     }
 
     @Override
@@ -70,148 +131,41 @@ public class Order {
     @Override
     public String toString() {
         return String.format("""
-                Order {
-                id = %s,
-                count_of_books = %d,
-                total_price = %f,
-                paid_amount = %f,
-                change_of_order = %f,
-                creation_date = %s,
-                }
-                """,
+                        Order {
+                        id = %s,
+                        count_of_books = %d,
+                        total_price = %f,
+                        paid_amount = %f,
+                        change_of_order = %f,
+                        creation_date = %s,
+                        }
+                        """,
                 id.toString(), countOfBooks,
                 totalPrice.totalPrice(), paidAmount.paidAmount(),
                 changeOfOrder.changeOfOrder(), creationDate.toString()
         );
     }
 
-    public static class Builder {
-        private UUID id;
-        private PaidAmount paidAmount;
-        private CreditCard creditCard;
-        private LocalDateTime creationDate;
-        private /**@ManyToOne*/ Customer customer;
-        private /**@ManyToMany*/ Map<Book, Integer> books;
+    private static Integer calculateCountOfBooks(Map<Book, Integer> books) {
+        return books.values()
+                .stream()
+                .reduce(0, Integer::sum);
+    }
 
-        private Builder() {}
+    private static TotalPrice calculateTotalPrice(Map<Book, Integer> books) {
+        Double price = books.entrySet()
+                .stream()
+                .map(entry -> {
+                    int bookCopies = entry.getValue();
+                    double priceOfOneCopy = entry.getKey().getPrice().price();
+                    return priceOfOneCopy * bookCopies;
+                })
+                .reduce(0.0, Double::sum);
 
-        public Builder id(final UUID id) {
-            this.id = id;
-            return this;
-        }
+        return new TotalPrice(price);
+    }
 
-        public Builder paidAmount(final PaidAmount paidAmount) {
-            this.paidAmount = paidAmount;
-            return this;
-        }
-
-        public Builder creditCard(final CreditCard creditCard) {
-            this.creditCard = creditCard;
-            return this;
-        }
-
-        public Builder creationDate(LocalDateTime creationDate) {
-            this.creationDate = creationDate;
-            return this;
-        }
-
-        public Builder customer(Customer customer) {
-            this.customer = customer;
-            return this;
-        }
-
-        public Builder books(Map<Book, Integer> books) {
-            this.books = books;
-            return this;
-        }
-
-        public final Order build() {
-            Integer countOfBooks = calculateCountOfBooks(books);
-            TotalPrice totalPrice = calculateTotalPrice(books);
-            ChangeOfOrder changeOfOrder = calculateChange(totalPrice, paidAmount);
-
-            validate(countOfBooks, totalPrice, changeOfOrder);
-
-            Order order = new Order(id, countOfBooks, totalPrice, paidAmount, changeOfOrder,
-                    creditCard, creationDate, customer, Collections.unmodifiableMap(books));
-
-            customer.addOrder(order);
-            books.forEach((book, _) -> book.addOrder(order));
-            return order;
-        }
-
-        private void validate(Integer countOfBooks, TotalPrice totalPrice, ChangeOfOrder changeOfOrder) {
-            if (Objects.isNull(id)) {
-                throw new NullValueException("Order id can`t be null");
-            }
-            if (Objects.isNull(countOfBooks)) {
-                throw new NullValueException("Order countOfBooks can`t be null");
-            }
-            if (Objects.isNull(totalPrice)) {
-                throw new NullValueException("Order totalPrice can`t be null");
-            }
-            if (Objects.isNull(paidAmount)) {
-                throw new NullValueException("Order paidAmount can`t be null");
-            }
-            if (Objects.isNull(changeOfOrder)) {
-                throw new NullValueException("Order changeOfOrder can`t be null");
-            }
-            if (Objects.isNull(creditCard)) {
-                throw new NullValueException("Order creditCard can`t be null");
-            }
-            if (Objects.isNull(creationDate)) {
-                throw new NullValueException("Order creationDate can`t be null");
-            }
-            if (Objects.isNull(customer)) {
-                throw new NullValueException("Order customer can`t be null");
-            }
-            if (Objects.isNull(books)) {
-                throw new NullValueException("Order books can`t be null");
-            }
-
-            boolean isPaidAmountEnough = paidAmount.paidAmount() > totalPrice.totalPrice();
-
-            if (countOfBooks <= 0) {
-                throw new NegativeValueException("Count of books can`t be negative or zero");
-            }
-            if (totalPrice.totalPrice() < 0.0) {
-                throw new NegativeValueException("Total price can`t be negative");
-            }
-            if (paidAmount.paidAmount() < 0.0) {
-                throw new NegativeValueException("Paid amount can`t be negative or smaller than total price in order");
-            }
-            if (!isPaidAmountEnough) {
-                throw new InsufficientPaymentException("The paid amount is not enough to complete the order");
-            }
-            if (books.isEmpty()) {
-                throw new IllegalArgumentException("Books can`t be empty");
-            }
-        }
-
-        private Integer calculateCountOfBooks(Map<Book, Integer> books) {
-            int countOfBooks = 0;
-            for (Integer count : books.values()) {
-                countOfBooks += count;
-            }
-            return countOfBooks;
-        }
-
-        private TotalPrice calculateTotalPrice(Map<Book, Integer> books) {
-            double totalPrice = 0.0;
-
-            for (Map.Entry<Book, Integer> pair : books.entrySet()) {
-                int countOfBookCopies = pair.getValue();
-                double priceOfBookInOneCopy = pair.getKey().getPrice().price();
-                double priceOfAllCopyOfBook = priceOfBookInOneCopy * countOfBookCopies;
-
-                totalPrice += priceOfAllCopyOfBook;
-            }
-
-            return new TotalPrice(totalPrice);
-        }
-
-        private ChangeOfOrder calculateChange(TotalPrice totalPrice, PaidAmount paidAmount) {
-            return new ChangeOfOrder(paidAmount.paidAmount() - totalPrice.totalPrice());
-        }
+    private static ChangeOfOrder calculateChange(TotalPrice totalPrice, PaidAmount paidAmount) {
+        return new ChangeOfOrder(paidAmount.paidAmount() - totalPrice.totalPrice());
     }
 }

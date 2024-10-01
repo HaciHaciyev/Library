@@ -103,45 +103,45 @@ public class Bootstrap implements CommandLineRunner {
     }
 
     public static Supplier<Publisher> publisherFactory() {
-        return () -> Publisher.builder()
-                .id(UUID.randomUUID())
-                .publisherName(randomPublisherName())
-                .address(randomAddress())
-                .phone(randomPhone())
-                .email(randomEmail())
-                .events(new Events())
-                .build();
+        return () -> Publisher.create(
+                UUID.randomUUID(),
+                randomPublisherName(),
+                randomAddress(),
+                randomPhone(),
+                randomEmail(),
+                new Events()
+        );
     }
 
     public static Supplier<Author> authorFactory() {
-        return () -> Author.builder()
-                .id(UUID.randomUUID())
-                .firstName(randomFirstName())
-                .lastName(randomLastName())
-                .email(randomEmail())
-                .address(randomAddress())
-                .events(new Events())
-                .build();
+        return () -> Author.create(
+                UUID.randomUUID(),
+                randomFirstName(),
+                randomLastName(),
+                randomEmail(),
+                randomAddress(),
+                new Events()
+        );
     }
 
     public static Supplier<Book> bookFactory() {
         return () -> {
-
             int randomPublisher = faker.number().numberBetween(0, MAX_NUMBER_OF_PUBLISHERS);
             Set<Author> authorsForBook = getAuthorsForBook();
 
-            return Book.builder()
-                    .id(UUID.randomUUID())
-                    .title(randomTitle())
-                    .description(randomDescription())
-                    .isbn(randomISBN13())
-                    .price(randomPrice())
-                    .quantityOnHand(randomQuantityOnHand())
-                    .events(new Events())
-                    .category(randomCategory())
-                    .publisher(publishers.get(randomPublisher))
-                    .authors(authorsForBook)
-                    .build();
+            return Book.create(
+                    UUID.randomUUID(),
+                    randomTitle(),
+                    randomDescription(),
+                    randomISBN13(),
+                    randomPrice(),
+                    randomQuantityOnHand(),
+                    randomCategory(),
+                    new Events(),
+                    false,
+                    publishers.get(randomPublisher),
+                    authorsForBook
+            );
         };
     }
 
@@ -152,15 +152,15 @@ public class Bootstrap implements CommandLineRunner {
     }
 
     public static Supplier<Customer> customerFactory() {
-        return () -> Customer.builder()
-                .id(UUID.randomUUID())
-                .firstName(randomFirstName())
-                .lastName(randomLastName())
-                .password(randomPassword())
-                .email(randomEmail())
-                .address(randomAddress())
-                .events(new Events())
-                .build();
+        return () -> Customer.create(
+                UUID.randomUUID(),
+                randomFirstName(),
+                randomLastName(),
+                randomPassword(),
+                randomEmail(),
+                randomAddress(),
+                new Events()
+        );
     }
 
     public static Supplier<Order> orderFactory() {
@@ -189,14 +189,14 @@ public class Bootstrap implements CommandLineRunner {
                     .get()
                     .intValue() + 1;
 
-            return Order.builder()
-                    .id(UUID.randomUUID())
-                    .paidAmount(new PaidAmount((double) ThreadLocalRandom.current().nextInt(minPaidAmount, 5000)))
-                    .creditCard(randomCreditCard())
-                    .creationDate(LocalDateTime.now())
-                    .customer(customers.get(randomCustomer))
-                    .books(booksForOrder)
-                    .build();
+            return Order.create(
+                    UUID.randomUUID(),
+                    new PaidAmount((double) ThreadLocalRandom.current().nextInt(minPaidAmount, 5000)),
+                    randomCreditCard(),
+                    LocalDateTime.now(),
+                    customers.get(randomCustomer),
+                    booksForOrder
+            );
         };
     }
 

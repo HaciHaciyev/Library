@@ -76,16 +76,19 @@ public class BookController {
                                                       @RequestParam(required = false) String category) {
         Objects.requireNonNull(pageNumber);
         Objects.requireNonNull(pageSize);
+
+        var books = bookService.listOfBooks(pageNumber, pageSize, title, category);
+
+        if (books.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, """
+                    We were unable to compile a list of books based on your requests..
+                    Make sure the fields you indicate are correct.
+                    Otherwise, unfortunately we do not have such data.""");
+        }
+
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(bookMapper.listOfModel(
-                        bookService.listOfBooks(pageNumber, pageSize, title, category)
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, """
-                                We were unable to compile a list of books based on your requests..
-                                Make sure the fields you indicate are correct.
-                                Otherwise, unfortunately we do not have such data."""))
-                        )
-                );
+                .body(bookMapper.listOfModel(books));
     }
 
     @PostMapping("/saveBook")
@@ -107,18 +110,19 @@ public class BookController {
                     .orElseThrow(() -> new NotFoundException(String.format("Author with id %s was not found.", authorId))));
         }
 
-        Book book = Book.builder()
-                .id(UUID.randomUUID())
-                .title(bookDTO.title())
-                .description(bookDTO.description())
-                .isbn(bookDTO.isbn())
-                .price(bookDTO.price())
-                .quantityOnHand(bookDTO.quantityOnHand())
-                .category(bookDTO.category())
-                .events(new Events())
-                .publisher(publisher)
-                .authors(authors)
-                .build();
+        Book book = Book.create(
+                UUID.randomUUID(),
+                bookDTO.title(),
+                bookDTO.description(),
+                bookDTO.isbn(),
+                bookDTO.price(),
+                bookDTO.quantityOnHand(),
+                bookDTO.category(),
+                new Events(),
+                false,
+                publisher,
+                authors
+        );
 
         bookService.completelySaveBook(book);
 

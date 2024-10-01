@@ -48,17 +48,23 @@ public class OrderController {
 
     @GetMapping("/findByCustomerId/{customerIdForOrders}")
     final ResponseEntity<List<OrderModel>> findByCustomerId(@PathVariable("customerIdForOrders")UUID customerId) {
-        var orders = orderRepository.findByCustomerId(customerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Customer either made no orders or he does not exist"));
+        var orders = orderRepository.findByCustomerId(customerId);
+
+        if (orders.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Customer either made no orders or he does not exist");
+        }
 
         return ResponseEntity.ok(mapper.listOfModel(orders));
     }
 
     @GetMapping("/findByBookId/{bookIdForOrders}")
     final ResponseEntity<List<OrderModel>> findByBookId(@PathVariable("bookIdForOrders")UUID bookId) {
-        var orders = orderRepository.findByBookId(bookId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        var orders = orderRepository.findByBookId(bookId);
+
+        if (orders.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
+        }
 
         return ResponseEntity.ok(mapper.listOfModel(orders));
     }
@@ -72,7 +78,39 @@ public class OrderController {
                 .map(bookId -> bookRepository.findById(bookId).orElseThrow(NotFoundException::new))
                 .collect(Collectors.toMap(book -> book, _ -> 1, Integer::sum));
 
-        for (Map.Entry<Book, Integer> pair : books.entrySet()) {
+        validateSaleStatusAndQuantity(books);
+
+        Order order = Order.create(
+                UUID.randomUUID(),
+                inboundOrderDTO.paidAmount(),
+                inboundOrderDTO.creditCard(),
+                LocalDateTime.now(),
+                customer,
+                books
+        );
+
+        updateBookQuantity(books);
+
+        var savedOrder = orderRepository.save(order, books.keySet())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not save order"));
+
+        return ResponseEntity
+                .created(URI.create("/library/order/findById/" + savedOrder.getId()))
+                .body("Successfully created order");
+    }
+
+    private void updateBookQuantity(Map<Book, Integer> books) {
+        for (var pair : books.entrySet()) {
+            Book book = pair.getKey();
+            int requiredQuantityForOneCopyOfBook = pair.getValue();
+            int existedQuantityOnHand = book.getQuantityOnHand().quantityOnHand();
+
+            book.changeQuantityOnHand(existedQuantityOnHand - requiredQuantityForOneCopyOfBook);
+        }
+    }
+
+    private void validateSaleStatusAndQuantity(Map<Book, Integer> books) {
+        for (var pair : books.entrySet()) {
             Book book = pair.getKey();
             if (!book.isItOnSale()) throw new RemovedFromSaleException("Book is not on sale");
 
@@ -84,29 +122,5 @@ public class OrderController {
                 throw new QuantityOnHandException("We do not have enough books for this order.");
             }
         }
-
-        Order order = Order.builder()
-                .id(UUID.randomUUID())
-                .paidAmount(inboundOrderDTO.paidAmount())
-                .creditCard(inboundOrderDTO.creditCard())
-                .creationDate(LocalDateTime.now())
-                .customer(customer)
-                .books(books)
-                .build();
-
-        for (Map.Entry<Book, Integer> pair : books.entrySet()) {
-            Book book = pair.getKey();
-            int requiredQuantityForOneCopyOfBook = pair.getValue();
-            int existedQuantityOnHand = book.getQuantityOnHand().quantityOnHand();
-
-            book.changeQuantityOnHand(existedQuantityOnHand - requiredQuantityForOneCopyOfBook);
-        }
-
-        var savedOrder = orderRepository.save(order, books.keySet())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not save order"));
-
-        return ResponseEntity
-                .created(URI.create("/library/order/findById/" + savedOrder.getId()))
-                .body("Successfully created order");
     }
 }

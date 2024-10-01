@@ -8,7 +8,6 @@ import core.project.library.domain.events.Events;
 import core.project.library.domain.value_objects.LastName;
 import core.project.library.infrastructure.mappers.CustomerMapper;
 import core.project.library.infrastructure.repository.CustomerRepository;
-import core.project.library.infrastructure.utilities.Result;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,7 +21,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -77,7 +78,7 @@ class CustomerControllerTest {
         @MethodSource("dtoEntity")
         @DisplayName("Accept UUID of existing customer")
         void testExisting(Customer customer, CustomerDTO customerDTO) throws Exception {
-            when(mockRepo.findById(customer.getId())).thenReturn(Result.success(customer));
+            when(mockRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
             when(mockMapper.toDTO(customer)).thenReturn(customerDTO);
 
             mockMvc.perform(get(FIND_BY_ID + customer.getId().toString())
@@ -99,7 +100,7 @@ class CustomerControllerTest {
         @Test
         @DisplayName("Reject UUID of non existent customer")
         void testNonExistent() throws Exception {
-            when(mockRepo.findById(any(UUID.class))).thenReturn(Result.failure(null));
+            when(mockRepo.findById(any(UUID.class))).thenReturn(Optional.empty());
 
             mockMvc.perform(get(FIND_BY_ID + UUID.randomUUID())
                             .accept(MediaType.APPLICATION_JSON))
@@ -120,15 +121,15 @@ class CustomerControllerTest {
         private static Stream<Arguments> customersDtosName() {
             String lastName = faker.name().lastName();
 
-            Supplier<Customer> customerSupplier = () -> Customer.builder()
-                    .id(UUID.randomUUID())
-                    .firstName(Bootstrap.randomFirstName())
-                    .lastName(new LastName(lastName))
-                    .password(Bootstrap.randomPassword())
-                    .email(Bootstrap.randomEmail())
-                    .address(Bootstrap.randomAddress())
-                    .events(new Events())
-                    .build();
+            Supplier<Customer> customerSupplier = () -> Customer.create(
+                    UUID.randomUUID(),
+                    Bootstrap.randomFirstName(),
+                    new LastName(lastName),
+                    Bootstrap.randomPassword(),
+                    Bootstrap.randomEmail(),
+                    Bootstrap.randomAddress(),
+                    new Events()
+            );
 
             List<Customer> customers = Stream.generate(customerSupplier)
                     .limit(5)
@@ -150,7 +151,7 @@ class CustomerControllerTest {
         @MethodSource("customersDtosName")
         @DisplayName("Return customers with matching last name")
         void testWithMatchingName(List<Customer> customerList, List<CustomerDTO> dtos, String lastName) throws Exception {
-            when(mockRepo.findByLastName(lastName)).thenReturn(Result.success(customerList));
+            when(mockRepo.findByLastName(lastName)).thenReturn(customerList);
             when(mockMapper.listOfDTO(customerList)).thenReturn(dtos);
 
             mockMvc.perform(get(FIND_BY_LAST_NAME + lastName)
@@ -166,7 +167,7 @@ class CustomerControllerTest {
         @DisplayName("Throw exception in case of no match")
         void testNoMatch() throws Exception {
             String lastName = "lastName";
-            when(mockRepo.findByLastName(lastName)).thenReturn(Result.failure(null));
+            when(mockRepo.findByLastName(lastName)).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get(FIND_BY_LAST_NAME + lastName)
                             .accept(MediaType.APPLICATION_JSON))
@@ -200,7 +201,7 @@ class CustomerControllerTest {
         @MethodSource("customerAndDTO")
         @DisplayName("accept valid customerDTO")
         void acceptValidDTO(Customer customer, CustomerDTO customerDTO) throws Exception {
-            when(mockRepo.saveCustomer(customer)).thenReturn(Result.success(customer));
+            when(mockRepo.saveCustomer(customer)).thenReturn(Optional.of(customer));
             when(mockMapper.customerFromDTO(customerDTO)).thenReturn(customer);
 
             mockMvc.perform(post("/library/customer/saveCustomer")
