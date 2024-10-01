@@ -319,7 +319,8 @@ class BookControllerTest {
                     Bootstrap.randomISBN13(),
                     Bootstrap.randomPrice(),
                     Bootstrap.randomQuantityOnHand(),
-                    Bootstrap.randomCategory());
+                    Bootstrap.randomCategory(),
+                    false);
 
             return Stream.generate(() -> arguments(bookDTO)).limit(1);
         }
@@ -330,7 +331,8 @@ class BookControllerTest {
                     Bootstrap.randomISBN13(),
                     Bootstrap.randomPrice(),
                     Bootstrap.randomQuantityOnHand(),
-                    Bootstrap.randomCategory());
+                    Bootstrap.randomCategory(),
+                    false);
 
             List<Author> authors = List.copyOf(authorSupplier().get());
 

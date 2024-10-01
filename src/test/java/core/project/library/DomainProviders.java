@@ -57,7 +57,7 @@ public class DomainProviders {
         };
     }
 
-    // candidates for test utility
+    /** candidates for test utility*/
     public static Supplier<Order> order() {
         int countOfBooks = faker.number().numberBetween(1, 100);
         Set<Book> books = Stream.generate(book()).limit(countOfBooks).collect(Collectors.toSet());
