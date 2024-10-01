@@ -52,7 +52,7 @@ public class PublisherRepository {
         try {
             String findById = "SELECT * FROM Publishers WHERE id = ?";
 
-            return Optional.of(
+            return Optional.ofNullable(
                     jdbcTemplate.queryForObject(findById, this::publisherMapper, publisherId.toString())
             );
         } catch (EmptyResultDataAccessException e) {

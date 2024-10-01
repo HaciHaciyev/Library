@@ -72,13 +72,4 @@ public class BookService {
             throw new NotFoundException();
         });
     }
-
-    public void withdrawBookFromTheSale(UUID bookId) {
-        bookRepository.findById(bookId).handle(foundBook -> {
-            foundBook.withdrawnFromSale();
-            bookRepository.withdrawBookFromTheSale(foundBook);
-        }, _ -> {
-            throw new NotFoundException();
-        });
-    }
 }

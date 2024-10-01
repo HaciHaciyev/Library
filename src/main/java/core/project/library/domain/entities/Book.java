@@ -174,8 +174,8 @@ public class Book {
                 creation_date = %s,
                 last_modified_date = %s
                 }
-                """, id.toString(), title.title(), description.description(),
-                isbn.isbn(), category.toString(), price.price(), quantityOnHand.quantityOnHand(),
+                """, id, title.title(), description.description(),
+                isbn.isbn(), category, price.price(), quantityOnHand.quantityOnHand(),
                 events.creation_date().toString(), events.last_update_date().toString());
     }
 }

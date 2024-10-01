@@ -102,7 +102,7 @@ public class Publisher {
                         creation_date = %s,
                         last_modified_date = %s
                         }
-                        """, id.toString(), publisherName.publisherName(),
+                        """, id, publisherName.publisherName(),
                 address.state(), address.city(), address.street(), address.home(),
                 email.email(), events.creation_date().toString(), events.last_update_date().toString());
     }

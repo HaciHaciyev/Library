@@ -38,7 +38,7 @@ public class CustomerRepository {
         try {
             String findById = "SELECT * FROM Customers WHERE id=?";
 
-            return Optional.of(
+            return Optional.ofNullable(
                     jdbcTemplate.queryForObject(findById, this::customerMapper, customerId.toString())
             );
         } catch (DataAccessException e) {

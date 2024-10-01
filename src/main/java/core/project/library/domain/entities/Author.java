@@ -101,7 +101,7 @@ public class Author {
                         creation_date = %s,
                         last_modified_date = %s
                         }
-                        """, id.toString(), firstName.firstName(), lastName.lastName(),
+                        """, id, firstName.firstName(), lastName.lastName(),
                 email.email(), address.state(), address.city(), address.street(), address.home(),
                 events.creation_date().toString(), events.last_update_date().toString());
     }

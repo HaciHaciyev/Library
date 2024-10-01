@@ -49,7 +49,7 @@ public class BookRepository {
         try {
             String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ID, bookId);
 
-            return Optional.of(
+            return Optional.ofNullable(
                     jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToBook)
             );
         } catch (EmptyResultDataAccessException e) {
@@ -62,7 +62,7 @@ public class BookRepository {
         try {
             String sqlQuery = String.format(SQL_FOR_GET_BOOK_BY_ISBN, isbn.isbn());
 
-            return Optional.of(
+            return Optional.ofNullable(
                     jdbcTemplate.query(preparedStatementFactory(sqlQuery), this::extractDataToBook)
             );
         } catch (EmptyResultDataAccessException e) {

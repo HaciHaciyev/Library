@@ -97,7 +97,7 @@ public class Customer {
                 creation_date = %s,
                 last_modified_date = %s
                 }
-                """, id.toString(), firstName.firstName(), lastName.lastName(),
+                """, id, firstName.firstName(), lastName.lastName(),
                 password.password(), email.email(),
                 events.creation_date().toString(), events.last_update_date().toString());
     }
